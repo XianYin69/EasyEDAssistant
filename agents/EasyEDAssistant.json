@@ -8,7 +8,7 @@
     "license": "MIT",
     "metadata": {
       "author": "EasyEDAssistant",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "homepage": "https://github.com/EasyEDAssistant/easyeda-agent",
       "prompt_file": "AGENT-PROMPT.md",
       "skill": "EasyEDAssistant",

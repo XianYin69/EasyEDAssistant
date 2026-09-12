@@ -54,7 +54,7 @@ EasyEDAssistant/
 ## EasyEDAssistant（SKILL.md）详细文档
 
 > 对应根目录 `SKILL.md`（frontmatter `name: EasyEDAssistant`，
-> `metadata.author: EasyEDAssistant`，当前 v0.4.0）。本节说明其组件、
+> `metadata.author: EasyEDAssistant`，当前 v0.5.0）。本节说明其组件、
 > 工作流、引用的其它 SKILL 文件及其作者。
 
 ### 组件（文档结构）
@@ -72,9 +72,9 @@ EasyEDAssistant/
 | §8 验证与交付 | 五层验证（拓扑/几何/电气/呈现/保存，不可互替）+ 交付报告要求 + §8.3 视觉质量自动评估（`scripts/visual-qa.py`） |
 | §9 已知平台限制 | 导入/泪滴/交互式布线/netLabel/截图/3D 模型/网表等承重边界 |
 | §10 执行纪律 | 10 条汇总纪律（门禁、快照、连接、授权、reload、save、MCP 一致性…） |
-| §11 用户需求澄清与目标明确 | 任务分类默认行为、必问清单、目标不变量化、沟通与授权纪律 |
+| §11 用户需求澄清与目标明确 | 任务分类默认行为、必问清单、目标不变量化、沟通与授权纪律、§11.5 执行中中断机制（强制/条件中断点+CHECKPOINT 协议+用户响应处理+S0–S6/P0–P10 中断点清单） |
 | §12 美观/功能布局经验 | 原理图可读性、PCB 美观（分区/朝向/阵列/留白/丝印/收尾顺序）、交付美学一致性 |
-| §13 变更摘要 | v0.4.0（visual-qa + §8.3）、v0.3.1（更名 EasyEDAssistant + 移至根目录）、v0.3.0 修订记录 |
+| §13 变更摘要 | v0.5.0（中断机制 §11.5）、v0.4.0（visual-qa + §8.3）、v0.3.1（更名+移根目录）、v0.3.0 |
 
 ### 工作流 / 过程
 
@@ -83,6 +83,7 @@ EasyEDAssistant/
 2. **会话门禁**：首条命令 `easyeda update --check --exit-code`；升级后新开会话。
 3. **需求澄清**（§11）：按任务类型走默认行为；只问"答案会改变做法"的选项；
    把模糊需求落成可验证的目标不变量（pin→net 黄金表、skew 预算、DRC 目标）。
+   执行中遇强制/条件中断点（§11.5）按 CHECKPOINT 协议暂停等用户确认。
 4. **基线读取**：`sch connectivity` / `sch list` / `pcb list --include-bbox`
    + `sheet-geometry`；写前读被改器件/引脚/网络/几何。
 5. **设计执行**：按子域判据（§4）与设计决策（§6）执行；原理图走
