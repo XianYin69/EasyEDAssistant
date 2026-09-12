@@ -57,7 +57,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 - **版本门禁（会话第一条命令）**：`easyeda update --check --exit-code`，先于任何
   项目读取、离线规划、`health` 和 EDA 操作。CLI/Skill/daemon 必须精确等于 GitHub
   latest，Connector 与 latest 共享 `major.minor` 兼容线才返回 0；仅 patch 差异通过。
-  门禁非 0 时停止任务按 `environment-setup.md` 升级；**升级/替换组件后本会话不得
+  门禁非 0 时停止任务按 `Sample/easyeda-agent/references/environment-setup.md` 升级；**升级/替换组件后本会话不得
   继续，必须新开会话从第一条命令重新开始**。不得用 `--version`、`--preserve`、
   `--skip-version-check` 或仅看 `health` 绕过门禁。
 - **`doc reload` 门（铁律）**：PCB mutation（rip-up/route/delete/via/track/pour）
@@ -131,7 +131,8 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 
 > 数值判据为方向性规则；落地前以数据手册与实测为准。
 > 判据索引：P0–P7 优先级总则裁决冲突；硬门（layout-lint gate / DRC /
-> antenna-keepout）不可放宽，`--force-unsafe` 不是恢复步骤。
+> antenna-keepout）不可放宽，`--force-unsafe`（有审计的越门选项，见
+> `Sample/easyeda-agent/references/design-flow.md`）不是恢复步骤。
 
 ### 4.1 优先级总则（PCB 冲突裁决）
 
@@ -670,7 +671,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
    不靠关闭检查取得通过。
 7. PCB mutation 后 `doc reload`；铜形变化后 `pour-rebuild`。
 8. 显式 save 并确认 `saved:true`；autosave 只是兜底。
- 9. MCP 与 CLI 双链路语义一致；MCP 不豁免任何验证、不改变授权范围。
+9. MCP 与 CLI 双链路语义一致；MCP 不豁免任何验证、不改变授权范围。
 10. 报告覆盖未验证项；不把 canonical 一致当作实际图面已同步。
 11. 强制/条件中断点（§11.5）命中时暂停等待用户确认，不自动推进；
     超时/无答复保持暂停态，不猜默认值落笔。
@@ -679,7 +680,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 
 ## 11. 用户需求澄清与目标明确（动手前）
 
-> 原则（与 `design-flow.md` S0 一致）：**缺信息会改变设计、或超出已有授权时
+> 原则（与 `Sample/easyeda-agent/references/design-flow.md` S0 一致）：**缺信息会改变设计、或超出已有授权时
 > 才问**；已有确认的需求与授权沿用，不因流程表重复索取许可；用户要求逐步
 > 确认时遵守其节奏。问的是"会改变做法的选项"，不是"流程打卡"。
 
@@ -787,7 +788,8 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 **中断点与验证门禁的关系**：
 - `blocked`（检查没运行/环境问题）→ 条件中断：需用户介入修环境，不自动跳过。
 - `fail`（设计不合格）→ 条件中断：用户决定改设计还是放宽（放宽须授权，
-  且 `--force-unsafe` 不是恢复步骤，§4 开头 guardrail）。
+  且 `--force-unsafe` 不是恢复步骤，见 §4 开头 guardrail 与上游
+  `Sample/easyeda-agent/references/design-flow.md`）。
 - `pass` → 不中断，静默进入下一阶段。
 - 截图 stale + 数据通过 → 不中断（数据是权威），但报告中标注 stale。
 
@@ -798,6 +800,13 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
   会话可在后续恢复（用户回复后从该中断点继续，不从头重跑已通过的阶段）。
 - 恢复时先回读当前状态确认中断前的写操作已落盘（§10 纪律 2），
   再从该点继续。
+
+**中断期间发现新问题的处理**：
+- 中断等待期间纯读取发现新问题（如 S3 等待时回读发现 S2 数据不一致）：
+  不静默处理，将新问题追加到当前 CHECKPOINT 的"背景"段，升级为复合
+  中断点，等用户一次性答复所有未决项；不因新问题取消原中断点。
+- 中断期间活体断连：按 §1.3 恢复流程处理；恢复后重读确认中断前写操作
+  落盘，再继续等用户答复；不重发写操作。
 
 ---
 

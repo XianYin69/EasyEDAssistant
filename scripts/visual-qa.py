@@ -399,6 +399,17 @@ def main() -> int:
     artifacts = Path(args.artifacts_dir)
     artifacts.mkdir(parents=True, exist_ok=True)
 
+    # 读取上次报告的 PCB screenshot sha256（用于 stale 检测）
+    prev_report_path = artifacts / f"visual-qa-{args.project}.json"
+    prev_sha = None
+    if prev_report_path.exists():
+        try:
+            prev = json.loads(prev_report_path.read_text(encoding="utf-8"))
+            pcb_prev = (prev.get("pcb") or {}).get("screenshot") or {}
+            prev_sha = pcb_prev.get("sha256")
+        except (json.JSONDecodeError, OSError):
+            pass  # 上次报告损坏 → 无 prev_sha，视为首次运行
+
     report = {
         "project": args.project,
         "mode": args.mode,
@@ -411,8 +422,7 @@ def main() -> int:
 
     # PCB
     if args.mode in ("pcb", "both"):
-        prev_sha = None  # TODO: 从上次报告读 previous-sha256
-        snap = ({"path": None, "sha256": None, "stale": None, "prev_sha": None, "error": "skipped"}
+        snap = ({"path": None, "sha256": None, "stale": None, "prev_sha": prev_sha, "error": "skipped"}
                 if args.no_snapshot
                 else capture_pcb_snapshot(args.project, artifacts, prev_sha))
         data = collect_pcb_data(args.project)
@@ -452,6 +462,13 @@ def main() -> int:
         report["exit_code"] = 0
 
     print(json.dumps(report, ensure_ascii=False, indent=2))
+    # 持久化报告供下次运行读 prev_sha（stale 检测闭环）
+    try:
+        prev_report_path.write_text(
+            json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    except OSError as e:
+        sys.stderr.write(f"[visual-qa] WARN: cannot persist report for next run: {e}\n")
     # 人读摘要到 stderr
     sys.stderr.write(
         f"[visual-qa] {args.project}: {report['overall_verdict']} "
