@@ -12,7 +12,7 @@ metadata:
 
 用 JLCEDA MCP VS Code 插件桥接操作嘉立创 EDA（EasyEDA 专业版）：原理图绘制、
 PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造文件导出。
-知识基线见同仓 `easyeda-agent-skill-behavior.md`（24–25 节为移植版专属判据）。
+知识基线见同仓 `Sample/easyeda-agent-skill-behavior.md`（24–25 节为移植版专属判据）。
 本 skill 是移植版行为规范；API 操作与数值判据以 `Sample/easyeda-agent/references`
 与 `Sample/easyeda-agent/scripts` 为真值来源，冲突时以 daemon 规则代码为准。
 
@@ -145,7 +145,9 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 | P6 | DFM | 朝向一致/极性/扇出空间/测试点 |
 | P7 | 网格/对齐/丝印 | 纯收尾美化，永远不得违反以上任何一级 |
 
-执行顺序 = "先 P5 粗聚簇，再 P2/P4 细约束就地改写"（§11 自动布局步骤）。
+执行顺序 = "先 P5 粗聚簇，再 P2/P4 细约束就地改写"（自动布局执行步骤见
+上游 `Sample/easyeda-agent/references/pcb-layout.md` §11，本 skill 的收尾
+顺序见 §12.2）。
 
 ### 4.2 PCB 布局与原理图绘制
 
