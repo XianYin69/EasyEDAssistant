@@ -5,7 +5,7 @@ license: MIT
 compatibility: "Requires JLCEDA MCP VS Code plugin running locally (ws://127.0.0.1:8765/bridge/ws + http://127.0.0.1:7655/mcp). Fallback: easyeda CLI/daemon/Agent Connector. Offline design planning needs no editor."
 metadata:
   author: EasyEDAssistant
-  version: "0.3.1"
+  version: "0.4.0"
 ---
 
 # EasyEDAssistant 设计 Skill
@@ -488,6 +488,9 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
   （list/drc/check）是权威，截图只做视觉终检。
 - 保存：通过阶段验证后显式 `sch save` / `pcb save` 并确认 `saved:true`；
   daemon 防抖 autosave 只是兜底。
+- 视觉质量聚合：`scripts/visual-qa.py`（§8.3）聚合截图 + 上述数据源
+  做三关注域（组件间距/走线间距/整齐度）交叉评估，是"呈现层"自动化，
+  不替代数据层硬门。
 
 ---
 
@@ -573,9 +576,63 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 
 ### 8.2 交付报告
 
-说明：修改范围、源数据与实际图面差异、各验证层结果、已保存页面、
+说明修改范围、源数据与实际图面差异、各验证层结果、已保存页面、
 尚未解决的问题与未运行检查。保留输入、生成队列、回读与验证报告；
 局部完成不称整板通过。
+
+### 8.3 视觉质量与布局完整性自动评估（`scripts/visual-qa.py`）
+
+> 用 API 截图 + 数据驱动检查**交叉**评估视觉质量，聚焦组件间距、
+> 走线间距、整体整齐度。是 §8.1 "呈现层"的自动化实现，但**不替代**
+> 数据层（拓扑/几何/电气/保存）。
+
+**设计原则**（与 §5.7 / §8.1 一致）：
+
+- 呈现层不可互替，但**数据校验是权威**——截图只做视觉终检。
+  截图与数据不一致时以数据为准，但必须把"图面 stale"标为阻断项。
+- PCB `snapshot` 可能 stale：用 `--previous-sha256` 检测同帧；
+  `sch export-image` 是文档渲染（不依赖视口刷新），无需 sha 检测。
+- `layout-score` 九维是诊断**不是硬门**；skipped/degraded 维不参与
+  加权（"没测 ≠ 满分"）；短路/重叠/出框进 `blocking[]` 一票否决。
+
+**三关注域 → 数据真值映射**：
+
+| 关注域 | layout-score 维度 | pcb check 规则 | drc 规则 |
+|---|---|---|---|
+| 组件间距 component_spacing | compact, clearance | solder-access（gate） | clearance |
+| 走线间距 trace_clearance | routable, clearance | acute-angle, dangling-end | clearance, trackWidth |
+| 整体整齐度 layout_neatness | tidy, partition, flow-order | rotation-inconsistent（子规则） | — |
+
+**用法**：
+
+```bash
+# PCB + 原理图双评估（需活体窗口或 daemon）
+python3 scripts/visual-qa.py --project <name> --doc <page-uuid> --both
+
+# 仅 PCB，strict（WARN 也判阻塞）
+python3 scripts/visual-qa.py --project <name> --pcb --strict
+
+# 跳过截图采集（只用已有数据打分；不触发 canvas-freeze）
+python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
+```
+
+**输出**：JSON（stdout）+ 人读摘要（stderr）。退出码：
+`0`=全通过（含截图非 stale）；`2`=有 WARN（低分维/带痕/stale 但数据通过）；
+`3`=blocking（短路/重叠/出框/间距硬违规/stale 且数据也不全）。
+
+**评估流程**（三层）：
+1. **硬门**：`layout-score.blocking[]` 一票否决（短路/重叠/出框）。
+2. **关注域**：逐域聚合维度状态（skipped/degraded/low-score<0.6）+
+   DRC/check findings → pass/warn/fail。
+3. **截图一致性**：stale/missing → 至少 warn（strict 且数据不全 → fail）。
+
+**边界**：
+- 该脚本**不替代** `sch gate --strict` / `pcb drc` / `pcb check`——
+  它是这些数据源的聚合器 + 截图终检，不是新的硬门。
+- 截图采集前的 `view fit` + 1.5s 等待是 canvas-freeze 缓解（§5.7），
+  不是保证；stale 检测是最终防线。
+- `--no-snapshot` 模式下只跑数据评估，不触发截图采集——适合
+  CI/批量回归或已知截图 fresh 的场景。
 
 ---
 
@@ -729,7 +786,16 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 
 ## 13. 变更摘要
 
-### 13.1 v0.3.1（2026-09-12）
+### 13.1 v0.4.0（2026-09-12）
+
+- 新增 **§8.3 视觉质量与布局完整性自动评估**：`scripts/visual-qa.py`
+  用 API 截图（`pcb snapshot --previous-sha256` / `sch export-image`）
+  + 数据驱动检查（`layout-score` / `pcb check` / `pcb drc`）交叉评估
+  组件间距、走线间距、整体整齐度；三层评估（硬门→关注域→截图一致性）；
+  退出码 0/2/3；遵循"数据为权威、截图只做视觉终检"原则。
+- 新增 `scripts/visual-qa.py`（Python 3，依赖 easyeda CLI）。
+
+### 13.2 v0.3.1（2026-09-12）
 
 - 技能名由 `jlceda-mcp-easyeda` 更名为 **`EasyEDAssistant`**（frontmatter `name`
   与文档标题同步更新；MCP server 键 `jlceda` 不变）。

@@ -104,6 +104,9 @@ layout-score）→ 电气（sch gate --strict / pcb drc / pcb check）→
 呈现（sch export-image / pcb snapshot，数据校验是权威）→
 保存（save + saved:true）。`layout-score` 九维是诊断不是硬门；
 短路/重叠/出框一票否决。
+视觉质量聚合用 `scripts/visual-qa.py`（§8.3）：截图 + 数据源交叉
+评估组件间距/走线间距/整齐度，退出码 0/2/3；是呈现层自动化，
+不替代数据层硬门。
 
 # 项目文档任务（按需）
 - 创建许可证：生成 LICENSE（默认 MIT），已有不覆盖，版权年份与
