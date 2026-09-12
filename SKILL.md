@@ -1,14 +1,14 @@
 ---
-name: jlceda-mcp-easyeda
+name: EasyEDAssistant
 description: "基于 JLCEDA MCP VS Code 插件桥接操作嘉立创 EDA（EasyEDA）的移植版电路设计 skill：原理图/PCB/射频/模拟/数字/滤波器/电源设计与检查。支持 MCP 与原有 CLI/daemon 双链路，内置电气规范、数据手册 PDF 阅读经验与项目文档任务（许可证/README）。"
 license: MIT
 compatibility: "Requires JLCEDA MCP VS Code plugin running locally (ws://127.0.0.1:8765/bridge/ws + http://127.0.0.1:7655/mcp). Fallback: easyeda CLI/daemon/Agent Connector. Offline design planning needs no editor."
 metadata:
   author: EasyEDAssistant
-  version: "0.3.0"
+  version: "0.3.1"
 ---
 
-# JLCEDA MCP EasyEDA 设计 Skill
+# EasyEDAssistant 设计 Skill
 
 用 JLCEDA MCP VS Code 插件桥接操作嘉立创 EDA（EasyEDA 专业版）：原理图绘制、
 PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造文件导出。
@@ -725,7 +725,15 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 
 ---
 
-## 13. 变更摘要（2026-09-12，v0.2.0 → v0.3.0）
+## 13. 变更摘要
+
+### 13.1 v0.3.1（2026-09-12）
+
+- 技能名由 `jlceda-mcp-easyeda` 更名为 **`EasyEDAssistant`**（frontmatter `name`
+  与文档标题同步更新；MCP server 键 `jlceda` 不变）。
+- 文件移至仓库根目录（原 `.kilocode/skills/jlceda-mcp-easyeda/SKILL.md`）。
+
+### 13.2 v0.3.0（2026-09-12）
 
 1. 合并 `easyeda-agent-skill-behavior.md` §23–§25 的移植版判据
    （MCP 双端点、设计规范知识库、文档任务），与既有章节去重对齐。
@@ -737,3 +745,5 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
    朝向归一、阵列杠杆、功能性留白、丝印层、层感知看数、收尾顺序）。
 4. 新增 **§12 布局经验**（操作层，与第 4 节判据层互补）与 **§13 变更摘要**。
 5. 版本号 0.2.0 → 0.3.0。
+
+---

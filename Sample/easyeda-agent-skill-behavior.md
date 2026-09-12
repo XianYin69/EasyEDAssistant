@@ -671,6 +671,69 @@ Kilocode `kilo.json` 中的接入示例（与原有链路并存，不互斥）�
 - 任务产物与 EDA 工程文件同仓管理，纳入 `git` 版本控制；提交信息注明
   生成来源（`generate-license` / `generate-readme`）。
 
+### 25.4 块贡献（提交已验证电路到块库）
+
+- 先 `easyeda blocks search <keyword>` 查重，`easyeda blocks show <id>` 读
+  完整 JSON；`blocks ls --json` 只有摘要投影，不含全部连接数据。
+- 贡献合同：`id/desc/category/source/author`；`parts`（role 表，`part` 指向
+  standard-parts key）；`internal_nets`（≥2 个 ROLE.PIN 引用）；`ports`
+  （边界 in/out/bidir）；可选 `schematic_layout`（关系形式优先）/`pcb_layout`/
+  `signals`/`silk`/`keepout`。
+- 同名多脚全并联写 `J.VBUS*`；引脚引用优先功能名，同名脚用真实引脚号。
+- `verification` 四项（schematic/component_selection/pcb_drc/bringup）均
+  `passed` 且有证据才能设 `production_ready:true`；草稿可贡献但不能声称
+  生产验证。详见 `standard-blocks-contributing.md`。
+
+## 25A. SKILL.md 变更记录（`.kilocode/skills/jlceda-mcp-easyeda/SKILL.md`）
+
+> 本节记录 2026-09-12 对移植版 skill 定义文件的修订（git 提交 `5c1427e`，
+> dev 分支）。修改在提交前完成并已提交；本条为提交前的修订摘要文档。
+
+**版本**：0.2.0 → 0.3.0（frontmatter `metadata.version`）。
+
+**合并自本文档 §23–§25 的移植版判据**：
+- §1 连接：JLCEDA MCP 双端点（`ws://127.0.0.1:8765/bridge/ws` +
+  `http://127.0.0.1:7655/mcp`）与原有 `easyeda` CLI/daemon 双链路并存
+  （对应本文档 §23.1/§23.2）；版本门禁与 `doc reload` 铁律并入 §1.2。
+- §4 设计子域判据：PCB/原理图、RF、模拟、数字、滤波器、电源、电气规范
+  （IPC/IEC/RoHS/FCC/JLCPCB）、PDF/数据手册阅读经验（对应本文档 §24）。
+- §7 项目文档任务：创建许可证、生成 README、块贡献（对应本文档 §25、
+  及原有块贡献条目并入 §25.4）。
+
+**新增 §11 用户需求澄清与目标明确（动手前）**：
+- 11.1 任务分类与默认行为：小修/整理/新设计/PCB 布局布线各自的默认行为
+  与需要澄清的信号。
+- 11.2 开工前必问清单：只问"答案会改变做法"的选项（目标与验收、
+  批量与工艺、机械约束、未决电气/机械要求）；有唯一正确答案的是
+  guardrail，不重复问。
+- 11.3 目标明确化方法：把模糊需求落成可验证的目标不变量（pin→net 黄金表、
+  位号清单、关键网 skew 预算、板框 bbox、DRC 目标）；范围边界与回归对照；
+  多页/多板工程先定归属；已授权破坏性范围持续有效，新范围才再澄清。
+- 11.4 沟通与授权纪律：证据化汇报（回读 + 官方导图，不截图猜）；
+  阻塞项如实列出（blocked ≠ fail）；`--yes` 只放行已授权范围。
+
+**新增 §12 原理图与 PCB 美观/功能布局经验**（操作层，与第 4 节判据层互补）：
+- 12.1 原理图可读性：信号流决定版面、Z 字阅读；框内紧凑/框间留白
+  （10 raw 贴边、5 raw 标题净距）；同模块短连优先；方向一致；
+  文字避让（本体 bbox 不含外置文字）；分页是功能决策。
+- 12.2 PCB 美观与功能性：分区先于对齐；朝向归一（至多两种正交朝向）；
+  阵列是整齐的最大杠杆（align/distribute + 栅倍数）；功能性留白
+  （手焊可达/热散开/拔插走廊）；丝印是最后的视觉层；层感知看数
+  （双面板 overlap/tight 按装配面分组）；固定收尾顺序
+  （功能定稿 → 清 blocking → refine → beautify → 丝印 → 全量验证）。
+- 12.3 设计决策与交付的美学一致性：离线终检（export-image / dump +
+  layout-score）；美观项与功能项分开陈述；增量打磨不重做功能布局。
+
+**扩充 §4.2**：
+- 原理图节新增"可读性经验"（同模块单轴信号流、跨模块 netport、
+  同排方向一致、Z 字阅读、视觉终检重点）。
+- PCB 节新增"美观与功能性兼顾的经验"（功能先行、朝向归一、成行对齐、
+  板面利用率、45° 走线/beautify、带线移动工具）。
+
+**§2 开始工作**：新增第 0 步"先澄清需求与目标，再动手"（指向 §11）。
+
+**§13 变更摘要**：记录本次修订条目（见 SKILL.md 文末）。
+
 ## 26. 回归测试
 
 
