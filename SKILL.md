@@ -5,7 +5,7 @@ license: MIT
 compatibility: "Requires JLCEDA MCP VS Code plugin running locally (ws://127.0.0.1:8765/bridge/ws + http://127.0.0.1:7655/mcp). Fallback: easyeda CLI/daemon/Agent Connector. Offline design planning needs no editor."
 metadata:
   author: EasyEDAssistant
-  version: "0.5.0"
+  version: "0.6.0"
 ---
 
 # EasyEDAssistant 设计 Skill
@@ -267,6 +267,8 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 
 **PCB 放置**：
 
+- 放置前先生成**布局蓝图**（§7.4，Markdown + 字符画板框）：把模块/组件/
+  部件及其连接可视化，经 P3 板框中断点（§11.5）拍板后再四档放置。
 - 四档顺序：T1 安装孔 → T2 板边接口（USB/电源/天线，开口朝外）→ T3 主芯片 →
   T4 卫星/配套器件。用 `pcb stage confirm-tier <1|2|3|4>` 记录，`confirm-layout`
   签核布局。
@@ -645,6 +647,75 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
   `passed` 且有证据才能设 `production_ready:true`；草稿可贡献但不能声称
   生产验证。
 
+### 7.4 生成 PCB 布局蓝图（Markdown + 字符画边框）
+
+> 在**物理放置/绘制 PCB 之前**，先生成一份 Markdown 布局蓝图，用模块、组件、
+> 部件及它们之间的连接把整板布局可视化；板框外形用**字符画（ASCII 边框）**
+> 表达。蓝图是规划/评审工件（pre-placement planning artifact），不直接产生
+> EDA 图元；须经 P3 中断点（§11.5）用户确认，再驱动 `pcb import-changes`
+> 与四档放置（§4.2、§5.5、§5.7）。
+
+**何时生成**：
+- 新设计需求→整板：P2（放置）之前生成，作为 P3 板框签核的评审材料。
+- 改版/复用布局：重新生成做 before/after 对照（`sch design-diff` 同源）。
+- 蓝图是"会改变做法"的选项载体（§6、§11.2）；已在 P3 板框/分区处摊给用户
+  拍板，不重复索取许可（§11.4）。
+
+**文件契约**（`<工程>-pcb-layout.md`）：
+1. **板框字符画**：用 box-drawing 字符画出板框外形与圆角，标注长宽（mm）、
+   安装孔、板边接口开口方向。字符约定：
+   - 外框：`╭╮╯╰ ├ ─`（Unicode box）或纯 ASCII `+ - |`；四角圆角用 `╭╮╰╯`。
+   - 模块分区：`[模块名]` 或 `+------+` 小框；keepout 区斜线阴影 `////`。
+   - 器件：`ref` 缩略（`U1`/`J1`/`C1..C8`/`ANT1`）。
+   - 比例尺：声明 1 字符 ≈ N mm（横/纵可不同，按板框长宽取整）。
+2. **模块清单**：按 §4.2 九宫格分区（电源左列 / MCU 中列 / RF·IO 右列）
+   列出每个功能 Lib 的 bbox、贴边（10 mil）、标题净距。
+3. **组件/部件清单**：四档 T1（安装孔）→ T2（板边接口）→ T3（主芯片）→
+   T4（卫星件）；每件含 `ref`/`role`/layer(TOP·BOTTOM)/朝向/间距约束（§4.2）。
+4. **连接关系**：模块间 / 跨模块 netport 的边集合（net 名 + 起讫器件 +
+   线宽档位 + 是否差分/等长/RF）；差分/等长/隔离网成对成组命名（§4.5）。
+5. **决策头**：§6 已拍板的 S0 决策（叠层/地域/单双面/焊接工艺）+ 未决项
+   （交 §11.5 中断点）。
+
+**字符画示例**（示意；比例尺 1 字符 ≈ 1 mm，板框 40×30 mm）：
+
+```text
+╭────────────────────────────────────────╮
+│ ┌──────┐   ┌─────────────┐  ┌──────┐ │  顶边 J1(USB) 开口朝上
+│ │ PWR  │   │    MCU      │  │ RF   │ │
+│ │ U1L1 │   │ U1 Y1 X1 X2 │  │ ANT1 │ │
+│ │ C1.. │   │  (ESP32)    │  │ L2C5 │ │
+│ └──────┘   └─────────────┘  └─////─┘ │  RF 全层 keepout(////)
+│ [电源]    [数字/控制]   [射频]        │
+│ ┌──────┐   ┌─────────────┐  ┌──────┐ │  底边 J2 开口朝下
+│ │ J1   │   │ 接口/IO TP  │  │ J2   │ │
+│ └──────┘   └─────────────┘  └──────┘ │
+╰────────────────────────────────────────╯
+  40 mm · 安装孔(四角) · 1 字符≈1 mm
+```
+
+**生成数据来源**（先读后画，不盲写）：
+- `sch connectivity --all-pages`（§5.1）→ 模块/组件/连接真值。
+- `pcb list --include-bbox` + `pcb sheet-geometry` → 板框尺寸与分区几何。
+- `sch design-diff` / `sch connectivity-diff` → 新旧蓝图 before/after 对照。
+- 比例尺/贴边取 §4.2 固定值（贴边 10 mil、标题净距 5 raw）；缺实测
+  `sheetBorder` 时注明边界回退（§4.2、§5.1 `sch sheet-geometry`）。
+
+**约束与边界**：
+- 蓝图是**规划层**工件（§8.1 验证分层中不属任何硬门）；生成后**不直接**
+  驱动写图元——物理放置仍走 `pcb import-changes` + 四档放置 +
+  `layout-lint --gate`（§4.2、§5.5、§5.7）。
+- 字符画是**示意**；坐标精确值以 `pcb list --include-bbox` 的 `center`
+  为准（§3 锚点 vs bbox 中心），字符画不替代 `layout-score`/`pcb check`。
+- 连接关系须与 `sch connectivity` pin→net 对账一致；不凭空补连接
+  （§4.2 短桩、§4.10 不靠截图推断）。
+- 已有蓝图文件追加/更新章节，不全量重写；破坏性改写须用户确认
+  （同 §7.2 README 纪律）。提交信息注明 `generate-pcb-layout`。
+
+**与 §11.5 中断点的关系**：蓝图生成完即触发 **P3（板框与安装孔方案）
+强制中断点**——把字符画板框 + 分区 + 关键连接摊给用户拍板（单双面/
+手焊回流/板框尺寸）；用户批准蓝图后才执行 P2–P10 物理放置。
+
 ---
 
 ## 8. 验证与交付
@@ -961,7 +1032,19 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 
 ## 13. 变更摘要
 
-### 13.1 v0.5.0（2026-09-12）
+### 13.1 v0.6.0（2026-09-13）
+
+- 新增 **§7.4 生成 PCB 布局蓝图（Markdown + 字符画边框）**：在物理放置/
+  绘制 PCB 之前先生成一份 Markdown 蓝图，用模块/组件/部件及元素间连接
+  可视化整板布局，板框外形用字符画（box-drawing ASCII）表达；文件含板框
+  字符画、模块/组件/部件清单、连接关系、决策头；先读后画（`sch
+  connectivity` / `pcb list --include-bbox` / `sch sheet-geometry`），
+  经 P3 中断点（§11.5）拍板后再驱动 `import-changes` 与四档放置。
+  蓝图属规划层工件，不替代 `layout-lint`/`pcb drc` 几何电气门禁。
+- §4.2 PCB 放置新增"放置前先生成布局蓝图"前置步骤；§13 变更摘要新增
+  v0.6.0 条目。
+
+### 13.2 v0.5.0（2026-09-12）
 
 - 新增 **§11.5 中断机制（执行中暂停与用户确认）**：两类中断点
   （强制 mandatory / 条件 conditional）、统一触发协议（CHECKPOINT 格式：
@@ -971,7 +1054,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 - §2 开始工作第 0 步交叉引用 §11.5；§10 执行纪律新增第 11 条
   （中断点命中时暂停不自动推进）。
 
-### 13.2 v0.4.0（2026-09-12）
+### 13.3 v0.4.0（2026-09-12）
 
 - 新增 **§8.3 视觉质量与布局完整性自动评估**：`scripts/visual-qa.py`
   用 API 截图（`pcb snapshot --previous-sha256` / `sch export-image`）
@@ -980,13 +1063,13 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
   退出码 0/2/3；遵循"数据为权威、截图只做视觉终检"原则。
 - 新增 `scripts/visual-qa.py`（Python 3，依赖 easyeda CLI）。
 
-### 13.3 v0.3.1（2026-09-12）
+### 13.4 v0.3.1（2026-09-12）
 
 - 技能名由 `jlceda-mcp-easyeda` 更名为 **`EasyEDAssistant`**（frontmatter `name`
   与文档标题同步更新；MCP server 键 `jlceda` 不变）。
 - 文件移至仓库根目录（原 `.kilocode/skills/jlceda-mcp-easyeda/SKILL.md`）。
 
-### 13.4 v0.3.0（2026-09-12）
+### 13.5 v0.3.0（2026-09-12）
 
 1. 合并 `easyeda-agent-skill-behavior.md` §23–§25 的移植版判据
    （MCP 双端点、设计规范知识库、文档任务），与既有章节去重对齐。
