@@ -16,6 +16,29 @@ PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造
 本 skill 是移植版行为规范；API 操作与数值判据以 `Sample/easyeda-agent/references`
 与 `Sample/easyeda-agent/scripts` 为真值来源，冲突时以 daemon 规则代码为准。
 
+## 嘉立创EDA 官方文档（参考）
+
+嘉立创EDA专业版（EasyEDA Pro）官方文档是本 skill 的基础参考。以下文档
+与本 skill 最相关（中文，由嘉立创科技集团股份有限公司所有）：
+
+| 主题 | 文档标题 | 链接 | 相关性 |
+|---|---|---|---|
+| 快速入门 | 嘉立创EDA专业版快速入门 | [链接](https://prodocs.easyeda.com/cn/quick-start.html) | 必读；工程创建、界面介绍 |
+| 原理图设计 | 原理图设计 | [链接](https://prodocs.easyeda.com/cn/private/designer/design-schematic.html) | **核心参考**；放置器件、电气连接、更新到PCB |
+| PCB 设计 | PCB 设计 | [链接](https://prodocs.easyeda.com/cn/private/designer/design-pcb.html) | **核心参考**；网格设置、图层、布线、DRC |
+| 仿真 | 仿真介绍 | [链接](https://prodocs.easyeda.com/cn/simulation/introduction) | 辅助参考；Simulide/NGSpice 引擎 |
+| 文件生成 | 文件生成与导出 | [链接](https://prodocs.easyeda.com/cn/file-generation) | 辅助参考；BOM、Gerber、PDF导出 |
+| 扩展 API | 嘉立创EDA专业版扩展 API | [链接](https://prodocs.easyeda.com/cn/api/reference) | 扩展开发参考 |
+
+**注意**：
+- 本 skill 的 MCP API (`eda.*`) 与 CLI (`easyeda <domain> <command>`)
+  都是基于上述官方文档设计的程序化接口。
+- 官方文档描述的是 GUI 操作流程；本 skill 提供的程序化路径（`sch connect`
+  / `sch apply` / `pcb route-short` / `pcb drc` 等）是对等价操作的映射，
+  不一定与 GUI 菜单顺序完全一致。
+- 官方文档与本 skill 冲突时，以 daemon 规则代码（`pcb_rules.go` 等）为
+  真值来源。
+
 ---
 
 ## 1. 连接（双链路，原有方式必须保留）
