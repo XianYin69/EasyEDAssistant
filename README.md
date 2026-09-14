@@ -10,8 +10,8 @@
 EasyEDAssistant/
 ├── README.md                                  # 本文件
 ├── LICENSE                                    # MIT
-├── SKILL.md                                   # EasyEDAssistant skill 定义（Kilocode，v0.4.0）
-├── AGENT-PROMPT.md                            # 智能体系统提示词（完整版 + 附录）
+├── SKILL.md                                   # EasyEDAssistant skill 定义（Kilocode，v0.8.1；运行时唯一注入源）
+├── AGENT-PROMPT.md                            # 精简使用指引（不再复制规范；规范回归 SKILL.md）
 ├── .gitignore                                 # 忽略 .kilo/ 环境文件等
 ├── agents/
 │   ├── EasyEDAssistant.yaml                   # Kilocode agent 定义（权威，interface: schema）
@@ -110,7 +110,7 @@ EasyEDAssistant/
 | `Sample/easyeda-agent/references/*.md`、`*.json` | 上游参考文档与数据文件（判据原始来源） | zhoushoujianwork（随上游 skill 分发） |
 | `Sample/easyeda-agent/scripts/*` | 上游辅助脚本（lint/选型/批量/测试） | zhoushoujianwork（随上游 skill 分发） |
 | `scripts/visual-qa.py` | 视觉质量与布局完整性自动评估（API 截图 + 数据驱动交叉评估 + 动态截图生命周期管理，§8.3） | 本项目（EasyEDAssistant）维护 |
-| `AGENT-PROMPT.md` | 智能体系统提示词（完整版 + 附录） | 本项目（EasyEDAssistant）维护 |
+| `AGENT-PROMPT.md` | 精简使用指引（默认 one-liner + 运行时边界，规范回归 SKILL.md） | 本项目（EasyEDAssistant）维护 |
 | `agents/EasyEDAssistant.yaml` | Kilocode agent 定义（权威，interface: schema） | 本项目（EasyEDAssistant）维护 |
 | `Sample/easyeda-agent-skill-behavior.md` | 上游 skill 全部行为的章节化记录（本项目维护，含移植版 §23–§25 与 §25A 变更史） | 本项目（EasyEDAssistant）维护 |
 
@@ -185,9 +185,11 @@ EasyEDAssistant skill 内置的设计判据（详见根目录 `SKILL.md` 第 4 �
    **EasyEDAssistant**）— 连接契约、坐标/数据模型、子域判据、API 操作速查、
    设计决策目录、验证分层（§8.3 视觉质量自动评估 + 动态截图生命周期）、
    执行纪律、需求澄清与美观/功能布局经验。
-- **智能体提示词**：根目录 `AGENT-PROMPT.md` — 完整系统指令（会话纪律、
-  需求澄清、设计执行、PDF 阅读、验证分层、文档任务）+ 附录 A（one-liner
-  default_prompt）+ 附录 B（任务触发短语）。
+- **智能体提示词**：根目录 `AGENT-PROMPT.md` — 精简使用指引（v0.6.0 起）：
+  仅保留触发入口、one-liner `default_prompt` 与运行时边界（防逃逸），
+  完整规范（会话纪律、需求澄清、设计执行、PDF 阅读、验证分层、文档任务、
+  中断机制、tmp 生命周期等）回归 `SKILL.md` 本体由 Kilocode 自动注入，
+  不再复制到提示词层。
 - **视觉质量评估脚本**：`scripts/visual-qa.py` — API 截图 + 数据驱动检查
    交叉评估组件间距/走线间距/整齐度（§8.3），含动态截图生命周期管理
    （每步截图、stale 识别、旧图清理）。
