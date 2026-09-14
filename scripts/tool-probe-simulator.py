@@ -35,13 +35,36 @@ def _cli(args: list[str], timeout: int = 30) -> str:
         return ""
 
 
+def _sanitize_project(name: str) -> str:
+    """剥离任何路径分隔符与 .. 序列，防止注入到路径/文件名（见 FILE_CREATION_POLICY §5.2）。"""
+    return Path(name).name or "default"
+
+
+def _resolve_within_workspace(raw: str) -> Path:
+    """把 raw 解析为绝对路径并强制其落在工作区(cwd)内；逃逸则拒绝。"""
+    workspace = Path.cwd().resolve()
+    p = Path(raw)
+    candidate = (p if p.is_absolute() else workspace / p).resolve()
+    try:
+        candidate.relative_to(workspace)
+    except ValueError:
+        raise SystemExit(
+            f"[tool-probe-sim] 安全拒绝：输出目录 {candidate} 逃逸出工作区 {workspace}"
+        )
+    return candidate
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project", default="default", help="目标工程名")
-    ap.add_argument("--output-dir", default=str(Path(__file__).resolve().parent.parent / "tmp"), help="输出目录")
+    ap.add_argument(
+        "--output-dir", default="tmp",
+        help="输出目录（相对工作区 cwd，禁止逃逸；默认 ./tmp）",
+    )
     args = ap.parse_args()
 
-    out_dir = Path(args.output_dir)
+    args.project = _sanitize_project(args.project)
+    out_dir = _resolve_within_workspace(args.output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
     sys.stderr.write("[tool-probe-sim] 开始模拟调用内置工具与插件...\n")
