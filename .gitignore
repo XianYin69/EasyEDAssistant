@@ -1,0 +1,13 @@
+# Kilocode 环境注入文件（不入库）
+.kilo/
+.Kilocode/
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+# easyeda 临时产物
+.easyeda/
+# 通用
+*.log
+.DS_Store
+Thumbs.db

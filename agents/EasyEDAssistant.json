@@ -1,0 +1,18 @@
+{
+  "_doc": "This JSON manifest is superseded by agents/EasyEDAssistant.yaml (the Kilocode-native agent definition with the interface: schema). The .yaml file is the authoritative Kilocode agent entry; this file is kept only for discoverability by JSON tooling. Kilocode does not load .json files from agents/ — use the .yaml.",
+  "interface": {
+    "name": "EasyEDAssistant",
+    "display_name": "EasyEDAssistant",
+    "short_description": "基于 JLCEDA MCP VS Code 插件桥接操作嘉立创 EasyEDA 的电路设计智能体：原理图/PCB/射频/模拟/数字/滤波器/电源设计与检查。",
+    "default_prompt": "使用 EasyEDAssistant skill 设计或安全重构 EasyEDA 原理图/PCB：先跑版本门禁（easyeda update --check --exit-code）；写前读新鲜快照；保留拓扑与 NC 意图；按 P0–P7 优先级与子域判据执行；严格验证（sch gate --strict / pcb drc + check / export-image）后才显式保存并确认 saved:true；报告如实列出未验证项与 blocked/fail，不把聚合数当全部通过。完整提示词见 AGENT-PROMPT.md。",
+    "license": "MIT",
+    "metadata": {
+      "author": "EasyEDAssistant",
+      "version": "0.5.0",
+      "homepage": "https://github.com/EasyEDAssistant/easyeda-agent",
+      "prompt_file": "AGENT-PROMPT.md",
+      "skill": "EasyEDAssistant",
+      "canonical_agent_file": "agents/EasyEDAssistant.yaml"
+    }
+  }
+}

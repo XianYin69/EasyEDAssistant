@@ -5,7 +5,7 @@ license: MIT
 compatibility: "Requires JLCEDA MCP VS Code plugin running locally (ws://127.0.0.1:8765/bridge/ws + http://127.0.0.1:7655/mcp). Fallback: easyeda CLI/daemon/Agent Connector. Offline design planning needs no editor."
 metadata:
   author: EasyEDAssistant
-  version: "0.3.1"
+  version: "0.7.0"
 ---
 
 # EasyEDAssistant 设计 Skill
@@ -15,6 +15,87 @@ PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造
 知识基线见同仓 `Sample/easyeda-agent-skill-behavior.md`（24–25 节为移植版专属判据）。
 本 skill 是移植版行为规范；API 操作与数值判据以 `Sample/easyeda-agent/references`
 与 `Sample/easyeda-agent/scripts` 为真值来源，冲突时以 daemon 规则代码为准。
+
+## 嘉立创EDA 官方文档（参考）
+
+嘉立创EDA专业版（EasyEDA Pro）官方文档是本 skill 的基础参考。以下文档
+与本 skill 最相关（中文，由嘉立创科技集团股份有限公司所有）：
+
+| 主题 | 文档标题 | 链接 | 相关性 |
+|---|---|---|---|
+| 快速入门 | 嘉立创EDA专业版快速入门 | [链接](https://prodocs.easyeda.com/cn/quick-start.html) | 必读；工程创建、界面介绍 |
+| 原理图设计 | 原理图设计 | [链接](https://prodocs.easyeda.com/cn/private/designer/design-schematic.html) | **核心参考**；放置器件、电气连接、更新到PCB |
+| PCB 设计 | PCB 设计 | [链接](https://prodocs.easyeda.com/cn/private/designer/design-pcb.html) | **核心参考**；网格设置、图层、布线、DRC |
+| 仿真 | 仿真介绍 | [链接](https://prodocs.easyeda.com/cn/simulation/introduction) | 辅助参考；Simulide/NGSpice 引擎 |
+| 文件生成 | 文件生成与导出 | [链接](https://prodocs.easyeda.com/cn/file-generation) | 辅助参考；BOM、Gerber、PDF导出 |
+| 扩展 API | 嘉立创EDA专业版扩展 API | [链接](https://prodocs.easyeda.com/cn/api/reference) | 扩展开发参考 |
+
+**注意**：
+- 本 skill 的 MCP API (`eda.*`) 与 CLI (`easyeda <domain> <command>`)
+  都是基于上述官方文档设计的程序化接口。
+- 官方文档描述的是 GUI 操作流程；本 skill 提供的程序化路径（`sch connect`
+  / `sch apply` / `pcb route-short` / `pcb drc` 等）是对等价操作的映射，
+  不一定与 GUI 菜单顺序完全一致。
+- 官方文档与本 skill 冲突时，以 daemon 规则代码（`pcb_rules.go` 等）为
+  真值来源。
+
+## 官方手册指令映射（GUI 菜单 ↔ 本 skill CLI）
+
+嘉立创 EDA 官方手册的"指令"部分即 GUI 菜单栏（放置/设计/布线/布局/工具/导出）
+的逐条说明。本节把官方菜单指令映射到本 skill 的程序化等价命令，并给出各
+菜单页的官方文档链接（`https://prodocs.easyeda.com` + 下表路径）。
+GUI 快捷键：[快捷键](https://prodocs.easyeda.com/cn/introduction/hotkeys/)；
+设计流程：[设计流程](https://prodocs.easyeda.com/cn/introduction/design-flow/)。
+
+### 原理图（Schematic）指令
+
+官方路径前缀：`/cn/schematic/`。下表"官方手册指令"为 GUI 菜单项，
+"本 skill 命令"为程序化等价（参数真值见 §5）。
+
+| 官方手册指令 | 官方文档 | 本 skill 程序化等价 |
+|---|---|---|
+| 放置 - 器件 | [place-device](https://prodocs.easyeda.com/cn/schematic/place-device/) | `sch compose` / `sch materialize`（Lib 放置） |
+| 放置 - 导线 | [place-wire](https://prodocs.easyeda.com/cn/schematic/place-wire/) | `sch autoconnect`（pin-aware）/ `sch connect`（不幂等） |
+| 放置 - 网络标签 | [place-net-label](https://prodocs.easyeda.com/cn/schematic/place-net-label/) | `sch autoconnect --kind power/ground` 生成 netflag/netlabel |
+| 放置 - 网络端口 | [place-net-port](https://prodocs.easyeda.com/cn/schematic/place-net-port/) | `sch autoconnect` 委托 connect_pin（netport 边界） |
+| 放置 - 非连接标识 | [place-no-connect](https://prodocs.easyeda.com/cn/schematic/place-no-connect/) | `pin.noConnected:true`（保留物理引脚，不删脚） |
+| 设计 - 更新/转换原理图到 PCB | [design-update-convert-schematic-to-pcb](https://prodocs.easyeda.com/cn/schematic/design-update-convert-schematic-to-pcb/) | `pcb import-changes`（自动点"应用修改"对话框） |
+| 设计 - 检查 DRC | [design-check-drc](https://prodocs.easyeda.com/cn/schematic/design-check-drc/) | `sch gate --strict --doc <page>`（layout-lint→check→bridge-check→SDK DRC） |
+| 设计 - 分配位号 | [design-annotate-designator](https://prodocs.easyeda.com/cn/schematic/design-annotate-designator/) | `sch designators allocate` → `plan` → `verify` |
+| 布局 - 对齐 | [layout-align](https://prodocs.easyeda.com/cn/schematic/layout-align/) | `sch lib-layout`（Lib 内部位置）/ `sch compose`（模块 Z 字排版） |
+| 导出 - 导出 BOM | [export-bill-of-materials-bom](https://prodocs.easyeda.com/cn/schematic/export-bill-of-materials-bom/) | `bom-enrich.py`（补 LCSC C 号） |
+| 导出 - 导出网表 | [export-netlist](https://prodocs.easyeda.com/cn/schematic/export-netlist/) | `sch_ManufactureData.getNetlistFile()`（不用已废弃 `sch_Netlist.getNetlist()`） |
+
+### PCB（PCB）指令
+
+官方路径前缀：`/cn/pcb/`。
+
+| 官方手册指令 | 官方文档 | 本 skill 程序化等价 |
+|---|---|---|
+| 放置 - 过孔 | [place-via](https://prodocs.easyeda.com/cn/pcb/place-via/) | `pcb.via.create`（默认 12/24 mil）/ `pcb via-hop`（复合换层） |
+| 放置 - 铺铜区域 | [place-copper-region](https://prodocs.easyeda.com/cn/pcb/place-copper-region/) | `pcb.pour.create`（net 必绑）/ `pcb power-pour` / `pcb power-planes` |
+| 放置 - 禁止区域 | [place-prohibited-region](https://prodocs.easyeda.com/cn/pcb/place-prohibited-region/) | `pcb region create --ref … --margin … --rule no-pours`（天线全层 keepout） |
+| 布线 - 单路布线 | [route-single-routing](https://prodocs.easyeda.com/cn/pcb/route-single-routing/) | `pcb.route-short`（启发式）/ 坐标 `pcb.line.create` |
+| 布线 - 差分对布线 | [route-differential-pair-routing](https://prodocs.easyeda.com/cn/pcb/route-differential-pair-routing/) | `pcb diff-pair` 约束 + 布线后 `pcb report` 量 skew |
+| 布线 - 自动布线 | [route-auto-routing](https://prodocs.easyeda.com/cn/pcb/route-auto-routing/) | `pcb export-dsn`（含 keepout）→ Freerouting 兜底（§9 限制：无 `eda.*` 自动布线 API） |
+| 设计 - 从原理图导入变更 | [design-import-changes-from-schematic](https://prodocs.easyeda.com/cn/pcb/design-import-changes-from-schematic/) | `pcb import-changes`（报 before/after 计数差） |
+| 设计 - 检查 DRC | [design-check-drc](https://prodocs.easyeda.com/cn/pcb/design-check-drc/) | `pcb drc --json` + `pcb check`（DFM 审计） |
+| 设计 - 网络类管理器 | [design-net-class-manager](https://prodocs.easyeda.com/cn/pcb/design-net-class-manager/) | `pcb net-classes`（net-class → 线宽阶梯，角色分档） |
+| 设计 - 差分对管理器 | [design-differential-pair-manager](https://prodocs.easyeda.com/cn/pcb/design-differential-pair-manager/) | `pcb diff-pair` 约束 |
+| 设计 - 等长网络组管理器 | [design-equal-length-group-manager](https://prodocs.easyeda.com/cn/pcb/design-equal-length-group-manager/) | `pcb eq-group` 约束 + 布线后 spread 校验 |
+| 工具 - 铺铜管理器 | [tools-copper-manager](https://prodocs.easyeda.com/cn/pcb/tools-copper-manager/) | `pcb pour-clean --netless` / `pcb pour-rebuild`（stale 铺铜重流） |
+| 工具 - 泪滴 | [tools-teardrop](https://prodocs.easyeda.com/cn/pcb/tools-teardrop/) | 无 `eda.*` API——制造前 UI 右键手动加（§9 已知限制） |
+| 导出 - PCB 制板文件 Gerber | [export-pcb-fabrication-file-gerber](https://prodocs.easyeda.com/cn/pcb/export-pcb-fabrication-file-gerber/) | 制造文件导出（Gerber） |
+| 导出 - 坐标文件 | [export-pick-and-place-file](https://prodocs.easyeda.com/cn/pcb/export-pick-and-place-file/) | 贴装坐标文件导出 |
+
+**映射原则**：
+- 官方菜单是**人机交互入口**；本 skill 命令是同一套 `eda.*` API 的
+  程序化映射。GUI 操作与程序化操作产生等价图元，但本 skill 额外做
+  dry-run/回读/`saved:true` 验证（GUI 路径没有这些门控）。
+- 官方文档的快捷键（如 放置-导线 `Alt+W`）在 GUI 有效；本 skill 走
+  MCP/CLI，不依赖键盘快捷键。
+- 数值判据（线宽/间距/keepout 半径）以 daemon 规则代码为真值，
+  官方菜单仅描述"在哪设"，不定义数值。
 
 ---
 
@@ -41,15 +122,20 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 }
 ```
 
-行为约束：
+**链路选择策略**（单链路直用，不重试）：
+- MCP 与 CLI/daemon 两条链路是**替代关系**，不是级联备用。
+- 开始工作前按以下优先级检测：
+  1. 先尝试 `7655` 端点（MCP HTTP）；连通则全程使用 MCP。
+  2. 若 MCP 不可用，再尝试 `60832` 端口（daemon）；连通则全程使用 CLI/daemon。
+- **一旦检测到可用链路就使用该链路**，不重试另一条链路，不做"莫名奇妙的检测"。
+- 两条端口属于同一插件，插件未启动时 `7655`/`8765` 两条端点均不可用，
+  按 §1.3 恢复流程处理。
 
-- 端点不可用（插件未启动）时回退原有 `easyeda daemon`（`60832` 端口）链路，
-  不静默降级；保留 `health` / journal 证据。
+行为约束（MCP 使用时）：
+
 - MCP 工具与 typed action 语义一致：同一套 `eda.*` API 映射、dry-run/回读/
   `saved:true` 纪律、破坏性操作确认门控；MCP 只是另一入口，不豁免任何验证。
 - 审计继续写本地 `~/.easyeda-agent/audit`，MCP 调用同样记录。
-- 端口分工：`7655` 与 `8765` 属于同一插件的两个端口；插件未启动时两条端点
-  均不可用，按 §1.3 恢复流程处理。
 
 ### 1.2 原有链路（兼容，不得移除）
 
@@ -57,7 +143,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 - **版本门禁（会话第一条命令）**：`easyeda update --check --exit-code`，先于任何
   项目读取、离线规划、`health` 和 EDA 操作。CLI/Skill/daemon 必须精确等于 GitHub
   latest，Connector 与 latest 共享 `major.minor` 兼容线才返回 0；仅 patch 差异通过。
-  门禁非 0 时停止任务按 `environment-setup.md` 升级；**升级/替换组件后本会话不得
+  门禁非 0 时停止任务按 `Sample/easyeda-agent/references/environment-setup.md` 升级；**升级/替换组件后本会话不得
   继续，必须新开会话从第一条命令重新开始**。不得用 `--version`、`--preserve`、
   `--skip-version-check` 或仅看 `health` 绕过门禁。
 - **`doc reload` 门（铁律）**：PCB mutation（rip-up/route/delete/via/track/pour）
@@ -66,6 +152,8 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
   stale"的修法。绕过开关是 `--force-stale-read "<理由>"`（入审计，不是 `--force`）。
 - 写操作使用 `--project` 和 `--doc`，由 CLI 在派发前实时确认目标文档；
   `windowId` 随重连变化，不作为持久身份，优先用项目/文档 UUID 路由。
+- **链路选择策略**：与 MCP 相同——先检测 `60832` 端口（daemon）；连通则全程
+  使用 CLI/daemon；不重试 MCP。MCP 与 CLI/daemon 是替代关系，非级联备用。
 
 ### 1.3 连接异常恢复
 
@@ -82,6 +170,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 
 0. **先澄清需求与目标，再动手**（§11 详述）：用户任务含糊时先补齐
    目标、边界与验收标准；已有的确认与授权沿用，不重复索取。
+   执行中遇强制/条件中断点按 §11.5 暂停等待用户确认。
 1. 确认插件状态：`8765` / `7655` 端点可达；不可达走原 daemon 链路。
 2. 读目标工程基线：
 
@@ -101,6 +190,13 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 4. 按任务选子域判据（第 4 节），只加载相关参考；以 `easyeda <domain> <command>
    --help` 与 `easyeda actions` 为参数真值。
 5. 临时 JSON、计划与回读结果放入项目已忽略的临时目录；保留原始快照，在副本中设计。
+ 6. **基线截图**：读取工程基线（原理图 PDF 导图或 PCB 视口快照），确认当前状态为清晰的"起始状态"；
+    保存截图到 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/baseline/`（自动按时间戳命名）；这条截图作为后续差异对比的参考。
+ 7. **动态截图管理**：
+     - 每完成关键步骤后立即截一张图（原理图用 `sch export-image`，PCB 用 `pcb snapshot --previous-sha256`）；
+     - 识别截图状态：用 SHA256 校验与上次截图比对，标记是否 stale（canvas-freeze）；
+     - 动态清理：每次新截之前，删除 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/` 中的旧截图（保留最近 3 张关键快照作为回溯依据）；
+     - 截图保存到 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/step-<索引>-<时间戳>.png`，便于后续复盘与 visual-qa.py 调用。
 
 ---
 
@@ -130,7 +226,8 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 
 > 数值判据为方向性规则；落地前以数据手册与实测为准。
 > 判据索引：P0–P7 优先级总则裁决冲突；硬门（layout-lint gate / DRC /
-> antenna-keepout）不可放宽，`--force-unsafe` 不是恢复步骤。
+> antenna-keepout）不可放宽，`--force-unsafe`（有审计的越门选项，见
+> `Sample/easyeda-agent/references/design-flow.md`）不是恢复步骤。
 
 ### 4.1 优先级总则（PCB 冲突裁决）
 
@@ -177,6 +274,8 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 
 **PCB 放置**：
 
+- 放置前先生成**布局蓝图**（§7.4，Markdown + 字符画板框）：把模块/组件/
+  部件及其连接可视化，经 P3 板框中断点（§11.5）拍板后再四档放置。
 - 四档顺序：T1 安装孔 → T2 板边接口（USB/电源/天线，开口朝外）→ T3 主芯片 →
   T4 卫星/配套器件。用 `pcb stage confirm-tier <1|2|3|4>` 记录，`confirm-layout`
   签核布局。
@@ -378,6 +477,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 | 位号修复 | `sch designators allocate` → `plan` → `verify` → `sch apply` | 按官方库前缀分配；只改非标准项，跳过已占用编号 |
 | 框与标题 | `sch frame apply/check --from frames.json` | 只操作自己登记的图元；check 按实际文本 bbox 验证 |
 | 执行队列 | `sch apply <plan.json> [--dry-run \| --yes]` | 保护队列禁止 `--resume/--from/--to` 跳步；失败重新回读生成 |
+| **动态截图** | 每步 `apply` 后立即 `sch export-image`（原理图）或 `pcb snapshot`（PCB） | 保存至 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/`；SHA256 校验与上帧比对；每 3 步自动清理旧截图 |
 
 Apply 队列（playbook）契约：`version:1` + `meta` + 有序 `steps`；每步
 `action+payload`（typed）或 `run+flags`（Cobra）或 `notify`；`capture` 捕获
@@ -410,6 +510,7 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 - `sch connect` 不幂等，重发可能叠加导线和标记；`sch disconnect` 检查
   `alsoDisconnectedPins[]`，逐个恢复；`partial`/`survivedIds`/`notApplied`
   表示删除未完全生效。
+- **批次截图**：`--spec` 批量连接完成后，立即 `sch export-image` 保存当前页面，验证 netflag/netport 位置与连线完整性。
 
 ### 5.3 PCB 基础上下文
 
@@ -449,6 +550,8 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 
 - `pcb import-changes` 从原理图同步器件/网表（自动点"应用修改"对话框，报
   before/after 计数差；`InvalidatesStage:placement_confirmed`，别为刷飞线跑它）。
+- **同步截图**：`import-changes` 成功后立即 `pcb snapshot`，可视化飞线差异，作为
+  P1 中断点（§11.5）的视觉证据。
 - `pcb sync-designators`：按 `uniqueId`（平台首次导入铸造，跨文档同一命名空间）
   回填占位位号 `U?/C?`，只动占位符，每笔回读验证。
 - `pcb sync-attrs`：器件库记录回填 PCB 属性空值（平台投影键绝不参与 merge）。
@@ -488,6 +591,9 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
   （list/drc/check）是权威，截图只做视觉终检。
 - 保存：通过阶段验证后显式 `sch save` / `pcb save` 并确认 `saved:true`；
   daemon 防抖 autosave 只是兜底。
+- 视觉质量聚合：`scripts/visual-qa.py`（§8.3）聚合截图 + 上述数据源
+  做三关注域（组件间距/走线间距/整齐度）交叉评估，是"呈现层"自动化，
+  不替代数据层硬门。
 
 ---
 
@@ -552,6 +658,75 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
   `passed` 且有证据才能设 `production_ready:true`；草稿可贡献但不能声称
   生产验证。
 
+### 7.4 生成 PCB 布局蓝图（Markdown + 字符画边框）
+
+> 在**物理放置/绘制 PCB 之前**，先生成一份 Markdown 布局蓝图，用模块、组件、
+> 部件及它们之间的连接把整板布局可视化；板框外形用**字符画（ASCII 边框）**
+> 表达。蓝图是规划/评审工件（pre-placement planning artifact），不直接产生
+> EDA 图元；须经 P3 中断点（§11.5）用户确认，再驱动 `pcb import-changes`
+> 与四档放置（§4.2、§5.5、§5.7）。
+
+**何时生成**：
+- 新设计需求→整板：P2（放置）之前生成，作为 P3 板框签核的评审材料。
+- 改版/复用布局：重新生成做 before/after 对照（`sch design-diff` 同源）。
+- 蓝图是"会改变做法"的选项载体（§6、§11.2）；已在 P3 板框/分区处摊给用户
+  拍板，不重复索取许可（§11.4）。
+
+**文件契约**（`<工程>-pcb-layout.md`）：
+1. **板框字符画**：用 box-drawing 字符画出板框外形与圆角，标注长宽（mm）、
+   安装孔、板边接口开口方向。字符约定：
+   - 外框：`╭╮╯╰ ├ ─`（Unicode box）或纯 ASCII `+ - |`；四角圆角用 `╭╮╰╯`。
+   - 模块分区：`[模块名]` 或 `+------+` 小框；keepout 区斜线阴影 `////`。
+   - 器件：`ref` 缩略（`U1`/`J1`/`C1..C8`/`ANT1`）。
+   - 比例尺：声明 1 字符 ≈ N mm（横/纵可不同，按板框长宽取整）。
+2. **模块清单**：按 §4.2 九宫格分区（电源左列 / MCU 中列 / RF·IO 右列）
+   列出每个功能 Lib 的 bbox、贴边（10 mil）、标题净距。
+3. **组件/部件清单**：四档 T1（安装孔）→ T2（板边接口）→ T3（主芯片）→
+   T4（卫星件）；每件含 `ref`/`role`/layer(TOP·BOTTOM)/朝向/间距约束（§4.2）。
+4. **连接关系**：模块间 / 跨模块 netport 的边集合（net 名 + 起讫器件 +
+   线宽档位 + 是否差分/等长/RF）；差分/等长/隔离网成对成组命名（§4.5）。
+5. **决策头**：§6 已拍板的 S0 决策（叠层/地域/单双面/焊接工艺）+ 未决项
+   （交 §11.5 中断点）。
+
+**字符画示例**（示意；比例尺 1 字符 ≈ 1 mm，板框 40×30 mm）：
+
+```text
+╭────────────────────────────────────────╮
+│ ┌──────┐   ┌─────────────┐  ┌──────┐ │  顶边 J1(USB) 开口朝上
+│ │ PWR  │   │    MCU      │  │ RF   │ │
+│ │ U1L1 │   │ U1 Y1 X1 X2 │  │ ANT1 │ │
+│ │ C1.. │   │  (ESP32)    │  │ L2C5 │ │
+│ └──────┘   └─────────────┘  └─////─┘ │  RF 全层 keepout(////)
+│ [电源]    [数字/控制]   [射频]        │
+│ ┌──────┐   ┌─────────────┐  ┌──────┐ │  底边 J2 开口朝下
+│ │ J1   │   │ 接口/IO TP  │  │ J2   │ │
+│ └──────┘   └─────────────┘  └──────┘ │
+╰────────────────────────────────────────╯
+  40 mm · 安装孔(四角) · 1 字符≈1 mm
+```
+
+**生成数据来源**（先读后画，不盲写）：
+- `sch connectivity --all-pages`（§5.1）→ 模块/组件/连接真值。
+- `pcb list --include-bbox` + `pcb sheet-geometry` → 板框尺寸与分区几何。
+- `sch design-diff` / `sch connectivity-diff` → 新旧蓝图 before/after 对照。
+- 比例尺/贴边取 §4.2 固定值（贴边 10 mil、标题净距 5 raw）；缺实测
+  `sheetBorder` 时注明边界回退（§4.2、§5.1 `sch sheet-geometry`）。
+
+**约束与边界**：
+- 蓝图是**规划层**工件（§8.1 验证分层中不属任何硬门）；生成后**不直接**
+  驱动写图元——物理放置仍走 `pcb import-changes` + 四档放置 +
+  `layout-lint --gate`（§4.2、§5.5、§5.7）。
+- 字符画是**示意**；坐标精确值以 `pcb list --include-bbox` 的 `center`
+  为准（§3 锚点 vs bbox 中心），字符画不替代 `layout-score`/`pcb check`。
+- 连接关系须与 `sch connectivity` pin→net 对账一致；不凭空补连接
+  （§4.2 短桩、§4.10 不靠截图推断）。
+- 已有蓝图文件追加/更新章节，不全量重写；破坏性改写须用户确认
+  （同 §7.2 README 纪律）。提交信息注明 `generate-pcb-layout`。
+
+**与 §11.5 中断点的关系**：蓝图生成完即触发 **P3（板框与安装孔方案）
+强制中断点**——把字符画板框 + 分区 + 关键连接摊给用户拍板（单双面/
+手焊回流/板框尺寸）；用户批准蓝图后才执行 P2–P10 物理放置。
+
 ---
 
 ## 8. 验证与交付
@@ -573,9 +748,72 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 
 ### 8.2 交付报告
 
-说明：修改范围、源数据与实际图面差异、各验证层结果、已保存页面、
+说明修改范围、源数据与实际图面差异、各验证层结果、已保存页面、
 尚未解决的问题与未运行检查。保留输入、生成队列、回读与验证报告；
 局部完成不称整板通过。
+
+### 8.3 视觉质量与布局完整性自动评估（`scripts/visual-qa.py`）
+
+> 用 API 截图 + 数据驱动检查**交叉**评估视觉质量，聚焦组件间距、
+> 走线间距、整体整齐度。是 §8.1 "呈现层"的自动化实现，但**不替代**
+> 数据层（拓扑/几何/电气/保存）。
+
+**设计原则**（与 §5.7 / §8.1 一致）：
+
+- 呈现层不可互替，但**数据校验是权威**——截图只做视觉终检。
+  截图与数据不一致时以数据为准，但必须把"图面 stale"标为阻断项。
+- PCB `snapshot` 可能 stale：用 `--previous-sha256` 检测同帧；
+  `sch export-image` 是文档渲染（不依赖视口刷新），无需 sha 检测。
+- `layout-score` 九维是诊断**不是硬门**；skipped/degraded 维不参与
+  加权（"没测 ≠ 满分"）；短路/重叠/出框进 `blocking[]` 一票否决。
+
+**三关注域 → 数据真值映射**：
+
+| 关注域 | layout-score 维度 | pcb check 规则 | drc 规则 |
+|---|---|---|---|
+| 组件间距 component_spacing | compact, clearance | solder-access（gate） | clearance |
+| 走线间距 trace_clearance | routable, clearance | acute-angle, dangling-end | clearance, trackWidth |
+| 整体整齐度 layout_neatness | tidy, partition, flow-order | rotation-inconsistent（子规则） | — |
+
+**用法**：
+
+```bash
+# PCB + 原理图双评估（需活体窗口或 daemon）
+python3 scripts/visual-qa.py --project <name> --doc <page-uuid> --both
+
+# 仅 PCB，strict（WARN 也判阻塞）
+python3 scripts/visual-qa.py --project <name> --pcb --strict
+
+# 跳过截图采集（只用已有数据打分；不触发 canvas-freeze）
+python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
+```
+
+**输出**：JSON（stdout）+ 人读摘要（stderr）。退出码：
+`0`=全通过（含截图非 stale）；`2`=有 WARN（低分维/带痕/stale 但数据通过）；
+`3`=blocking（短路/重叠/出框/间距硬违规/stale 且数据也不全）。
+
+**评估流程**（三层）：
+1. **硬门**：`layout-score.blocking[]` 一票否决（短路/重叠/出框）。
+2. **关注域**：逐域聚合维度状态（skipped/degraded/low-score<0.6）+
+   DRC/check findings → pass/warn/fail。
+3. **截图一致性**：stale/missing → 至少 warn（strict 且数据不全 → fail）。
+
+**边界**：
+- 该脚本**不替代** `sch gate --strict` / `pcb drc` / `pcb check`——
+  它是这些数据源的聚合器 + 截图终检，不是新的硬门。
+- 截图采集前的 `view fit` + 1.5s 等待是 canvas-freeze 缓解（§5.7），
+  不是保证；stale 检测是最终防线。
+- `--no-snapshot` 模式下只跑数据评估，不触发截图采集——适合
+  CI/批量回归或已知截图 fresh 的场景。
+
+**动态截图生命周期**（v0.7.0）：
+- **保存策略**：截图保存在 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/step-<index>-<timestamp>.png`，
+  基线图保存在 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/baseline/`；两目录皆在 `.gitignore` 中排除。
+- **清理策略**：每次新截图生成前，自动删除 snapshots 目录中最旧的截图
+  （保留最近 3 张关键快照作为回溯）；基线截图在会话结束后清理。
+- **状态识别**：`visual-qa.py` 用 `--previous-sha256` 检测同帧，stale 标记
+  视为 "canvas-freeze"，触发 `easyeda view --fit` + 重取。脚本自动维护
+  `prev_sha` 闭环（上次报告 JSON → 下次 stale 检测）。
 
 ---
 
@@ -614,12 +852,14 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 8. 显式 save 并确认 `saved:true`；autosave 只是兜底。
 9. MCP 与 CLI 双链路语义一致；MCP 不豁免任何验证、不改变授权范围。
 10. 报告覆盖未验证项；不把 canonical 一致当作实际图面已同步。
+11. 强制/条件中断点（§11.5）命中时暂停等待用户确认，不自动推进；
+    超时/无答复保持暂停态，不猜默认值落笔。
 
 ---
 
 ## 11. 用户需求澄清与目标明确（动手前）
 
-> 原则（与 `design-flow.md` S0 一致）：**缺信息会改变设计、或超出已有授权时
+> 原则（与 `Sample/easyeda-agent/references/design-flow.md` S0 一致）：**缺信息会改变设计、或超出已有授权时
 > 才问**；已有确认的需求与授权沿用，不因流程表重复索取许可；用户要求逐步
 > 确认时遵守其节奏。问的是"会改变做法的选项"，不是"流程打卡"。
 
@@ -663,6 +903,90 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 - 阻塞项与未运行检查如实列出（`blocked` ≠ `fail`，未评估 WARN 不能记通过）。
 - 授权边界：`--yes` 只放行已授权范围；保护队列失败后重新生成，
   不用 `--resume/--from/--to` 扩大或跳步。
+
+### 11.5 中断机制（执行中暂停与用户确认）
+
+> §11.1–11.4 管"动手前"的澄清；本节管**执行中**的暂停。核心判据：
+> **用户的选择会不会改变实际做法、或超出已有授权范围**——会才中断，
+> 不会就不中断。已有确认与授权沿用，不因流程节点重复索取许可。
+> 用户要求逐步确认时遵守其节奏（§11 原则）。
+
+**两类中断点**：
+
+| 类型 | 触发条件 | 行为 | 示例 |
+|---|---|---|---|
+| **强制中断（mandatory checkpoint）** | 该阶段决策不可单方面定，或后果不可逆 | 必须暂停，等用户明确答复后才继续 | S0 决策点（叠层/接地/USB 架构）；`compose --replace` 清页重建；破坏性 `pcb clear` |
+| **条件中断（conditional checkpoint）** | 信息缺失会改变设计，或超出已授权范围 | 只在条件命中时中断；信息齐备或已授权则静默通过 | 选型缺数据手册参数；PCB 装配工艺未定；门禁 `blocked`（修环境需用户介入） |
+
+**不中断的情况**（避免流程打卡）：
+- 已确认的需求与授权（§11.3 目标不变量已锁定）。
+- 有唯一正确答案的 guardrail（save 纪律、mutation 后 reload、PLANE 顺序、
+  天线 keepout 全层）——这些是硬门，不需要用户拍板。
+- 已授权范围内的增量执行（如已授权清页重建后逐模块 compose）。
+- 纯读取与验证（connectivity / list / drc / export-image）。
+
+**中断点触发协议**（统一格式）：
+
+```
+[CHECKPOINT <阶段> | <类型>]
+快照：<截图文件路径 C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/step-N-*.png> + <状态 fresh/stale>
+背景：<当前状态与为什么要问，≤3 句，含证据（回读数据/DRC/快照）>
+决策点：<要用户拍什么，列出选项与推荐默认>
+  - 选项 A：<描述> → 后果：<对后续流程的影响>
+  - 选项 B：<描述> → 后果：…
+  ⚠ 推荐：<默认>（理由：…）
+影响范围：<本次只动哪些模块/页面/网络；不动的部分列回归对照>
+等待：用户回复 A/B 或自定；超时/无答复不自动推进，保持暂停态
+```
+
+**用户响应处理**：
+
+| 用户回复 | 后续行为 |
+|---|---|
+| 选择某选项 | 记入授权（`confirmed_decisions[]`），沿用到后续阶段，不重复问 |
+| 补充新信息 | 更新目标不变量（§11.3），重评估是否影响已执行步骤 |
+| 要求中止 | 停止当前操作；已执行的写操作不回滚（无 undo），报告当前状态 + 已落盘步骤 |
+| 超时/无答复 | **保持暂停态，不自动推进**；不猜默认值落笔（推荐默认仅供用户参考，不代表自动执行） |
+
+**强制中断点清单**（S0–S6 / P0–P10 关键阶段）：
+
+| 阶段 | 中断点 | 类型 | 触发条件 |
+|---|---|---|---|
+| S0 | 设计决策目录（§6）摊牌 | 强制 | 新设计必须先拍叠层/接地/USB/选型档位等 |
+| S1 | 工程基线与纸张边界确认 | 条件 | 多页工程归属未定，或纸张 keep-out 推导有歧义 |
+| S2 | 位号修复范围 | 条件 | `sch designators allocate` 要改的位号超出"非标准项"（如用户已有自定义位号） |
+| S3 | Lib 几何与模块拆分 | 强制 | `compose` 前用户需确认模块划分与页数（功能拆页是设计决策） |
+| S4 | `compose --replace` 清页 | 强制 | 清目标页是破坏性，须用户已授权重建范围 |
+| S5 | 回读差异超出预期 | 条件 | `sch design-diff` 出现 `coverage.unverified` 或非预期 pin→net 差异 |
+| P1 | PCB import-changes | 条件 | 原理图与 PCB 差异超出预期（器件数/网数变化大） |
+| P3 | 板框与安装孔方案 | 强制 | 有机械约束时须用户确认 outline；无约束时按"无尺寸路径"但须告知板框尺寸 |
+| P6 | 布线前门未通过 | 条件 | `layout-lint --gate` = `blocked`（需用户介入修环境）或 `fail`（需用户决定改布局还是放宽） |
+| P8 | 电源铺铜策略 | 条件 | 多电源域（≥2 地网络）的铺铜/割地方案是 §6 决策点 |
+| P10 | 终检 WARN 清单 | 条件 | DRC 有非 fatal WARN，须用户决定接受还是修复 |
+| 交付 | 文档任务 | 条件 | 生成 LICENSE/README 须用户确认版权主体；README 内容须用户确认阶段门状态 |
+
+**中断点与验证门禁的关系**：
+- `blocked`（检查没运行/环境问题）→ 条件中断：需用户介入修环境，不自动跳过。
+- `fail`（设计不合格）→ 条件中断：用户决定改设计还是放宽（放宽须授权，
+  且 `--force-unsafe` 不是恢复步骤，见 §4 开头 guardrail 与上游
+  `Sample/easyeda-agent/references/design-flow.md`）。
+- `pass` → 不中断，静默进入下一阶段。
+- 截图 stale + 数据通过 → 不中断（数据是权威），但报告中标注 stale。
+
+**超时与恢复**：
+- 中断点等待用户回复期间，不执行任何写操作；可在后台继续纯读取（如
+  刷新快照检测 stale），但不推进流程。
+- 用户长时间无回复时，在报告中标记 `checkpoint_pending: <阶段>`，
+  会话可在后续恢复（用户回复后从该中断点继续，不从头重跑已通过的阶段）。
+- 恢复时先回读当前状态确认中断前的写操作已落盘（§10 纪律 2），
+  再从该点继续。
+
+**中断期间发现新问题的处理**：
+- 中断等待期间纯读取发现新问题（如 S3 等待时回读发现 S2 数据不一致）：
+  不静默处理，将新问题追加到当前 CHECKPOINT 的"背景"段，升级为复合
+  中断点，等用户一次性答复所有未决项；不因新问题取消原中断点。
+- 中断期间活体断连：按 §1.3 恢复流程处理；恢复后重读确认中断前写操作
+  落盘，再继续等用户答复；不重发写操作。
 
 ---
 
@@ -729,13 +1053,53 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 
 ## 13. 变更摘要
 
-### 13.1 v0.3.1（2026-09-12）
+### 13.1 v0.7.0（2026-09-14）
+
+- 新增 **§2 动态截图管理**（§2.7、§2.8）：每关键步骤后自动截图（原理图 `sch export-image` / PCB `pcb snapshot`），SHA256 校验识别 stale 状态，动态清理旧截图（保留最近 3 张关键快照），截图路径 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/step-<index>-<timestamp>.png`。
+- **§5.1 执行队列**新增"动态截图"操作：每步 `apply` 后立即截图保存至 snapshots 目录。
+- **§5.2 批量连接**新增截图验证：`--spec` 批量 `sch autoconnect` 完成后立即 `sch export-image` 验证 netflag/netport 位置。
+- **§5.5 原理图↔PCB 同步**新增同步截图：`import-changes` 后立即 `pcb snapshot` 可视化飞线差异，作为 P1 中断点视觉证据。
+- **§8.3 视觉质量评估**新增"动态截图生命周期"三段：保存策略（step/baseline 双目录）、清理策略（保留 3 张）、状态识别（SHA256 stale 闭环）。
+- **§11.5 中断协议**新增 `快照` 字段：CHECKPOINT 输出当前截图路径与 fresh/stale 状态。
+
+### 13.2 v0.6.0（2026-09-13）
+
+- 新增 **§7.4 生成 PCB 布局蓝图（Markdown + 字符画边框）**：在物理放置/
+  绘制 PCB 之前先生成一份 Markdown 蓝图，用模块/组件/部件及元素间连接
+  可视化整板布局，板框外形用字符画（box-drawing ASCII）表达；文件含板框
+  字符画、模块/组件/部件清单、连接关系、决策头；先读后画（`sch
+  connectivity` / `pcb list --include-bbox` / `sch sheet-geometry`），
+  经 P3 中断点（§11.5）拍板后再驱动 `import-changes` 与四档放置。
+  蓝图属规划层工件，不替代 `layout-lint`/`pcb drc` 几何电气门禁。
+- §4.2 PCB 放置新增"放置前先生成布局蓝图"前置步骤；§13 变更摘要新增
+  v0.6.0 条目。
+
+### 13.2 v0.5.0（2026-09-12）
+
+- 新增 **§11.5 中断机制（执行中暂停与用户确认）**：两类中断点
+  （强制 mandatory / 条件 conditional）、统一触发协议（CHECKPOINT 格式：
+  背景+决策点+选项+推荐+影响范围+等待）、用户响应处理（选择/补充/中止/
+  超时）、S0–S6/P0–P10 全阶段强制中断点清单、与验证门禁
+  （blocked/fail/pass）的关系、超时与恢复。
+- §2 开始工作第 0 步交叉引用 §11.5；§10 执行纪律新增第 11 条
+  （中断点命中时暂停不自动推进）。
+
+### 13.3 v0.4.0（2026-09-12）
+
+- 新增 **§8.3 视觉质量与布局完整性自动评估**：`scripts/visual-qa.py`
+  用 API 截图（`pcb snapshot --previous-sha256` / `sch export-image`）
+  + 数据驱动检查（`layout-score` / `pcb check` / `pcb drc`）交叉评估
+  组件间距、走线间距、整体整齐度；三层评估（硬门→关注域→截图一致性）；
+  退出码 0/2/3；遵循"数据为权威、截图只做视觉终检"原则。
+- 新增 `scripts/visual-qa.py`（Python 3，依赖 easyeda CLI）。
+
+### 13.4 v0.3.1（2026-09-12）
 
 - 技能名由 `jlceda-mcp-easyeda` 更名为 **`EasyEDAssistant`**（frontmatter `name`
   与文档标题同步更新；MCP server 键 `jlceda` 不变）。
 - 文件移至仓库根目录（原 `.kilocode/skills/jlceda-mcp-easyeda/SKILL.md`）。
 
-### 13.2 v0.3.0（2026-09-12）
+### 13.5 v0.3.0（2026-09-12）
 
 1. 合并 `easyeda-agent-skill-behavior.md` §23–§25 的移植版判据
    （MCP 双端点、设计规范知识库、文档任务），与既有章节去重对齐。
