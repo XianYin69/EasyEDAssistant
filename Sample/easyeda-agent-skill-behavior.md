@@ -311,7 +311,7 @@ guardrail，以硬门禁形式内置在 `pcb-layout-conventions.md` / `auto-layo
 **中断点协议**（统一格式）：
 ```
 [CHECKPOINT <步骤> | <类型>]
-快照：<探针报告路径 .kilo/tmp/eda-tools-manifest.json>
+快照：<探针报告路径 ./tmp/eda-tools-manifest.json>
 背景：<当前步骤需求与为什么要问，≤3 句，含证据（探针到的插件/工具列表）>
 决策点：<要用户确认什么，列出选项与推荐默认>
   - 选项 A：使用专用插件/工具（如：<插件名>）→ 后果：调用插件高级API，可能获得更好结果
@@ -416,8 +416,8 @@ guardrail，以硬门禁形式内置在 `pcb-layout-conventions.md` / `auto-layo
 2. **内建工具探测**：枚举官方编辑器注册的工具（Tools），如泪滴、铺铜管理器、网络类管理器、差分对管理器、电路计算器、嘉立创 SMT 选型工具。
 3. **已安装插件探测**：查询扩展 API 返回的 extensions/plugins 清单（若插件 API 可用）；若当前版本未暴露枚举接口，则生成标准结构供 Agent 参考并标记 `unknown`。
 4. **产物生成**：
-   - `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-manifest.json`（机器可读清单）
-   - `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-guide.md`（人读说明）
+    - `./tmp/eda-tools-manifest.json`（机器可读清单）
+    - `./tmp/eda-tools-guide.md`（人读说明）
 5. **步骤级调用**：Agent 进入特定设计阶段（铺铜、布线收尾、泪滴、拼板、导出制造文件）前，先读探针报告：
    - 有专用插件/工具 → 优先调用插件 API（并记录插件名与版本）
    - 无插件/工具 → 回退 Skill 原生程序化路径（如 `pcb.pour.create`、`pcb.drc`）

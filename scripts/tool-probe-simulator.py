@@ -9,9 +9,9 @@ tool-probe-simulator.py — Simulate calling built-in tools/plugins in EasyEDA P
   python3 scripts/tool-probe-simulator.py [--project <name>] [--output-dir ./tmp]
 
 输出内容：
-  - .kilo/tmp/tool-call-examples.json    # 结构化示例数据
-  - .kilo/tmp/tool-call-examples.md     # Markdown 示例文档
-  - .kilo/tmp/tool-call-guide.md         # 实用调用指南
+  - ./tmp/tool-call-examples.json    # 结构化示例数据
+  - ./tmp/tool-call-examples.md     # Markdown 示例文档
+  - ./tmp/tool-call-guide.md         # 实用调用指南
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ def _cli(args: list[str], timeout: int = 30) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project", default="default", help="目标工程名")
-    ap.add_argument("--output-dir", default="C:\\Users\\User\\.kilocode\\skills\\EasyEDAssistant/tmp", help="输出目录")
+    ap.add_argument("--output-dir", default=str(Path(__file__).resolve().parent.parent / "tmp"), help="输出目录")
     args = ap.parse_args()
 
     out_dir = Path(args.output_dir)
