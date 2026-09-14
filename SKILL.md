@@ -5,7 +5,7 @@ license: MIT
 compatibility: "Requires JLCEDA MCP VS Code plugin running locally (ws://127.0.0.1:8765/bridge/ws + http://127.0.0.1:7655/mcp). Fallback: easyeda CLI/daemon/Agent Connector. Offline design planning needs no editor."
 metadata:
   author: EasyEDAssistant
-  version: "0.8.0"
+  version: "0.8.1"
 ---
 
 # EasyEDAssistant 设计 Skill
@@ -135,6 +135,12 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 - **一旦检测到可用链路就使用该链路**，不重试另一条链路，不做"莫名奇妙的检测"。
 - 两条端口属于同一插件，插件未启动时 `7655`/`8765` 两条端点均不可用，
   按 §1.3 恢复流程处理。
+- **确认工作区根目录（cwd）**：端口连通后，询问用户其 EDA 工程
+  （原理图/PCB 文件所在目录）的绝对路径，与 Kilocode 会话的
+  `workspace root` 比对；以用户指定路径作为本会话运行时根目录
+  `cwd`（所有运行产物 `./tmp/`、截图、回读 JSON 的根目录）。
+  用户指定路径与 Kilocode `workspace root` 不一致时以用户指定为准，
+  并提示确认当前会话的工作区是否与该路径匹配。
 
 行为约束（MCP 使用时）：
 
@@ -159,6 +165,9 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
   `windowId` 随重连变化，不作为持久身份，优先用项目/文档 UUID 路由。
 - **链路选择策略**：与 MCP 相同——先检测 `60832` 端口（daemon）；连通则全程
   使用 CLI/daemon；不重试 MCP。MCP 与 CLI/daemon 是替代关系，非级联备用。
+- **确认工作区根目录（cwd）**：与 §1.1 相同——端口连通后询问用户 EDA 工程
+  所在目录，与 Kilocode `workspace root` 比对，以用户指定路径为运行时
+  `cwd`；不一致时以用户为准并提示确认。
 
 ### 1.3 连接异常恢复
 
@@ -1300,6 +1309,17 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 ---
 
 ## 13. 变更摘要
+
+### 13.- v0.8.1（2026-09-14）
+
+- **§1.1 / §1.2 新增"确认工作区根目录（cwd）"步骤**：连接端口（MCP `7655`
+  或 daemon `60832`）成功后，Agent **主动向用户询问 EDA 工程（原理图/PCB
+  文件所在目录）的绝对路径**，与 Kilocode 会话报告的 `workspace root` 比对；
+  以用户指定路径作为本会话运行时根目录 `cwd`（`./tmp/`、截图、回读 JSON
+  等运行产物的落地根）。用户指定与 Kilocode 报告不一致时以用户指定为准，
+  同时提示确认当前会话工作区是否与该路径匹配。此举把"运行时根目录"的
+  决定权从"隐式继承 Kilocode `workspace root`"改为"显式向用户核对"，
+  避免运行产物落入 skill 目录或错误工程目录。
 
 ### 13.0 v0.8.0（2026-09-14）
 
