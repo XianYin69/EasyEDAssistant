@@ -10,7 +10,7 @@
 EasyEDAssistant/
 ├── README.md                                  # 本文件
 ├── LICENSE                                    # MIT
-├── SKILL.md                                   # EasyEDAssistant skill 定义（Kilocode，v0.8.0）
+├── SKILL.md                                   # EasyEDAssistant skill 定义（Kilocode，v0.9.0）
 ├── AGENT-PROMPT.md                            # 精简使用指引（规范回归 SKILL.md）
 ├── .gitignore                                 # 忽略 .kilo/ 环境文件等
 ├── agents/
@@ -18,7 +18,11 @@ EasyEDAssistant/
 │   ├── EasyEDAssistant.md                    # 人读镜像
 │   └── EasyEDAssistant.json                   # JSON 可发现性清单（Kilocode 不加载）
 ├── scripts/
-│   └── visual-qa.py                           # 视觉质量与布局完整性自动评估
+│   ├── visual-qa.py                           # 视觉质量与布局完整性自动评估
+│   ├── tool-probe.py                          # 内建工具与插件探针（生成 ./tmp/eda-tools-manifest.json）
+│   ├── tool-probe-simulator.py                # 工具调用示例文档生成器
+│   ├── net-download.py                        # 网络资源下载器（白名单 + 逃逸防护，§13.2）
+│   └── net-download-policy.md                 # 网络资源下载策略（格式/路径/协议规范）
 └── Sample/
     ├── easyeda-agent-skill-behavior.md        # easyeda-agent skill 全部行为记录（含移植版章节）
     └── easyeda-agent/                         # 参考样本（上游 Codex skill 原样）
@@ -28,6 +32,7 @@ EasyEDAssistant/
         │   ├── schematic*.md  pcb*.md        # 原理图 / PCB 操作参考
         │   ├── design-flow.md  design-decisions.md  # 设计流程与决策目录
         │   ├── part-selection.md              # 立创/JLC 选型
+        │   ├── pcb-design-spec.md             # PCB 设计规范与 D1–D20 必答清单（v0.9.0 新增，§13.3）
         │   ├── standard-parts.json            # 标准器件库（LCSC C 号 + deviceUuid）
         │   ├── symbol-pins.json               # 实测符号引脚
         │   ├── orientation.json               # 朝向单一真源
@@ -54,7 +59,7 @@ EasyEDAssistant/
 ## EasyEDAssistant（SKILL.md）详细文档
 
 > 对应根目录 `SKILL.md`（frontmatter `name: EasyEDAssistant`，
-> `metadata.author: EasyEDAssistant`，当前 v0.7.0）。本节说明其组件、
+> `metadata.author: EasyEDAssistant`，当前 v0.9.0）。本节说明其组件、
 > 工作流、引用的其它 SKILL 文件及其作者。
 
 ### 组件（文档结构）
@@ -74,7 +79,8 @@ EasyEDAssistant/
 | §10 执行纪律 | 10 条汇总纪律（门禁、快照、连接、授权、reload、save、MCP 一致性…） |
 | §11 用户需求澄清与目标明确 | 任务分类默认行为、必问清单、目标不变量化、沟通与授权纪律、§11.5 执行中中断机制（强制/条件中断点+CHECKPOINT 协议+用户响应处理+S0–S6/P0–P10 中断点清单） |
 | §12 美观/功能布局经验 | 原理图可读性、PCB 美观（分区/朝向/阵列/留白/丝印/收尾顺序）、交付美学一致性 |
-| §13 变更摘要 | v0.7.0（动态截图生命周期 v0.7.0）、v0.6.0（布局蓝图 §7.4）、v0.5.0（中断机制 §11.5）、v0.4.0（visual-qa + §8.3）、v0.3.1（更名+移根目录）、v0.3.0 |
+| §13 主动学习与外部资源（v0.9.0 新增） | §13.1 主动学习（浏览器检索，落 `./tmp/learning/`）；§13.2 网络资源下载（`scripts/net-download.py` + `scripts/net-download-policy.md`，落 `./tmp/downloads/`）；§13.3 PCB 设计基线（`Sample/easyeda-agent/references/pcb-design-spec.md` D1–D20 必答清单） |
+| §14 变更摘要 | v0.8.1（工作区核对）、v0.8.0、v0.7.0（动态截图生命周期）、v0.6.0（布局蓝图 §7.4）、v0.5.0（中断机制 §11.5）、v0.4.0（visual-qa + §8.3）、v0.3.1（更名+移根目录）、v0.3.0 |
 
 ### 工作流 / 过程
 
@@ -110,6 +116,9 @@ EasyEDAssistant/
 | `Sample/easyeda-agent/references/*.md`、`*.json` | 上游参考文档与数据文件（判据原始来源） | zhoushoujianwork（随上游 skill 分发） |
 | `Sample/easyeda-agent/scripts/*` | 上游辅助脚本（lint/选型/批量/测试） | zhoushoujianwork（随上游 skill 分发） |
 | `scripts/visual-qa.py` | 视觉质量与布局完整性自动评估（API 截图 + 数据驱动交叉评估 + 动态截图生命周期管理，§8.3） | 本项目（EasyEDAssistant）维护 |
+| `scripts/tool-probe.py` / `tool-probe-simulator.py` | 嘉立创 EDA 内建工具与已安装插件探针（生成 `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`） | 本项目（EasyEDAssistant）维护 |
+| `scripts/net-download.py` + `scripts/net-download-policy.md` | 网络资源下载器（格式白/黑名单 + 路径逃逸防护 + `index.json` 审计）与配套策略文档（§13.2） | 本项目（EasyEDAssistant）维护 |
+| `Sample/easyeda-agent/references/pcb-design-spec.md` | PCB 设计规范与 D1–D20 必答清单（PCB 阶段前向用户核对，落 `./tmp/design/<project>-pcb-spec.md`，§13.3） | 本项目（EasyEDAssistant）维护 |
 | `AGENT-PROMPT.md` | 精简使用指引（触发入口 + one-liner default_prompt；规范回归 SKILL.md） | 本项目（EasyEDAssistant）维护 |
 | `agents/EasyEDAssistant.yaml` | Kilocode agent 定义（权威，interface: schema） | 本项目（EasyEDAssistant）维护 |
 | `Sample/easyeda-agent-skill-behavior.md` | 上游 skill 全部行为的章节化记录（本项目维护，含移植版 §23–§25 与 §25A 变更史） | 本项目（EasyEDAssistant）维护 |

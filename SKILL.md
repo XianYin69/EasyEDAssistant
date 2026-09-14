@@ -5,7 +5,7 @@ license: MIT
 compatibility: "Requires JLCEDA MCP VS Code plugin running locally (ws://127.0.0.1:8765/bridge/ws + http://127.0.0.1:7655/mcp). Fallback: easyeda CLI/daemon/Agent Connector. Offline design planning needs no editor."
 metadata:
   author: EasyEDAssistant
-  version: "0.8.1"
+  version: "0.9.0"
 ---
 
 # EasyEDAssistant 设计 Skill
@@ -221,10 +221,17 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
     - 识别截图状态：用 SHA256 校验与上次截图比对，标记是否 stale（canvas-freeze）；
     - 动态清理：每次新截之前，删除 `./tmp/snapshots/` 中的旧截图（保留最近 3 张关键快照作为回溯依据）；
     - 截图保存到 `./tmp/snapshots/step-<索引>-<时间戳>.png`，便于后续复盘与 visual-qa.py 调用。
-10. **交付工件落位与清理**：原理图/PCB 字符画蓝图、计划、方案、元器件选型与比价、
-    理论计算缓存、数据手册摘要、图片全部落在 `./tmp/` 对应子目录（§8.4）；
-    工作结束时先在工作区根目录生成技术手册与功能手册（§7.8），再删除 `./tmp/`
-    全部产物并在交付报告（§8.2）中记录（§8.4）。
+ 10. **交付工件落位与清理**：原理图/PCB 字符画蓝图、计划、方案、元器件选型与比价、
+     理论计算缓存、数据手册摘要、图片全部落在 `./tmp/` 对应子目录（§8.4）；
+     工作结束时先在工作区根目录生成技术手册与功能手册（§7.8），再删除 `./tmp/`
+     全部产物并在交付报告（§8.2）中记录（§8.4）。
+ 11. **主动学习与外部资源**（§13）：遇到未知器件、异常错误、非内建工具
+     行为等**信息缺口**时，Agent 主动用浏览器工具（`websearch` / `webfetch`）
+     在 博客园 / Stack Overflow / 知乎 / CSDN / EEVblog / 官方 wiki 检索
+     同类问题，结果整理为 markdown 落 `./tmp/learning/`；需下载资源
+     （数据手册 PDF / 参考图 / 结构化数据 / EDA 库文件）时调用
+     `scripts/net-download.py`，输出根强制 `./tmp/downloads/`，格式判定见
+     `scripts/net-download-policy.md`（§13.1/§13.2）。
 
 ---
 
@@ -302,6 +309,11 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 
 **PCB 放置**：
 
+- 进入 PCB 阶段（P0）前，Agent 必须先读 `Sample/easyeda-agent/references/pcb-design-spec.md`
+  §2 必答清单，逐项向用户核对板框/安装孔/叠层/铜厚/电源轨/接地/阻抗/接口/
+  天线/封装下限/热预算/测试点/丝印/隔离/DFM 目标/拼板/颜色/未用脚/成本档
+  /验收线共 20 项（D1–D20），答复落到**工作区** `./tmp/design/<project>-pcb-spec.md`
+  作为设计基线；D1/D2/D8 未定即不能开工（§11.5 P0 强制中断）。
 - 放置前先生成**布局蓝图**（§7.4，Markdown + 字符画板框）：把模块/组件/
   部件及其连接可视化，经 P3 板框中断点（§11.5）拍板后再四档放置。
 - 四档顺序：T1 安装孔 → T2 板边接口（USB/电源/天线，开口朝外）→ T3 主芯片 →
@@ -1047,12 +1059,14 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 | `./tmp/sch/` | 原理图字符画蓝图、官方导图 | md/json/png |
 | `./tmp/pcb/` | PCB 布局蓝图、视口快照 | md/json/png |
 | `./tmp/plan/` | 计划类工件（含 `<project>-sch-layout.md`） | md/json |
-| `./tmp/design/` | 方案、逻辑框图、可行性结论 | md/json |
+| `./tmp/design/` | 方案、逻辑框图、可行性结论、PCB 设计基线（§13.3） | md/json |
 | `./tmp/parts/` | 元器件选型与浏览器比价缓存（§5.6） | md/json |
 | `./tmp/calc/` | 理论计算数据缓存（§7.7 推导） | md/json |
 | `./tmp/datasheet/` | 数据手册摘要（型号/关键参数/页码出处） | md |
 | `./tmp/snapshots/` | 动态截图（§2.9 既有） | png |
 | `./tmp/baseline/` | 基线截图（§2.7 既有） | png |
+| `./tmp/learning/` | 主动学习笔记（§13.1，浏览器检索结果整理） | md |
+| `./tmp/downloads/` | 网络资源下载（§13.2 `scripts/net-download.py`），含 datasheet/docs/images/data/edalib/manufacturing 子目录 + `index.json` | 见 `net-download-policy.md` §2 |
 
 **清理纪律**（工作结束时执行）：
 1. 先按 §7.8 在**工作区根目录**生成技术手册与功能手册，按 §8.2 出交付报告。
@@ -1109,6 +1123,15 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 13. 运行产物只写工作区 `./tmp/`（§8.4 目录契约），工作结束先交付后清理，tmp 内容不得入库。
 14. 交付前在工作区根目录生成技术手册与功能手册（§7.8），再清理 `./tmp/`（§8.4）；
     蓝图/框图/可行性结论（§7.5–§7.7）未拍板不进入绘制与放置阶段。
+15. **PCB 设计基线（§13.3）**：进入 PCB 阶段（P0）前逐项核对
+    `Sample/easyeda-agent/references/pcb-design-spec.md` §2 D1–D20 清单，
+    答复落 `./tmp/design/<project>-pcb-spec.md`；D1 板框 / D2 安装孔 /
+    D8 关键接口未定即触发 §11.5 P0 强制中断，不放行放置。
+16. **主动学习（§13.1/§13.2）**：信息缺口主动用浏览器工具在 博客园 /
+    Stack Overflow / 知乎 / 官方 wiki 检索并落 `./tmp/learning/`；下载
+    外部资源用 `scripts/net-download.py`（格式白名单见
+    `scripts/net-download-policy.md`），拒绝可执行/脚本/归档，输出根强制
+    工作区 `./tmp/downloads/`。
 
 ---
 
@@ -1138,6 +1161,11 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 - **未决电气/机械要求**：电源轨清单与电流预算、隔离/爬电要求、RF 频段与
   天线形式——缺失且影响设计时澄清，不影响（有唯一正确答案）的内置 guardrail
   不重复问。
+- **PCB 设计细节**：进入 PCB 阶段（P0）时逐项核对 `Sample/easyeda-agent/`
+  `references/pcb-design-spec.md` §2 的 D1–D20 清单（板框/安装孔/叠层/
+  铜厚/电源轨/接地/阻抗/接口/天线/封装/热/测试点/丝印/隔离/DFM/拼板/
+  颜色/未用脚/成本/验收线），答复落 `./tmp/design/<project>-pcb-spec.md`
+  作为后续所有 P0–P10 阶段的引用基线，未拍板前不进入放置。
 
 ### 11.3 目标明确化方法
 
@@ -1209,6 +1237,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 |---|---|---|---|
 | S0 | 设计决策目录（§6）摊牌 | 强制 | 新设计必须先拍叠层/接地/USB/选型档位等；静态可行性结论（§7.7）为"不可行/有条件可行"时必须摊牌 |
 | S0 | 原理图/PCB 蓝图与逻辑框图评审 | 强制 | 新设计在 S3/P3 前须先摊 §7.5/§7.4/§7.6 蓝图给用户 |
+| **P0** | **PCB 设计基线（`pcb-design-spec.md` §2 D1–D20）** | **强制** | 进入 PCB 阶段前逐项核对；D1 板框 / D2 安装孔 / D8 关键接口位置 未定即不能开工（immovable 参考），答复落 `./tmp/design/<project>-pcb-spec.md`（§13.3） |
 | S1 | 工程基线与纸张边界确认 | 条件 | 多页工程归属未定，或纸张 keep-out 推导有歧义 |
 | S2 | 位号修复范围 | 条件 | `sch designators allocate` 要改的位号超出"非标准项"（如用户已有自定义位号） |
 | S3 | Lib 几何与模块拆分 | 强制 | `compose` 前用户需确认模块划分与页数（功能拆页是设计决策）；原理图字符画蓝图（§7.5）随 S3 一并拍板 |
@@ -1308,9 +1337,165 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 
 ---
 
-## 13. 变更摘要
+## 13. 主动学习与外部资源
 
-### 13.- v0.8.1（2026-09-14）
+> 会话遇到信息缺口（不认识的器件、异常错误码、非内建工具行为、数据手册
+> 参数不明、参考电路缺失等）时，Agent **主动**用浏览器工具与网络下载
+> 脚本补齐知识，产物落工作区 `./tmp/learning/` 与 `./tmp/downloads/`
+> （§8.4）；skill 目录不写入。这是"运行时知识获取"通道，不豁免 §1.2
+> 版本门禁与 §11.5 中断机制。
+
+### 13.1 主动学习（浏览器检索）
+
+**触发条件**（任一）：
+- 未知 MPN / LCSC C 号 / 器件封装：手册关键参数、典型应用未查到
+- 命令报错 / daemon 返回未知 code / 图元行为异常
+- 需要跨平台核对选型、行情、库存、替代品
+- 遇到 §9 已知限制外的新症状
+
+**检索站点优先级**（不越权、不下载页面外链资源）：
+| 主题 | 优先站点 |
+|---|---|
+| 中文经验/踩坑 | 博客园、知乎、CSDN、电子发烧友、嘉立创 论坛 |
+| 英文工程问答 | Stack Overflow、Electronics Stack Exchange、EEVblog Forum、All About Circuits |
+| 器件与选型 | 厂商官网、DigiKey、Mouser、立创商城、华秋、LCSC |
+| 标准与规范 | IPC / JEDEC / IEC 摘要、JLCPCB 能力页 |
+| 协议 | USB-IF / IEEE / SDMI 公开摘要页 |
+
+**工具**：`websearch`（首查）、`webfetch`（取正文）；不用浏览器执行页面
+JS、不做账号登录、不下载页面上的可执行体（下载走 §13.2）。
+
+**落盘工件**：`./tmp/learning/<topic>.md`，字段固定：
+
+```markdown
+# <topic> 学习笔记
+
+- 时间：<UTC ISO>
+- 触发：<为什么查>
+- 站点/URL：
+  - <url1>
+  - <url2>
+- 摘要：<3–5 条要点>
+- 关键数据/参数：<带厂商/型号/条件>
+- 与本工程的映射：<怎么用；影响哪些引脚/网/参数>
+- 未证实项：<标"未核实"，不回填 §4 判据或 standard-parts.json>
+```
+
+**纪律**：
+- 学习笔记是**证据链**，不是新知识真值；与 `Sample/easyeda-agent/references/`
+  冲突时以本地经验库为准，再落"待验证"标签。
+- 不将笔记内容静默合并进 `SKILL.md`；如下结论要改判据，走 §11.5 中断
+  点请用户拍板，再由贡献者按 `CONTRIBUTING.md` 修订流程更新 skill 本体。
+- 会话结束随 `./tmp/` 一并清理（§8.4）。
+
+### 13.2 网络资源下载（`scripts/net-download.py`）
+
+**用途**：需要"文件本体"（数据手册 PDF、参考图、公开 EDA 库、
+结构化数据）时，用 `scripts/net-download.py` 拉取；不通过浏览器工具
+抓页面资源，也不 `curl` 手工执行。
+
+**Agent 调用规范**：
+- 先按 §13.1 在 `./tmp/learning/` 记下**为什么要下载**这个 URL；
+- 再执行：`python3 scripts/net-download.py --url <URL> [--name <filename>]`；
+- 输出根**强制** `Path.cwd() / "tmp/downloads"`（或 `--out-dir`
+  指定的、经 `_resolve_within_workspace` 校验的子目录，如
+  `tmp/downloads/datasheet/`、`tmp/downloads/images/`、
+  `tmp/downloads/data/`、`tmp/downloads/edalib/`、`tmp/downloads/manufacturing/`），
+  禁止 `../`、绝对路径到 skill 目录或工作区外（FILE_CREATION_POLICY.md §5.2）；
+- 格式判定见 `scripts/net-download-policy.md` §2/§3：
+  - **白名单**：`.pdf` `.md` `.txt` `.html` `.json` `.csv` `.yaml`
+    `.xml` `.png` `.jpg` `.jpeg` `.gif` `.webp` `.svg` `.sch` `.pcb`
+    `.brd` `.elib` `.dip` `.epow` `.esym` `.epcb` `.gbr` `.drl`
+    `.nc` `.dcm` `.lib` `.kicod` `.kicad_sym` `.kicad_pcb`
+  - **黑名单**（拒绝）：`.exe` `.dll` `.so` `.dylib` `.bin` `.com`
+    `.sh` `.ps1` `.bat` `.cmd` `.vbs` `.js` `.jar`
+    `.zip` `.rar` `.7z` `.tar` `.gz` `.bz2` `.xz` `.iso` `.img` `.dmg`
+- 协议仅允许 `http(s)://`；`file://` / `ftp://` / 本地路径一律拒绝。
+- 单文件默认上限 32 MiB（§9 3D 模型上限同源）；超出立即中断，不留
+  部分文件；每次成功 append 到 `./tmp/downloads/index.json`（URL/时间/
+  字节数/SHA256/HTTP 状态），作为工作证据链。
+- `--dry-run` 只判定格式与目标路径，用于"先看会不会被拒"。
+
+**失败处理**：
+- 白名单外/黑名单内 → 不 `--force`；改为向用户报告并请求手动投递
+  到工作区（用户负责校验来源），或找替代合法格式资源；
+- HTTP 4xx/5xx → 报告 URL + 状态；不重试；
+- 网络错误 → 检查 §1.1 端口；插件/代理不干预。
+
+**清理**：`./tmp/downloads/` 与 `index.json` 会话结束随 §8.4 全清；
+需要长期保留的（如数据手册 PDF）先由 Agent 复制到用户指定的**工作区**
+正式目录（非 skill 目录），再清 tmp。
+
+### 13.3 PCB 设计基线（`Sample/easyeda-agent/references/pcb-design-spec.md`）
+
+PCB 阶段（P0）进入前，Agent **必须**读
+`Sample/easyeda-agent/references/pcb-design-spec.md` §2 **必答清单**
+D1–D20（板框 / 安装孔 / 叠层 / 铜厚 / 电源轨 / 接地 / 阻抗 / 接口 /
+天线 / 封装下限 / 热预算 / 测试点 / 丝印 / 隔离 / DFM / 拼板 / 颜色 /
+未用脚 / 成本 / 验收线），逐项问用户，答复落到**工作区**
+`./tmp/design/<project>-pcb-spec.md`：
+
+```markdown
+# <project> PCB 设计基线
+
+| 项 | 用户答复 | 依据 | 拍板时间 |
+|---|---|---|---|
+| D1 板框 | 60 × 40 mm，R3 圆角 | 外壳图 | 2026-… |
+| D2 安装孔 | 4 × M2.5，孔心距边 3.5 mm | 结构 | … |
+…
+```
+
+**强制中断**（§11.5 P0 行）：D1 板框 / D2 安装孔 / D8 关键接口三项任一
+未定即不放行四档放置（immovable 参考未定）；D3 叠层、D5 电源轨、
+D6 接地、D9 天线形式为条件中断——缺失会改变设计时按 §11.5 中断协议
+摊牌。已拍板项在后续 P1–P10 沿用，不重复问；变更走 §11.5 中断点
+重新拍板。
+
+**与其他章节的关系**：
+- 本清单**问用户要什么**；§4.2/§4.7/§4.8 是**定了之后怎么做**；
+- 基线文件是 §8.2 交付报告与 §7.8 技术手册的引用来源；
+- 基线里的 D15（DFM 目标）与 `Sample/easyeda-agent/references/`
+  `fab-rules-jlcpcb.json` 一致时走默认，否则按用户指定的厂规；
+- 基线里的 D20（验收线）落到 §8.1 五层验证的具体门禁。
+
+**skill 维护者**：新增必答项须同步更新 `pcb-design-spec.md` §2 表与本节
+引用；`scripts/net-download.py` 与 `net-download-policy.md` 修改格式
+列表时同步 §13.2 内联白/黑名单，两处不一致以策略文件为准，脚本更新
+走 `CONTRIBUTING.md` 评审。
+
+---
+
+## 14. 变更摘要
+
+### 14.- v0.9.0（2026-09-14）
+
+- **新增 §13 主动学习与外部资源**：
+  - §13.1 主动学习——Agent 用 `websearch`/`webfetch` 在博客园/Stack
+    Overflow/知乎/CSDN/EEVblog/厂商官网/立创商城 等检索同类问题，笔记
+    落 `./tmp/learning/<topic>.md`（字段：触发/URL/摘要/关键数据/工程
+    映射/未证实项），是证据链不是新知识真值；不静默改 §4 判据。
+  - §13.2 网络资源下载——新增 `scripts/net-download.py`（stdlib urllib
+    封装，含路径逃逸防护、格式白/黑名单、32 MiB 上限、`index.json`
+    审计），配套 `scripts/net-download-policy.md` 规定允许/禁止格式；
+    输出根强制 `Path.cwd()/tmp/downloads`，`file://` / `..` / 可执行
+    格式一律拒绝；Agent 调用规范含"先记为什么下（§13.1）再执行"。
+  - §13.3 PCB 设计基线——新增 `Sample/easyeda-agent/references/`
+    `pcb-design-spec.md` 定义 D1–D20 必答清单（板框/安装孔/叠层/铜厚/
+    电源轨/接地/阻抗/接口/天线/封装/热/测试点/丝印/隔离/DFM/拼板/
+    颜色/未用脚/成本/验收线），PCB 阶段前逐项向用户核对，答复落到
+    `./tmp/design/<project>-pcb-spec.md`；D1/D2/D8 未定即触发 §11.5 P0
+    强制中断。
+- **§2 开始工作** 新增第 11 步主动学习与外部资源；
+- **§4.2 PCB 放置** 首行加入进入 P0 前核对 pcb-design-spec.md §2 必答
+  清单的前置要求；
+- **§8.4 tmp 目录契约** 新增 `./tmp/learning/` 与 `./tmp/downloads/` 两
+  行；
+- **§10 执行纪律** 新增第 15 条（PCB 设计基线）与第 16 条（主动学习）；
+- **§11.2 必问清单** 新增"PCB 设计细节"项引用 pcb-design-spec.md；
+- **§11.5 中断点表** 新增 P0 强制中断"PCB 设计基线"行；
+- 版本号 0.8.1 → 0.9.0。
+
+### 14.0 v0.8.1（2026-09-14）
 
 - **§1.1 / §1.2 新增"确认工作区根目录（cwd）"步骤**：连接端口（MCP `7655`
   或 daemon `60832`）成功后，Agent **主动向用户询问 EDA 工程（原理图/PCB
@@ -1321,7 +1506,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
   决定权从"隐式继承 Kilocode `workspace root`"改为"显式向用户核对"，
   避免运行产物落入 skill 目录或错误工程目录。
 
-### 13.0 v0.8.0（2026-09-14）
+### 14.1 v0.8.0（2026-09-14）
 
 - 新增 **§7.5 生成原理图布局蓝图（Markdown + 字符画）**：沿用 §7.4 PCB 蓝图范式，
   在 `sch compose`/`sch apply`（§5.1）物理绘制前生成字符画蓝图；`./tmp/plan/` 文件
@@ -1362,7 +1547,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
   技术/功能手册（§7.8）用户确认。
 - 版本号 0.7.0 → 0.8.0。
 
-### 13.1 v0.7.0（2026-09-14）
+### 14.2 v0.7.0（2026-09-14）
 
 - 新增 **§2 动态截图管理**（§2.7、§2.9）：每关键步骤后自动截图（原理图 `sch export-image` / PCB `pcb snapshot`），SHA256 校验识别 stale 状态，动态清理旧截图（保留最近 3 张关键快照），截图路径 `./tmp/snapshots/step-<index>-<timestamp>.png`。
 - **§5.1 执行队列**新增"动态截图"操作：每步 `apply` 后立即截图保存至 snapshots 目录。
@@ -1371,7 +1556,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 - **§8.3 视觉质量评估**新增"动态截图生命周期"三段：保存策略（step/baseline 双目录）、清理策略（保留 3 张）、状态识别（SHA256 stale 闭环）。
 - **§11.5 中断协议**新增 `快照` 字段：CHECKPOINT 输出当前截图路径与 fresh/stale 状态。
 
-### 13.2 v0.6.0（2026-09-13）
+### 14.3 v0.6.0（2026-09-13）
 
 - 新增 **§7.4 生成 PCB 布局蓝图（Markdown + 字符画边框）**：在物理放置/
   绘制 PCB 之前先生成一份 Markdown 蓝图，用模块/组件/部件及元素间连接
@@ -1380,10 +1565,10 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
   connectivity` / `pcb list --include-bbox` / `sch sheet-geometry`），
   经 P3 中断点（§11.5）拍板后再驱动 `import-changes` 与四档放置。
   蓝图属规划层工件，不替代 `layout-lint`/`pcb drc` 几何电气门禁。
-- §4.2 PCB 放置新增"放置前先生成布局蓝图"前置步骤；§13 变更摘要新增
+- §4.2 PCB 放置新增"放置前先生成布局蓝图"前置步骤；§14 变更摘要新增
   v0.6.0 条目。
 
-### 13.3 v0.5.0（2026-09-12）
+### 14.4 v0.5.0（2026-09-12）
 
 - 新增 **§11.5 中断机制（执行中暂停与用户确认）**：两类中断点
   （强制 mandatory / 条件 conditional）、统一触发协议（CHECKPOINT 格式：
@@ -1393,7 +1578,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 - §2 开始工作第 0 步交叉引用 §11.5；§10 执行纪律新增第 11 条
   （中断点命中时暂停不自动推进）。
 
-### 13.4 v0.4.0（2026-09-12）
+### 14.5 v0.4.0（2026-09-12）
 
 - 新增 **§8.3 视觉质量与布局完整性自动评估**：`scripts/visual-qa.py`
   用 API 截图（`pcb snapshot --previous-sha256` / `sch export-image`）
@@ -1402,13 +1587,13 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
   退出码 0/2/3；遵循"数据为权威、截图只做视觉终检"原则。
 - 新增 `scripts/visual-qa.py`（Python 3，依赖 easyeda CLI）。
 
-### 13.5 v0.3.1（2026-09-12）
+### 14.6 v0.3.1（2026-09-12）
 
 - 技能名由 `jlceda-mcp-easyeda` 更名为 **`EasyEDAssistant`**（frontmatter `name`
   与文档标题同步更新；MCP server 键 `jlceda` 不变）。
 - 文件移至仓库根目录（原 `.kilocode/skills/jlceda-mcp-easyeda/SKILL.md`）。
 
-### 13.6 v0.3.0（2026-09-12）
+### 14.7 v0.3.0（2026-09-12）
 
 1. 合并 `easyeda-agent-skill-behavior.md` §23–§25 的移植版判据
    （MCP 双端点、设计规范知识库、文档任务），与既有章节去重对齐。
@@ -1418,7 +1603,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 3. 扩充 **§4.2 美观与功能性经验**：原理图可读性（信号流、框紧凑留白、
    短连优先、方向一致、文字避让、功能分页）；PCB 美观（分区先于对齐、
    朝向归一、阵列杠杆、功能性留白、丝印层、层感知看数、收尾顺序）。
-4. 新增 **§12 布局经验**（操作层，与第 4 节判据层互补）与 **§13 变更摘要**。
+4. 新增 **§12 布局经验**（操作层，与第 4 节判据层互补）与 **§14 变更摘要**（v0.9.0 把变更摘要从 §13 移到 §14，腾出 §13 主动学习与外部资源）。
 5. 版本号 0.2.0 → 0.3.0。
 
 ---
