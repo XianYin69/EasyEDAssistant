@@ -16,6 +16,11 @@ PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造
 本 skill 是移植版行为规范；API 操作与数值判据以 `Sample/easyeda-agent/references`
 与 `Sample/easyeda-agent/scripts` 为真值来源，冲突时以 daemon 规则代码为准。
 
+> **项目级规范引用**（Agent 与贡献者必读）：
+> - `CONTRIBUTING.md` — 贡献指南（开发环境、代码规范、提交格式、审查流程、版本管理）。
+> - `FILE_CREATION_POLICY.md` — 新建文件/文件夹使用规范（Kilo Model 安全合规：
+>   允许/禁止的文件类型、命名规范、操作流程、安全要求）。全体会话须遵守。
+
 ## 嘉立创EDA 官方文档（参考）
 
 嘉立创EDA专业版（EasyEDA Pro）官方文档是本 skill 的基础参考。以下文档
