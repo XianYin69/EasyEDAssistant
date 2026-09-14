@@ -5,24 +5,21 @@ license: MIT
 compatibility: "Requires JLCEDA MCP VS Code plugin running locally (ws://127.0.0.1:8765/bridge/ws + http://127.0.0.1:7655/mcp). Fallback: easyeda CLI/daemon/Agent Connector. Offline design planning needs no editor."
 metadata:
   author: EasyEDAssistant
-  version: "0.8.1"
+  version: "0.8.0"
 ---
 
 # EasyEDAssistant 设计 Skill
 
 用 JLCEDA MCP VS Code 插件桥接操作嘉立创 EDA（EasyEDA 专业版）：原理图绘制、
 PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造文件导出。
-本 skill 是移植版行为规范。运行时 API 参数与数值判据的真值：
-`easyeda <cmd> --help`、`easyeda actions` 与 daemon 规则代码；冲突时以代码为准。
+知识基线见同仓 `Sample/easyeda-agent-skill-behavior.md`（24–25 节为移植版专属判据）。
+本 skill 是移植版行为规范；API 操作与数值判据以 `Sample/easyeda-agent/references`
+与 `Sample/easyeda-agent/scripts` 为真值来源，冲突时以 daemon 规则代码为准。
 
-> **运行时边界（防工作区逃逸）**：本 skill 正文（即本文件）已由 Kilocode
-> 在会话加载 skill 时注入上下文；会话**不得**再 `read` 本文件本身、
-> `AGENT-PROMPT.md`、`Sample/easyeda-agent/**` 或 skill 目录内任何 `.md`
-> （包括 `CONTRIBUTING.md` / `FILE_CREATION_POLICY.md` /
-> `references/*.md` / `environment-setup.md`）——这些是仓库归档与贡献者
-> 文档，非运行时输入。所有运行产物只写**用户工作区** `./tmp/`（`Path.cwd()`），
-> skill 目录只读不写；升级需求直接向用户报告版本差异，不打开任何升级指引文档。
-> 完整规范：仓库维护者请阅 `CONTRIBUTING.md` 与 `FILE_CREATION_POLICY.md`（人读文档）。
+> **项目级规范引用**（Agent 与贡献者必读）：
+> - `CONTRIBUTING.md` — 贡献指南（开发环境、代码规范、提交格式、审查流程、版本管理）。
+> - `FILE_CREATION_POLICY.md` — 新建文件/文件夹使用规范（Kilo Model 安全合规：
+>   允许/禁止的文件类型、命名规范、操作流程、安全要求）。全体会话须遵守。
 
 ## 嘉立创EDA 官方文档（参考）
 
@@ -151,7 +148,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 - **版本门禁（会话第一条命令）**：`easyeda update --check --exit-code`，先于任何
   项目读取、离线规划、`health` 和 EDA 操作。CLI/Skill/daemon 必须精确等于 GitHub
   latest，Connector 与 latest 共享 `major.minor` 兼容线才返回 0；仅 patch 差异通过。
-  门禁非 0 时停止任务，直接向用户报告 CLI/Skill/daemon/Connector 与 GitHub latest 的实际版本差异，请用户升级后新开会话；**升级/替换组件后本会话不得
+  门禁非 0 时停止任务按 `Sample/easyeda-agent/references/environment-setup.md` 升级；**升级/替换组件后本会话不得
   继续，必须新开会话从第一条命令重新开始**。不得用 `--version`、`--preserve`、
   `--skip-version-check` 或仅看 `health` 绕过门禁。
 - **`doc reload` 门（铁律）**：PCB mutation（rip-up/route/delete/via/track/pour）
@@ -197,7 +194,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
    `net:""` 与 `noConnected:false` 时自动导出，仍保留 `unconnected-pin` 警告。
 4. 按任务选子域判据（第 4 节），只加载相关参考；以 `easyeda <domain> <command>
    --help` 与 `easyeda actions` 为参数真值。
-5. 临时 JSON、计划与回读结果放入**工作区**（`cwd`，非 skill 目录）下已忽略的 `./tmp/` 目录；保留原始快照，在副本中设计（运行产物禁止写入 skill 目录，禁止 `../` 逃逸出工作区；判据见 §1 运行时边界）。`tmp/` 下按用途分子目录（sch/pcb/plan/design/parts/calc/datasheet/snapshots/baseline），完整目录契约与清理纪律见 §8.4。
+5. 临时 JSON、计划与回读结果放入**工作区**（`cwd`，非 skill 目录）下已忽略的 `./tmp/` 目录；保留原始快照，在副本中设计（详见 `FILE_CREATION_POLICY.md` §2.4：运行产物禁止写入 skill 目录，且不得逃逸出工作区）。`tmp/` 下按用途分子目录（sch/pcb/plan/design/parts/calc/datasheet/snapshots/baseline），完整目录契约与清理纪律见 §8.4。
 6. **工具与插件探针**：**Agent 必须自动运行** `python3 scripts/tool-probe.py --project <project>` 获取嘉立创 EDA 内建工具与已安装插件清单；
     生成 `./tmp/eda-tools-manifest.json` 与 `./tmp/eda-tools-guide.md`；
     此清单供后续设计步骤查阅并按需调用专用工具或插件。
@@ -248,8 +245,8 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 
 > 数值判据为方向性规则；落地前以数据手册与实测为准。
 > 判据索引：P0–P7 优先级总则裁决冲突；硬门（layout-lint gate / DRC /
-> antenna-keepout）不可放宽，`--force-unsafe`（有审计的越门选项，见 §11.5
-> 中断机制）不是恢复步骤。
+> antenna-keepout）不可放宽，`--force-unsafe`（有审计的越门选项，见
+> `Sample/easyeda-agent/references/design-flow.md`）不是恢复步骤。
 
 ### 4.1 优先级总则（PCB 冲突裁决）
 
@@ -264,7 +261,8 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 | P6 | DFM | 朝向一致/极性/扇出空间/测试点 |
 | P7 | 网格/对齐/丝印 | 纯收尾美化，永远不得违反以上任何一级 |
 
-执行顺序 = "先 P5 粗聚簇，再 P2/P4 细约束就地改写"（本 skill 的收尾
+执行顺序 = "先 P5 粗聚簇，再 P2/P4 细约束就地改写"（自动布局执行步骤见
+上游 `Sample/easyeda-agent/references/pcb-layout.md` §11，本 skill 的收尾
 顺序见 §12.2）。
 
 ### 4.2 PCB 布局与原理图绘制
@@ -1107,7 +1105,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 
 ## 11. 用户需求澄清与目标明确（动手前）
 
-> 原则（S0 摊牌）：**缺信息会改变设计、或超出已有授权时
+> 原则（与 `Sample/easyeda-agent/references/design-flow.md` S0 一致）：**缺信息会改变设计、或超出已有授权时
 > 才问**；已有确认的需求与授权沿用，不因流程表重复索取许可；用户要求逐步
 > 确认时遵守其节奏。问的是"会改变做法的选项"，不是"流程打卡"。
 
@@ -1218,7 +1216,8 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 **中断点与验证门禁的关系**：
 - `blocked`（检查没运行/环境问题）→ 条件中断：需用户介入修环境，不自动跳过。
 - `fail`（设计不合格）→ 条件中断：用户决定改设计还是放宽（放宽须授权，
-  且 `--force-unsafe` 不是恢复步骤，见 §4 开头 guardrail 与 §11.5）。
+  且 `--force-unsafe` 不是恢复步骤，见 §4 开头 guardrail 与上游
+  `Sample/easyeda-agent/references/design-flow.md`）。
 - `pass` → 不中断，静默进入下一阶段。
 - 截图 stale + 数据通过 → 不中断（数据是权威），但报告中标注 stale。
 
@@ -1301,29 +1300,6 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 ---
 
 ## 13. 变更摘要
-
-### 13.- v0.8.1（2026-09-14）
-
-- **消除工作区逃逸指令**：删除或改写所有"运行时读取 skill 目录内文件"的
-  提示句，包括原 `§1` 顶部"知识基线见 `Sample/easyeda-agent-skill-behavior.md`"、
-  "以 `Sample/easyeda-agent/references` 与 `Sample/easyeda-agent/scripts`
-  为真值来源"、"项目级规范引用 Agent 与贡献者必读 `CONTRIBUTING.md` /
-  `FILE_CREATION_POLICY.md`"、`§1.2` 版本门禁非 0 时"按 `environment-setup.md`
-  升级"、`§4` 开头"见 `design-flow.md`"、`§4.1` "上游 `pcb-layout.md` §11"、
-  `§11` 顶部"与 `design-flow.md` S0 一致"、`§11.5` 门禁关系"上游
-  `design-flow.md`"，以及 `§2.5` "详见 `FILE_CREATION_POLICY.md` §2.4"。
-  替换为**运行时边界**段（§1）：会话不 `read` `SKILL.md` /
-  `AGENT-PROMPT.md` / `Sample/easyeda-agent/**` 等 skill 目录内 `.md`；
-  运行时真值改为 `easyeda <cmd> --help` / `easyeda actions` / daemon 代码；
-  门禁非 0 改为直接向用户报告版本差异并请其升级，不打开任何升级指引文档；
-  产物只写工作区 `./tmp/`，skill 目录只读不写。
-- 精简 `AGENT-PROMPT.md` 为使用指引 + 边界说明（删除 170 行完整提示词，
-  全部规范回归 `SKILL.md` 本体由 Kilocode 自动注入）。
-- `agents/EasyEDAssistant.yaml` / `.json` 删除 `metadata.prompt_file`
-  与 default_prompt 末尾"完整提示词见 AGENT-PROMPT.md"逃逸触发句；
-  版本号 0.5.0 → 0.6.0。`agents/EasyEDAssistant.md` 精简为使用镜像，
-  移除"完整提示词见 `AGENT-PROMPT.md`"与指向 `Sample/` 的运行时链接。
-- 版本号 0.8.0 → 0.8.1。
 
 ### 13.0 v0.8.0（2026-09-14）
 

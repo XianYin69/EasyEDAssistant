@@ -17,6 +17,6 @@ description: "EasyEDAssistant agent (markdown mirror) — the canonical Kilocode
 
 会话选择本 agent 或直接触发 `@EasyEDAssistant` skill；skill 加载即注入
 完整行为规范（S0–S6 / P0–P10、会话纪律、中断机制、验证分层等），
-无需另外读取 `AGENT-PROMPT.md`。运行时边界（不读/不写 skill 目录、
-门禁失败不打开升级文档、tmp 只落工作区）由 `SKILL.md` 与
-`FILE_CREATION_POLICY.md` 保证。
+无需另外读取 `AGENT-PROMPT.md`。`SKILL.md` 引用的
+`Sample/easyeda-agent/references/*.md`（他人总结与试错经验库）与
+`scripts/*.py`（设计时调用的辅助脚本）按 `SKILL.md` 指引读取与执行。

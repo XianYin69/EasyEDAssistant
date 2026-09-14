@@ -10,6 +10,8 @@
 
 在 Kilocode 会话选择本 agent（`agents/EasyEDAssistant.yaml`）或直接触发
 `@EasyEDAssistant` skill；skill 加载完成即注入规范，无需任何额外提示词文件。
+`SKILL.md` 内引用的 `Sample/easyeda-agent/**` 与 `scripts/*.py` 是运行时
+经验库与调用脚本，按 `SKILL.md` 指引读取或执行即可。
 
 ## 精简 default_prompt（外部 one-liner）
 
@@ -20,19 +22,3 @@
 check / export-image）后才显式保存并确认 saved:true；报告如实列出未验证项
 与 blocked/fail，不把聚合数当全部通过。
 ```
-
-## 运行时边界（防工作区逃逸）
-
-以下约束由 skill 本体（`SKILL.md`）在会话加载时自动注入，本文件不重复：
-
-- **不读取 skill 目录内文件**：`SKILL.md` 本体已由 skill 加载器注入，会话
-  期间不再 `read` `SKILL.md` / `AGENT-PROMPT.md` / `Sample/easyeda-agent/**`
-  中的任何 `.md`；`Sample/` 与 `AGENT-PROMPT.md` 是移植参考与归档，仅供
-  skill 维护者核对，不是运行时输入。
-- **不写入 skill 目录**：所有运行产物（截图 / 临时 JSON / 计划 / 蓝图 /
-  tmp 清单）只写**工作区** `./tmp/`（`Path.cwd()`，`FILE_CREATION_POLICY.md`
-  §1.3/§2.4 与 §8.4）；skill 目录只读。
-- **版本门禁非 0**：直接向用户报告 `CLI/Skill/daemon/Connector` 与 GitHub
-  latest 的实际版本差异并请用户升级后新开会话，**不打开任何升级指引文档**。
-- **API 判据真值**：以 daemon 规则代码与 `easyeda <cmd> --help` /
-  `easyeda actions` 为准，与文档描述冲突时以代码为准。
