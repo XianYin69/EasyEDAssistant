@@ -304,6 +304,36 @@ guardrail，以硬门禁形式内置在 `pcb-layout-conventions.md` / `auto-layo
 2. 硬错不抹平分数。
 3. 计数与判定同源。
 
+### 11.5 中断机制（条件中断点与用户确认）
+
+**触发时机**：在特定设计步骤前（如使用泪滴工具、特殊拼板插件、第三方高级DRC等非标准工具时），当探针报告检测到可用但非内建的专用工具/插件。
+
+**中断点协议**（统一格式）：
+```
+[CHECKPOINT <步骤> | <类型>]
+快照：<探针报告路径 .kilo/tmp/eda-tools-manifest.json>
+背景：<当前步骤需求与为什么要问，≤3 句，含证据（探针到的插件/工具列表）>
+决策点：<要用户确认什么，列出选项与推荐默认>
+  - 选项 A：使用专用插件/工具（如：<插件名>）→ 后果：调用插件高级API，可能获得更好结果
+  - 选项 B：使用Skill内置标准流程→ 后果：调用原生命令（如pcb.pour.create），结果符合基线要求
+  ⚠ 推荐：<默认>（理由：基于项目需求和已有授权范围）
+影响范围：<本次只动哪些模块/页面/网络；不动的部分列回归对照>
+等待：用户回复 A/B 或自定；超时/无答复不自动推进，保持暂停态
+```
+
+**用户响应处理**：
+| 用户回复 | 后续行为 |
+|---|---|
+| 选择某选项 | 记入授权（`confirmed_decisions[]`），沿用到后续阶段，不重复问 |
+| 补充新信息 | 更新目标不变量（工具/插件可用性），重评估是否影响已执行步骤 |
+| 要求中止 | 停止当前操作；已执行的写操作不回滚（无 undo），报告当前状态 + 已落盘步骤 |
+| 超时/无答复 | **保持暂停态，不自动推进**；不猜默认值落笔（推荐默认仅供用户参考，不代表自动执行） |
+
+**设计原则**：
+- 用户的选择会不会改变实际做法、或超出已有授权范围——会才中断，
+- 不会就不中断。已有确认与授权沿用，不因流程节点重复索取许可。
+- 用户要求逐步确认时遵守其节奏（§11 原则）。
+
 ## 12. PCB 布线与铺铜
 
 - 导线（`pcb.line.create`）、过孔（`pcb.via.create`）为增量创建，无确认。
@@ -370,10 +400,38 @@ guardrail，以硬门禁形式内置在 `pcb-layout-conventions.md` / `auto-layo
 | `sch.py` | 原理图执行器（place/wire/connectivity/snapshot 封装） |
 | `probe.js` | 全布局快照（通过 `debug.exec_js` 拉取 parts+pins+flags+wires） |
 | `tests/run.py` | 规则信任测试（朝向表一致性 + fixture 金标准） |
+| `tool-probe-simulator.py` | 模拟内建工具与插件调用示例生成器，输出 JSON/MD 示例文档供技能文档引用 |
 
 ### 16.1 Python 脚本逻辑详解
 
 > 以下对每个 Python 脚本的核心逻辑进行详细说明。JS 脚本（`calibrate.js`、`probe.js`、`lint.sh`）不在本节范围。
+
+#### `tool-probe.py` — 嘉立创 EDA 工具与插件探针
+
+**定位**：会话环境探针脚本，获取嘉立创 EDA 专业版内建工具与用户已安装插件清单，
+并在项目临时目录生成可供 Agent 逐步查阅的说明文档。
+
+**核心逻辑**：
+1. **连接环境**：通过本地 EDA 引擎（MCP / daemon 60832）读取工程健康状态与扩展信息。
+2. **内建工具探测**：枚举官方编辑器注册的工具（Tools），如泪滴、铺铜管理器、网络类管理器、差分对管理器、电路计算器、嘉立创 SMT 选型工具。
+3. **已安装插件探测**：查询扩展 API 返回的 extensions/plugins 清单（若插件 API 可用）；若当前版本未暴露枚举接口，则生成标准结构供 Agent 参考并标记 `unknown`。
+4. **产物生成**：
+   - `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-manifest.json`（机器可读清单）
+   - `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-guide.md`（人读说明）
+5. **步骤级调用**：Agent 进入特定设计阶段（铺铜、布线收尾、泪滴、拼板、导出制造文件）前，先读探针报告：
+   - 有专用插件/工具 → 优先调用插件 API（并记录插件名与版本）
+   - 无插件/工具 → 回退 Skill 原生程序化路径（如 `pcb.pour.create`、`pcb.drc`）
+6. **用户中断门控**：若涉及非标高级工具（如特殊拼板、泪滴、第三方 DRC），触发 §11.5 条件中断点询问用户是否启用对应插件或工具；用户明确答复后才继续。
+
+**输出字段**：
+- `builtin_tools[]`：内建工具（id/name/category/status）
+- `installed_extensions[]`：已安装扩展插件（id/name/version/status）
+- `health{}`：工程健康状态（来自 `easyeda health`）
+
+**边界**：
+- 探针不替代设计决策，只负责发现可用工具与插件。
+- 插件调用仍须遵守用户授权、版本门禁与回读验证纪律。
+- 探针失败时不阻塞主流程，仅将 `status` 标记为 `unknown` 并在报告中提示。
 
 #### `sch.py` — 稳定原理图执行器
 
@@ -514,6 +572,27 @@ guardrail，以硬门禁形式内置在 `pcb-layout-conventions.md` / `auto-layo
 3. **朝向表一致性**：`sch.py` 和 `orientation.json` 推导的朝向表必须一致（`tests/run.py` 断言）
 4. **`--update` 模式**：运行后自动更新金标准（需人工确认），用于规则变更后快速校准
 5. **输出**：测试报告（通过/失败/更新条目），覆盖率统计
+
+#### `tool-probe-simulator.py` — 内建工具与插件调用示例生成器
+
+**定位**：生成 EasyEDA Pro 内建工具与第三方插件的调用示例文档，作为技能文档与 Agent 的参考样例。
+
+**核心逻辑**：
+1. **工具/插件清单**：内置内建工具（teardrop、copper_manager、net_class_manager、diff_pair_manager、circuit_calculator、smt_selector）与示例插件（拼板助手、高级 DRC、智能布线优化）的调用示例。
+2. **示例生成**：为每个工具/插件生成 CLI 与 API 两种调用示例，包含用途、参数与输出说明。
+3. **真实调用尝试**：可选执行 `easyeda health --project <project> --json` 等真实 CLI 调用，记录成功/失败与输出摘要。
+4. **产物输出**：
+   - `eda-tools-manifest.json` 的补充示例数据（`tool-call-examples.json`）
+   - 人读示例文档（`tool-call-guide.md`）
+5. **使用场景**：
+   - 在技能文档中引用调用示例作为 Agent 的参考
+   - 在特定步骤前生成/更新示例文档，帮助 Agent 选择调用路径
+   - 作为工具/插件能力发现流程的演示样例
+
+**边界**：
+- 示例文档仅说明调用方式，不替代实际工具调用
+- 真实调用可能因权限、环境或插件安装情况而成功或失败
+- 所有调用仍需遵循授权范围与回读验证纪律
 
 ---
 

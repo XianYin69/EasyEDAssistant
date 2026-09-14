@@ -190,9 +190,19 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 4. 按任务选子域判据（第 4 节），只加载相关参考；以 `easyeda <domain> <command>
    --help` 与 `easyeda actions` 为参数真值。
 5. 临时 JSON、计划与回读结果放入项目已忽略的临时目录；保留原始快照，在副本中设计。
- 6. **基线截图**：读取工程基线（原理图 PDF 导图或 PCB 视口快照），确认当前状态为清晰的"起始状态"；
-    保存截图到 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/baseline/`（自动按时间戳命名）；这条截图作为后续差异对比的参考。
- 7. **动态截图管理**：
+6. **工具与插件探针**：**Agent 必须自动运行** `python3 scripts/tool-probe.py --project <project>` 获取嘉立创 EDA 内建工具与已安装插件清单；
+    生成 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-manifest.json` 与 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-guide.md`；
+    此清单供后续设计步骤查阅并按需调用专用工具或插件。
+7. **基线截图**：读取工程基线（原理图 PDF 导图或 PCB 视口快照），**Agent 自动保存**截图到 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/baseline/`（自动按时间戳命名）；
+    这条截图作为后续差异对比的参考。
+
+8. **辅助脚本自动调用**：Agent 必须在特定设计步骤前自动运行以下脚本：
+   - **P1 导入前**：运行 `python3 scripts/tool-probe-simulator.py` 生成工具调用示例文档，供用户参考
+   - **P6 布线前**：运行 `python3 scripts/tool-probe.py` 扫描插件状态，自动触发 §11.5 条件中断点询问用户是否启用对应插件
+   - **P8 电源铺铜前**：运行 `python3 scripts/tool-probe.py` 检查电源插件状态，决定是否启用专用工具
+   - **P10 终检前**：运行 `python3 scripts/tool-probe.py` 确认工具状态，确保视觉验证完整性
+   - **每个关键步骤后**：自动运行 `python3 scripts/visual-qa.py` 进行视觉质量评估
+ 8. **动态截图管理**：
      - 每完成关键步骤后立即截一张图（原理图用 `sch export-image`，PCB 用 `pcb snapshot --previous-sha256`）；
      - 识别截图状态：用 SHA256 校验与上次截图比对，标记是否 stale（canvas-freeze）；
      - 动态清理：每次新截之前，删除 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/` 中的旧截图（保留最近 3 张关键快照作为回溯依据）；
@@ -550,6 +560,9 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 
 - `pcb import-changes` 从原理图同步器件/网表（自动点"应用修改"对话框，报
   before/after 计数差；`InvalidatesStage:placement_confirmed`，别为刷飞线跑它）。
+- **工具与插件检查**：参考 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-manifest.json` 和 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-guide.md`：
+    - 若有专用导入/同步插件（如高级网表同步工具、智能飞线处理插件），触发 §11.5 条件中断点询问用户是否启用；
+    - 用户确认后优先调用插件 API；用户选择标准流程或无插件时使用原生命令。
 - **同步截图**：`import-changes` 成功后立即 `pcb snapshot`，可视化飞线差异，作为
   P1 中断点（§11.5）的视觉证据。
 - `pcb sync-designators`：按 `uniqueId`（平台首次导入铸造，跨文档同一命名空间）
@@ -854,6 +867,9 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 10. 报告覆盖未验证项；不把 canonical 一致当作实际图面已同步。
 11. 强制/条件中断点（§11.5）命中时暂停等待用户确认，不自动推进；
     超时/无答复保持暂停态，不猜默认值落笔。
+12. **Agent 必须自动调用 Python 辅助脚本**：进入特定步骤前，自动运行 `scripts/tool-probe.py`
+    生成工具清单；在 PCB 铺铜/泪滴/拼板/导出等阶段前，查阅清单并触发 §11.5 条件中断点
+    询问用户是否启用专用插件或工具；在关键步骤后，自动调用 `scripts/visual-qa.py` 进行视觉验证。
 
 ---
 
@@ -964,6 +980,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 | P8 | 电源铺铜策略 | 条件 | 多电源域（≥2 地网络）的铺铜/割地方案是 §6 决策点 |
 | P10 | 终检 WARN 清单 | 条件 | DRC 有非 fatal WARN，须用户决定接受还是修复 |
 | 交付 | 文档任务 | 条件 | 生成 LICENSE/README 须用户确认版权主体；README 内容须用户确认阶段门状态 |
+| P6 | 工具与插件调用 | 条件 | 探针报告检测到非内建专用工具/插件（如泪滴、拼板、第三方 DRC）时，触发 §11.5 条件中断点询问用户是否启用对应插件或工具 |
 
 **中断点与验证门禁的关系**：
 - `blocked`（检查没运行/环境问题）→ 条件中断：需用户介入修环境，不自动跳过。
