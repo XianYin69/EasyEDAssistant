@@ -9,9 +9,9 @@ tool-probe-simulator.py — Simulate calling built-in tools/plugins in EasyEDA P
   python3 scripts/tool-probe-simulator.py [--project <name>] [--output-dir ./tmp]
 
 输出内容：
-  - .kilo/tmp/tool-call-examples.json    # 结构化示例数据
-  - .kilo/tmp/tool-call-examples.md     # Markdown 示例文档
-  - .kilo/tmp/tool-call-guide.md         # 实用调用指南
+  - ./tmp/tool-call-examples.json    # 结构化示例数据
+  - ./tmp/tool-call-examples.md     # Markdown 示例文档
+  - ./tmp/tool-call-guide.md         # 实用调用指南
 """
 from __future__ import annotations
 
