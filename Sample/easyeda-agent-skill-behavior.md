@@ -371,6 +371,152 @@ guardrail，以硬门禁形式内置在 `pcb-layout-conventions.md` / `auto-layo
 | `probe.js` | 全布局快照（通过 `debug.exec_js` 拉取 parts+pins+flags+wires） |
 | `tests/run.py` | 规则信任测试（朝向表一致性 + fixture 金标准） |
 
+### 16.1 Python 脚本逻辑详解
+
+> 以下对每个 Python 脚本的核心逻辑进行详细说明。JS 脚本（`calibrate.js`、`probe.js`、`lint.sh`）不在本节范围。
+
+#### `sch.py` — 稳定原理图执行器
+
+**定位**：将核心 CLI 操作封装为**抗抖动（churn-resilient）** API，供批量脚本链式调用。
+
+**核心逻辑**：
+1. **操作封装**：`place()` / `wire()` / `connectivity()` / `snapshot()` 四个基础方法，每个方法内部：
+   - 调用 `easyeda <domain> <command>` CLI
+   - 捕获输出 JSON，解析为统一返回格式
+   - 超时（默认 35s）自动重试一次；超时/DISPATCH_FAILED 触发**轻读复核**（重新读 layout 确认是否已落笔）
+2. **状态守卫**：每次写操作前后自动执行 `sch read` 回读，对比 before/after 确认变更已生效
+3. **幂等处理**：`wire()` / `connect()` 对已连接目标自动跳过；`--replace` 模式先删旧 flag+wire 再连
+4. **失败处理**：保护队列失败后重新读取当前图面，修正输入后完整重编译执行；已生效步骤保留在画布与 journal
+
+#### `lint.py` — 数据级原理图 Linter
+
+**定位**：纯离线脚本，读取完整布局 JSON，报告问题点。
+
+**核心逻辑**：
+1. **输入**：`easyeda sch list --include-device-identity --include-pins --include-bbox --include-wires --json` 的输出 JSON
+2. **检查项**：
+   - **悬空引脚**：`pin.noConnected != true` 且无 wire/netflag/netport 连接 → WARN
+   - **重复网络标记**：同一 net 名出现在不应重复的位置 → WARN
+   - **零长度导线**：起点终点坐标重合的 wire → ERROR（DRC fatal 级别）
+   - **NC/连接状态互斥**：`noConnected`、`connectionState:"unconnected"`、正常连接三者互斥校验
+3. **输出**：JSON（问题列表，含严重等级、位置、规则编号）+ 人读摘要到 stderr
+
+#### `diff.py` — 差异感知原理图 Linter
+
+**定位**：在 `lint.py` 基础上增加**差异感知**——只报告与已保存基线不一致的新问题。
+
+**核心逻辑**：
+1. **输入**：新鲜布局 JSON + 基线 JSON（上次保存的 `page-before.json`）
+2. **差异计算**：对比两份 JSON 的器件、引脚、网络、图元列表，识别新增/删除/变更
+3. **差异报告**：只报告**变化部分**的问题（忽略基线已存在问题），输出格式与 `lint.py` 一致
+4. **应用场景**：`sch design-diff` 发现问题后，用 `diff.py` 聚焦修复范围
+
+#### `bom-enrich.py` — BOM 导出补 LCSC C 号
+
+**定位**：读取 EasyEDA BOM 导出 CSV，匹配 LCSC C 号并补入 "Supplier Part" 列。
+
+**核心逻辑**：
+1. **读取 BOM**：解析 EasyEDA 导出的 BOM CSV（designator、value、footprint 列为键）
+2. **匹配 C 号**：按 `designator + value + footprint` 三元组查询 `standard-parts.json`
+3. **写回**：将匹配到的 LCSC C 号写入 BOM 的 "Supplier Part" 列
+4. **未匹配处理**：未找到匹配项的行标记 `NEED_LOOKUP`，供人工处理
+
+#### `parts-select.py` — 器件选型（本地/在线比价）
+
+**定位**：器件标准化的「比对选型」步骤；本地库优先，在线为**显式 opt-in**（需 `--online`）。
+
+**核心逻辑**：
+1. **查询**：按关键词（功能名/型号/LCSC C 号）搜索：
+   - 本地 `standard-parts.json` → `easyeda lib by-lcsc` / `lib search` 精确解析
+   - 在线比价（`--online`，opt-in）→ JLC 在店库存与单价
+2. **排名五档**（顺序固定）：
+   - `Resistance gate`：阻值等式（SI 前缀大小写敏感）
+   - `Buildable`：`stockCount ≥ qty`（有库存满足需求）
+   - `Basic`：免 feeder 费
+   - `Preferred`：优选档位
+   - `Cheapest`：单价最低
+3. **输出**：排名结果 JSON + 人读摘要，含每档的筛选依据
+4. **写回**：选中结果经 `parts-add.py` 写回 `standard-parts.json`
+
+#### `parts-add.py` — 选型写回
+
+**定位**：将 `parts-select.py` 选中的新器件追加到 `standard-parts.json`。
+
+**核心逻辑**：
+1. **输入**：`easyeda lib by-lcsc --lcsc C…` 或 `lib search` 的输出
+2. **去重**：检查 `standard-parts.json` 中是否已有相同 `lcsc` C 号或 `deviceUuid`，已有则跳过
+3. **写入**：追加新条目（含 `deviceUuid`、`lcsc`、`footprint`、`basic` 标记等），保持 JSON 格式一致
+4. **校验**：写回后回读确认条目已落盘
+
+#### `blocks-pin-audit.py` — 电路块引脚引用审计
+
+**定位**：校验电路块（block）的 pin 引用是否与**真实符号引脚**一致。
+
+**核心逻辑**：
+1. **读模板**：`easyeda blocks show <id>` 获取块 JSON，提取 `parts` map 中所有 pin 引用（`ROLE.PIN` 格式）
+2. **读真实引脚**：`easyeda lib symbol-pins --uuid <deviceUuid>` 或 `--probe` 实测回读
+3. **比对**：逐一校验块的 pin 引用在真实符号中是否存在：
+   - 名不匹配 → ERROR
+   - 数量不足 → ERROR
+4. **`--probe` 模式**（需 `--project --doc --allow-clear`）：
+   - 在专用空白测量页放件 → 读引脚 → 清页
+   - 用于实测刷新 `symbol-pins.json`（离线脚本依赖此文件）
+5. **输出**：审计结果 JSON，每个 pin 的 PASS/FAIL/ADVISORY 状态
+
+#### `bulk-place.py` — 整页批量放置
+
+**定位**：按 manifest 驱动整页批量放置（place + 位号回写 + 增量存盘）。
+
+**核心逻辑**：
+1. **输入**：manifest 文件（JSON，含器件列表 + 目标 page） + page UUID（命令行参数）
+2. **放置循环**：
+   - 读 manifest，逐一调用 `sch materialize` 或等效放置命令
+   - 每放一个器件，回读验证位号/网络/几何已落盘
+3. **位号回写**：放置完成后检查位号占用情况，自动分配未占用位号
+4. **增量存盘**：每批放置后执行 `sch save`，确认 `saved:true`
+5. **异常处理**：中途失败则停止，报告已放置/未放置清单，不盲重试
+
+#### `bulk-connect.py` — 整页电气实现
+
+**定位**：按连接 spec 驱动整页电气实现 + 期望网表验证门 + 悬空脚修复循环。
+
+**核心逻辑**：
+1. **输入**：连接 spec JSON（net → pins 映射）+ 目标 page
+2. **连接执行**：逐一调用 `sch autoconnect --spec` 或逐 pin `sch autoconnect --pin <ref>:<pin> --kind <kind> --net <net>`
+3. **验证门**：连接完成后运行 `sch check`，检查 `duplicate-net-marker` 规则兜叠加 marker
+4. **悬空脚修复循环**：
+   - 读 `sch list` 获取所有悬空脚（`unconnected-pin` WARNING）
+   - 按 spec 判断应为连接还是 NC
+   - 对应为连接的，自动调用 `sch autoconnect` 修复
+   - 循环直到无悬空脚或达到最大迭代次数
+5. **输出**：连接报告（已连/悬空/失败）+ 最终 `sch check` 结果
+
+#### `audit-baseline.py` — 审计日志离线分析
+
+**定位**：从 audit log 离线分析「暴露面健康度」基线——不需要连编辑器，不需要跑真机。
+
+**核心逻辑**：
+1. **输入**：`easyeda audit export --playbook` 导出的审计 JSON 序列
+2. **分析维度**：
+   - **调用分布**：各类命令（place/wire/connect/save/check）的调用频率与占比
+   - **失败率**：各命令的失败率、失败类型分布（超时/DISPATCH_FAILED/STALE_READ/权限拒绝）
+   - **回退路径**：失败后实际采取的恢复路径统计（重试/回读/放弃）
+3. **基线输出**：生成健康度评分（暴露面 = 失败操作占比 × 严重程度）
+4. **应用场景**：长期跟踪 EDA 工程操作健康度，识别高风险操作模式
+
+#### `tests/run.py` — 规则信任测试框架
+
+**定位**：对 schematic-lint 规则集做回归测试，验证 lint 规则不会误杀合法设计。
+
+**核心逻辑**：
+1. **Fixture 金标准**：预定义合法/非法原理图布局 JSON 样本（fixtures 目录），每个样本标注预期 PASS/FAIL
+2. **规则一致性**：对每个 fixture 运行 `lint.py`，对比实际输出与金标准预期
+3. **朝向表一致性**：`sch.py` 和 `orientation.json` 推导的朝向表必须一致（`tests/run.py` 断言）
+4. **`--update` 模式**：运行后自动更新金标准（需人工确认），用于规则变更后快速校准
+5. **输出**：测试报告（通过/失败/更新条目），覆盖率统计
+
+---
+
 ## 17. 朝向系统（单一真源）
 
 `orientation.json` 是 netflag/netport body 朝向的单一真源。整张表由 4 个事实决定：
