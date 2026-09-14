@@ -54,7 +54,7 @@ EasyEDAssistant/
 ## EasyEDAssistant（SKILL.md）详细文档
 
 > 对应根目录 `SKILL.md`（frontmatter `name: EasyEDAssistant`，
-> `metadata.author: EasyEDAssistant`，当前 v0.5.0）。本节说明其组件、
+> `metadata.author: EasyEDAssistant`，当前 v0.7.0）。本节说明其组件、
 > 工作流、引用的其它 SKILL 文件及其作者。
 
 ### 组件（文档结构）
@@ -63,10 +63,10 @@ EasyEDAssistant/
 |---|---|
 | frontmatter | `name: EasyEDAssistant`、description、`license: MIT`、compatibility（MCP 端点 + CLI 回退）、metadata（author/version） |
 | §1 连接 | JLCEDA MCP 双端点（`ws://127.0.0.1:8765/bridge/ws`、`http://127.0.0.1:7655/mcp`）+ 原有 `easyeda` CLI/daemon 链路 + 连接异常恢复 |
-| §2 开始工作 | 需求澄清（→§11）→ 插件状态 → 工程基线读取 → 参数真值 |
+| §2 开始工作 | 需求澄清（→§11）→ 插件状态 → 工程基线读取 → **动态截图管理**（基线 + 关键步骤截图 + 清理 + stale 识别） |
 | §3 坐标/单位/数据模型 | raw/mil、y-UP、5 raw 网格、锚点 vs bbox 中心（#105）、层/翻面、无 undo |
 | §4 设计子域判据 | P0–P7 优先级总则；PCB/原理图、RF、模拟、数字、滤波器、电源子域规则；电气规范表；设计经验法则；数据手册/PDF 阅读经验 |
-| §5 核心 API 操作 | 原理图 1.4 数据路径（connectivity → compose → apply）、pin-aware autoconnect、PCB 上下文/布线/铺铜、SCH↔PCB 同步、器件库与选型、验证门禁 |
+| §5 核心 API 操作 | 原理图 1.4 数据路径（connectivity → compose → apply + 动态截图）、pin-aware autoconnect（含批处理截图）、PCB 上下文/布线/铺铜、SCH↔PCB 同步（含同步截图）、器件库与选型、验证门禁 |
 | §6 设计决策目录 | 10 类 S0 决策点（叠层/接地/线宽/USB-C/自动下载/选型/单双面/焊接工艺…）与推荐默认 |
 | §7 项目文档任务 | 创建许可证、生成 README、块贡献 |
 | §8 验证与交付 | 五层验证（拓扑/几何/电气/呈现/保存，不可互替）+ 交付报告要求 + §8.3 视觉质量自动评估（`scripts/visual-qa.py`） |
@@ -74,7 +74,7 @@ EasyEDAssistant/
 | §10 执行纪律 | 10 条汇总纪律（门禁、快照、连接、授权、reload、save、MCP 一致性…） |
 | §11 用户需求澄清与目标明确 | 任务分类默认行为、必问清单、目标不变量化、沟通与授权纪律、§11.5 执行中中断机制（强制/条件中断点+CHECKPOINT 协议+用户响应处理+S0–S6/P0–P10 中断点清单） |
 | §12 美观/功能布局经验 | 原理图可读性、PCB 美观（分区/朝向/阵列/留白/丝印/收尾顺序）、交付美学一致性 |
-| §13 变更摘要 | v0.5.0（中断机制 §11.5）、v0.4.0（visual-qa + §8.3）、v0.3.1（更名+移根目录）、v0.3.0 |
+| §13 变更摘要 | v0.7.0（动态截图生命周期 v0.7.0）、v0.6.0（布局蓝图 §7.4）、v0.5.0（中断机制 §11.5）、v0.4.0（visual-qa + §8.3）、v0.3.1（更名+移根目录）、v0.3.0 |
 
 ### 工作流 / 过程
 
@@ -86,9 +86,11 @@ EasyEDAssistant/
    执行中遇强制/条件中断点（§11.5）按 CHECKPOINT 协议暂停等用户确认。
 4. **基线读取**：`sch connectivity` / `sch list` / `pcb list --include-bbox`
    + `sheet-geometry`；写前读被改器件/引脚/网络/几何。
-5. **设计执行**：按子域判据（§4）与设计决策（§6）执行；原理图走
-   S0–S6（IR → Lib 几何 → compose → apply → 回读），PCB 走 P0–P10
-   （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）。
+  5. **设计执行**：按子域判据（§4）与设计决策（§6）执行；原理图走
+     S0–S6（IR → Lib 几何 → compose → apply + 动态截图），PCB 走 P0–P10
+     （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）；
+     关键步骤后截图（`.kilo/tmp/snapshots/`），SHA256 校验 stale，
+     旧图自动清理。
 6. **验证与保存**：分层验证（§8），`blocked`/`fail` 区分，显式 `save`
    确认 `saved:true`。
 7. **收尾**（§12.2）：功能定稿 → 清 blocking → `pcb refine` →
@@ -103,7 +105,7 @@ EasyEDAssistant/
 | `Sample/easyeda-agent/agents/openai.yaml` | 上游 agent 接口定义（display_name "EasyEDA Agent"） | zhoushoujianwork（随上游 skill 分发） |
 | `Sample/easyeda-agent/references/*.md`、`*.json` | 上游参考文档与数据文件（判据原始来源） | zhoushoujianwork（随上游 skill 分发） |
 | `Sample/easyeda-agent/scripts/*` | 上游辅助脚本（lint/选型/批量/测试） | zhoushoujianwork（随上游 skill 分发） |
-| `scripts/visual-qa.py` | 视觉质量与布局完整性自动评估（本项目新增，§8.3） | 本项目（EasyEDAssistant）维护 |
+| `scripts/visual-qa.py` | 视觉质量与布局完整性自动评估（API 截图 + 数据驱动交叉评估 + 动态截图生命周期管理，§8.3） | 本项目（EasyEDAssistant）维护 |
 | `AGENT-PROMPT.md` | 智能体系统提示词（完整版 + 附录） | 本项目（EasyEDAssistant）维护 |
 | `agents/EasyEDAssistant.yaml` | Kilocode agent 定义（权威，interface: schema） | 本项目（EasyEDAssistant）维护 |
 | `Sample/easyeda-agent-skill-behavior.md` | 上游 skill 全部行为的章节化记录（本项目维护，含移植版 §23–§25 与 §25A 变更史） | 本项目（EasyEDAssistant）维护 |
@@ -176,14 +178,15 @@ EasyEDAssistant skill 内置的设计判据（详见根目录 `SKILL.md` 第 4 �
   辅助脚本表、朝向系统、图签 keep-out 推导、关键数据文件、审计与恢复、回归
   测试）删除后将丢失，故保留。
 - **skill 定义（agent 行为规范）**：根目录 `SKILL.md`（skill 名
-  **EasyEDAssistant**）— 连接契约、坐标/数据模型、子域判据、API 操作速查、
-  设计决策目录、验证分层（§8.3 视觉质量自动评估）与执行纪律、需求澄清与
-  美观/功能布局经验。
+   **EasyEDAssistant**）— 连接契约、坐标/数据模型、子域判据、API 操作速查、
+   设计决策目录、验证分层（§8.3 视觉质量自动评估 + 动态截图生命周期）、
+   执行纪律、需求澄清与美观/功能布局经验。
 - **智能体提示词**：根目录 `AGENT-PROMPT.md` — 完整系统指令（会话纪律、
   需求澄清、设计执行、PDF 阅读、验证分层、文档任务）+ 附录 A（one-liner
   default_prompt）+ 附录 B（任务触发短语）。
 - **视觉质量评估脚本**：`scripts/visual-qa.py` — API 截图 + 数据驱动检查
-  交叉评估组件间距/走线间距/整齐度（§8.3）。
+   交叉评估组件间距/走线间距/整齐度（§8.3），含动态截图生命周期管理
+   （每步截图、stale 识别、旧图清理）。
 - **上游参考真值**：`Sample/easyeda-agent/references/*.md` 与
   `Sample/easyeda-agent/scripts/*` — SKILL.md 中判据的原始来源；数值冲突时以
   daemon 规则代码（`pcb_rules.go` / `pcb_netclass.go` / `pcb_check*.go`）为准。
