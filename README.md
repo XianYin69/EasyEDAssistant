@@ -1,6 +1,6 @@
 # EasyEDAssistant
 
-易EDA 助手项目：将 **easyeda-agent** skill（嘉立创 EDA 专业版自动化设计 skill）
+嘉立创EDA 助手项目：将 **easyeda-agent** skill（嘉立创 EDA 专业版自动化设计 skill）
 移植为基于 **JLCEDA MCP VS Code 插件**桥接的 Kilocode skill（**EasyEDAssistant**），
 并维护完整的行为记录文档。
 
@@ -89,7 +89,7 @@ EasyEDAssistant/
   5. **设计执行**：按子域判据（§4）与设计决策（§6）执行；原理图走
      S0–S6（IR → Lib 几何 → compose → apply + 动态截图），PCB 走 P0–P10
      （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）；
-     关键步骤后截图（`.kilo/tmp/snapshots/`），SHA256 校验 stale，
+     关键步骤后截图（`C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/`），SHA256 校验 stale，
      旧图自动清理。
 6. **验证与保存**：分层验证（§8），`blocked`/`fail` 区分，显式 `save`
    确认 `saved:true`。

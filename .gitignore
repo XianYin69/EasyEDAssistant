@@ -1,5 +1,6 @@
 # Kilocode 环境注入文件（不入库）
 .kilo/
+.Kilocode/
 # Python 缓存
 __pycache__/
 *.pyc
