@@ -87,13 +87,13 @@ EasyEDAssistant/
 4. **基线读取**：`sch connectivity` / `sch list` / `pcb list --include-bbox`
    + `sheet-geometry`；写前读被改器件/引脚/网络/几何。
 4. **工具探针**：**Agent 自动执行** `python3 scripts/tool-probe.py --project <name>`，生成
-   `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-manifest.json` 与
+   `./tmp/eda-tools-manifest.json` 与
    `eda-tools-guide.md`；在 P1/P6/P8/P10 等关键步骤前查阅清单，按需触发 §11.5
    条件中断点询问用户是否启用专用插件。
 5. **设计执行**：按子域判据（§4）与设计决策（§6）执行；原理图走 S0–S6
    （IR → Lib 几何 → compose → apply + 动态截图），PCB 走 P0–P10
    （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）；
-   关键步骤后截图（`C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/`），SHA256 校验 stale，
+   关键步骤后截图（`./tmp/snapshots/`），SHA256 校验 stale，
    旧图自动清理。
 6. **验证与保存**：分层验证（§8），`blocked`/`fail` 区分，显式 `save`
    确认 `saved:true`。

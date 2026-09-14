@@ -196,9 +196,9 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
    --help` 与 `easyeda actions` 为参数真值。
 5. 临时 JSON、计划与回读结果放入项目已忽略的临时目录；保留原始快照，在副本中设计。
 6. **工具与插件探针**：**Agent 必须自动运行** `python3 scripts/tool-probe.py --project <project>` 获取嘉立创 EDA 内建工具与已安装插件清单；
-    生成 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-manifest.json` 与 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-guide.md`；
+    生成 `./tmp/eda-tools-manifest.json` 与 `./tmp/eda-tools-guide.md`；
     此清单供后续设计步骤查阅并按需调用专用工具或插件。
-7. **基线截图**：读取工程基线（原理图 PDF 导图或 PCB 视口快照），**Agent 自动保存**截图到 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/baseline/`（自动按时间戳命名）；
+7. **基线截图**：读取工程基线（原理图 PDF 导图或 PCB 视口快照），**Agent 自动保存**截图到 `./tmp/baseline/`（自动按时间戳命名）；
     这条截图作为后续差异对比的参考。
 
 8. **辅助脚本自动调用**：Agent 必须在特定设计步骤前自动运行以下脚本：
@@ -210,8 +210,8 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
  8. **动态截图管理**：
      - 每完成关键步骤后立即截一张图（原理图用 `sch export-image`，PCB 用 `pcb snapshot --previous-sha256`）；
      - 识别截图状态：用 SHA256 校验与上次截图比对，标记是否 stale（canvas-freeze）；
-     - 动态清理：每次新截之前，删除 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/` 中的旧截图（保留最近 3 张关键快照作为回溯依据）；
-     - 截图保存到 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/step-<索引>-<时间戳>.png`，便于后续复盘与 visual-qa.py 调用。
+     - 动态清理：每次新截之前，删除 `./tmp/snapshots/` 中的旧截图（保留最近 3 张关键快照作为回溯依据）；
+     - 截图保存到 `./tmp/snapshots/step-<索引>-<时间戳>.png`，便于后续复盘与 visual-qa.py 调用。
 
 ---
 
@@ -492,7 +492,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 | 位号修复 | `sch designators allocate` → `plan` → `verify` → `sch apply` | 按官方库前缀分配；只改非标准项，跳过已占用编号 |
 | 框与标题 | `sch frame apply/check --from frames.json` | 只操作自己登记的图元；check 按实际文本 bbox 验证 |
 | 执行队列 | `sch apply <plan.json> [--dry-run \| --yes]` | 保护队列禁止 `--resume/--from/--to` 跳步；失败重新回读生成 |
-| **动态截图** | 每步 `apply` 后立即 `sch export-image`（原理图）或 `pcb snapshot`（PCB） | 保存至 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/`；SHA256 校验与上帧比对；每 3 步自动清理旧截图 |
+| **动态截图** | 每步 `apply` 后立即 `sch export-image`（原理图）或 `pcb snapshot`（PCB） | 保存至 `./tmp/snapshots/`；SHA256 校验与上帧比对；每 3 步自动清理旧截图 |
 
 Apply 队列（playbook）契约：`version:1` + `meta` + 有序 `steps`；每步
 `action+payload`（typed）或 `run+flags`（Cobra）或 `notify`；`capture` 捕获
@@ -565,7 +565,7 @@ easyeda sch autoconnect --spec p1-connect.json --dry-run --json # 预览不改
 
 - `pcb import-changes` 从原理图同步器件/网表（自动点"应用修改"对话框，报
   before/after 计数差；`InvalidatesStage:placement_confirmed`，别为刷飞线跑它）。
-- **工具与插件检查**：参考 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-manifest.json` 和 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/eda-tools-guide.md`：
+- **工具与插件检查**：参考 `./tmp/eda-tools-manifest.json` 和 `./tmp/eda-tools-guide.md`：
     - 若有专用导入/同步插件（如高级网表同步工具、智能飞线处理插件），触发 §11.5 条件中断点询问用户是否启用；
     - 用户确认后优先调用插件 API；用户选择标准流程或无插件时使用原生命令。
 - **同步截图**：`import-changes` 成功后立即 `pcb snapshot`，可视化飞线差异，作为
@@ -825,8 +825,8 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
   CI/批量回归或已知截图 fresh 的场景。
 
 **动态截图生命周期**（v0.7.0）：
-- **保存策略**：截图保存在 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/step-<index>-<timestamp>.png`，
-  基线图保存在 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/baseline/`；两目录皆在 `.gitignore` 中排除。
+- **保存策略**：截图保存在 `./tmp/snapshots/step-<index>-<timestamp>.png`，
+  基线图保存在 `./tmp/baseline/`；两目录皆在 `.gitignore` 中排除。
 - **清理策略**：每次新截图生成前，自动删除 snapshots 目录中最旧的截图
   （保留最近 3 张关键快照作为回溯）；基线截图在会话结束后清理。
 - **状态识别**：`visual-qa.py` 用 `--previous-sha256` 检测同帧，stale 标记
@@ -950,7 +950,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 
 ```
 [CHECKPOINT <阶段> | <类型>]
-快照：<截图文件路径 C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/step-N-*.png> + <状态 fresh/stale>
+快照：<截图文件路径 ./tmp/snapshots/step-N-*.png> + <状态 fresh/stale>
 背景：<当前状态与为什么要问，≤3 句，含证据（回读数据/DRC/快照）>
 决策点：<要用户拍什么，列出选项与推荐默认>
   - 选项 A：<描述> → 后果：<对后续流程的影响>
@@ -1077,7 +1077,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 
 ### 13.1 v0.7.0（2026-09-14）
 
-- 新增 **§2 动态截图管理**（§2.7、§2.8）：每关键步骤后自动截图（原理图 `sch export-image` / PCB `pcb snapshot`），SHA256 校验识别 stale 状态，动态清理旧截图（保留最近 3 张关键快照），截图路径 `C:\Users\User\.kilocode\skills\EasyEDAssistant/tmp/snapshots/step-<index>-<timestamp>.png`。
+- 新增 **§2 动态截图管理**（§2.7、§2.8）：每关键步骤后自动截图（原理图 `sch export-image` / PCB `pcb snapshot`），SHA256 校验识别 stale 状态，动态清理旧截图（保留最近 3 张关键快照），截图路径 `./tmp/snapshots/step-<index>-<timestamp>.png`。
 - **§5.1 执行队列**新增"动态截图"操作：每步 `apply` 后立即截图保存至 snapshots 目录。
 - **§5.2 批量连接**新增截图验证：`--spec` 批量 `sch autoconnect` 完成后立即 `sch export-image` 验证 netflag/netport 位置。
 - **§5.5 原理图↔PCB 同步**新增同步截图：`import-changes` 后立即 `pcb snapshot` 可视化飞线差异，作为 P1 中断点视觉证据。

@@ -38,7 +38,7 @@ def _cli(args: list[str], timeout: int = 30) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--project", default="default", help="目标工程名")
-    ap.add_argument("--output-dir", default="C:\\Users\\User\\.kilocode\\skills\\EasyEDAssistant/tmp", help="输出目录")
+    ap.add_argument("--output-dir", default=str(Path(__file__).resolve().parent.parent / "tmp"), help="输出目录")
     args = ap.parse_args()
 
     out_dir = Path(args.output_dir)
