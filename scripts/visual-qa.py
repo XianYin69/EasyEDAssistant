@@ -20,7 +20,7 @@ visual-qa.py — EasyEDAssistant 视觉质量与布局完整性自动评估
 
 用法：
   python3 scripts/visual-qa.py --project <name> [--doc <page-uuid>]
-      [--artifacts-dir .easyeda/artifacts]
+      [--artifacts-dir ./tmp]                # 工作区相对路径，禁止逃逸 cwd
       [--schematic | --pcb | --both]   # 默认 --both
       [--strict]                        # WARN 也判阻塞（退出码 3）
       [--no-snapshot]                   # 跳过截图采集，只用已有数据打分
@@ -386,17 +386,37 @@ def evaluate_sch(image: dict, data: dict, strict: bool) -> dict:
 # ───────────────────────── 主入口 ─────────────────────────
 
 
+def _sanitize_project(name: str) -> str:
+    """剥离任何路径分隔符与 .. 序列，防止注入到文件名/路径（FILE_CREATION_POLICY §5.2）。"""
+    return Path(name).name or "default"
+
+
+def _resolve_within_workspace(raw: str) -> Path:
+    """解析为绝对路径并强制落在工作区(cwd)内；逃逸则拒绝。"""
+    workspace = Path.cwd().resolve()
+    p = Path(raw)
+    candidate = (p if p.is_absolute() else workspace / p).resolve()
+    try:
+        candidate.relative_to(workspace)
+    except ValueError:
+        raise SystemExit(
+            f"[visual-qa] 安全拒绝：产物目录 {candidate} 逃逸出工作区 {workspace}"
+        )
+    return candidate
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--project", required=True)
     ap.add_argument("--doc", help="schematic page UUID")
-    ap.add_argument("--artifacts-dir", default=".easyeda/artifacts")
+    ap.add_argument("--artifacts-dir", default="tmp")
     ap.add_argument("--mode", choices=["schematic", "pcb", "both"], default="both")
     ap.add_argument("--strict", action="store_true", help="WARN 也判阻塞")
     ap.add_argument("--no-snapshot", action="store_true", help="跳过截图采集")
     args = ap.parse_args()
 
-    artifacts = Path(args.artifacts_dir)
+    args.project = _sanitize_project(args.project)
+    artifacts = _resolve_within_workspace(args.artifacts_dir)
     artifacts.mkdir(parents=True, exist_ok=True)
 
     # 读取上次报告的 PCB screenshot sha256（用于 stale 检测）

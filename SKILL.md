@@ -194,7 +194,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
    `net:""` 与 `noConnected:false` 时自动导出，仍保留 `unconnected-pin` 警告。
 4. 按任务选子域判据（第 4 节），只加载相关参考；以 `easyeda <domain> <command>
    --help` 与 `easyeda actions` 为参数真值。
-5. 临时 JSON、计划与回读结果放入项目已忽略的临时目录；保留原始快照，在副本中设计。
+5. 临时 JSON、计划与回读结果放入**工作区**（`cwd`，非 skill 目录）下已忽略的 `./tmp/` 目录；保留原始快照，在副本中设计（详见 `FILE_CREATION_POLICY.md` §2.4：运行产物禁止写入 skill 目录，且不得逃逸出工作区）。
 6. **工具与插件探针**：**Agent 必须自动运行** `python3 scripts/tool-probe.py --project <project>` 获取嘉立创 EDA 内建工具与已安装插件清单；
     生成 `./tmp/eda-tools-manifest.json` 与 `./tmp/eda-tools-guide.md`；
     此清单供后续设计步骤查阅并按需调用专用工具或插件。
