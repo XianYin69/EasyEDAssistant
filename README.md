@@ -69,6 +69,11 @@ EasyEDAssistant/
 2. **移植版 skill** — 根目录 `SKILL.md`（skill 名 **EasyEDAssistant**），
    Kilocode 合规的 skill 定义，支持双链路连接并扩充设计知识库与任务能力。
 
+### 流程图综述
+
+> 完整交互式流程图请打开 [`stream.html`](./stream.html)（基于 diagrams.net）。
+> 主要流程：用户输入请求 → 识别用户意图 → 判断首次设计 → 是则走「电路板设计标准设计流程」（初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作），否则询问需要执行的步骤后读取 /tmp 上下文文件继续。
+
 ## EasyEDAssistant（SKILL.md）详细文档
 
 > 对应根目录 `SKILL.md`（frontmatter `name: EasyEDAssistant`，
