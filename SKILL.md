@@ -1,11 +1,11 @@
 ---
 name: EasyEDAssistant
-description: "基于 JLCEDA MCP VS Code 插件桥接操作嘉立创 EDA（EasyEDA）的移植版电路设计 skill：原理图/PCB/射频/模拟/数字/滤波器/电源设计与检查。支持 MCP 与原有 CLI/daemon 双链路，内置电气规范、数据手册 PDF 阅读经验与项目文档任务（许可证/README）。详细内容按触发条件存放在同目录 references/ 文件中，SKILL.md 为唯一入口主干。"
+description: "基于 JLCEDA MCP VS Code 插件桥接操作嘉立创 EDA（EasyEDA）的移植版电路设计 skill：原理图/PCB/射频/模拟/数字/滤波器/电源设计与检查。支持 MCP 与原有 CLI/daemon 双链路，内置电气规范、数据手册 PDF 阅读经验与项目文档任务（许可证/README）。SKILL.md 为唯一入口主干；会话初始化见 references/初始化部分/，其余详细文档由维护者索引 tmp/project-files-overview.md 管理。"
 license: MIT
 compatibility: "Requires JLCEDA MCP VS Code plugin running locally (ws://127.0.0.1:8765/bridge/ws + http://127.0.0.1:7655/mcp). Fallback: easyeda CLI/daemon/Agent Connector. Offline design planning needs no editor."
 metadata:
   author: EasyEDAssistant
-  version: "0.10.0"
+  version: "0.10.1"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -24,13 +24,13 @@ PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造
 ## 0. 主干机制（先读本节）
 
 - **progressive disclosure 契约**：本文件只含入口判定、路由与 always-on 纪律；
-  §1–§14 全文已逐字迁入 `references/` 与 `CHANGELOG.md`，**原章节编号不变**。
-- **铁律**：进入路由表（§2）所列任一操作前，必须先完整读取对应 `references/` 文件；
-  全文中出现的 `§N`/`§N.N` 引用一律指向对应 reference 文件内的原文（§10 在本文件）。
+  §1–§14 详细文档已移出主干，由维护者按框图重建并索引于 tmp/project-files-overview.md；CHANGELOG.md 保留版本史。**原章节编号不变**。
+- **铁律**：进入路由表（§2）所列任一操作前，必须先完整读取路由表所列的主题 reference 文件；
+  全文中出现的 `§N`/`§N.N` 引用一律指原文章节编号，其详细文档正本经 tmp/project-files-overview.md 索引查取（§10 在本文件）。
 - SKILL.md 与 reference 文件如有出入，以 reference 文件（迁移原文）为准；数值判据
   最终以 daemon 规则代码（`pcb_rules.go` 等）为准。
 
-## 1. 连接速览（双链路，详见 references/connection-setup.md §1）
+## 1. 连接速览（双链路，原文 §1）
 
 | 通道 | 地址 | 用途 |
 |---|---|---|
@@ -43,28 +43,21 @@ PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造
 - **cwd 确认**：端口连通后向用户索要 EDA 工程绝对路径并与 Kilocode `workspace root`
   比对，以用户指定路径为运行时 `cwd`（运行产物 `./tmp/` 根）；不一致以用户为准。
 - **版本门禁**：CLI/daemon 链路会话第一条命令 `easyeda update --check --exit-code`，
-  非 0 停止并报告版本差异，升级后新开会话从头开始（详见 connection-setup.md §1.2）。
+  非 0 停止并报告版本差异，升级后新开会话从头开始（§1.2）。
 
 ## 2. Reference 路由表
 
-| 触发条件 | 原文章节 | 文件 |
-|---|---|---|
-| 会话开始/链路异常恢复/开始工作 12 步细则 | §1、§2 | references/connection-setup.md |
-| 坐标换算、放置、写前几何回读 | §3 | references/coordinates-model.md |
-| 任何绘制/布局/布线判据决策；P0–P7 冲突裁决；RF/模拟/数字/滤波器/电源子域；行业标准表；数据手册阅读 | §4 | references/design-rules.md |
-| 执行具体 API/CLI：connectivity/compose/apply/autoconnect/PCB 布线铺铜/原理图↔PCB 同步/选型/验证门禁命令 | §5 | references/api-operations.md |
-| 新设计 S0 决策摊牌（层数/VCC 内层/地域/线宽/USB/选型档位…） | §6 | references/design-decisions.md |
-| 项目文档任务：LICENSE/README/块贡献/PCB 与原理图字符画蓝图/逻辑框图/静态可行性/技术手册与功能手册 | §7 | references/project-docs.md |
-| 验证分层、交付报告、visual-qa、截图与 tmp/ 生命周期、已知平台限制 | §8、§9 | references/verification-delivery.md |
-| 需求澄清、开工必问、目标不变量、授权纪律、执行中 CHECKPOINT 中断机制与全阶段中断点表 | §11 | references/discipline-checkpoints.md |
-| 布局收尾美观：可读性、朝向/阵列/留白/丝印、收尾顺序 | §12 | references/layout-aesthetics.md |
-| 未知器件/报错主动检索学习、net-download 下载外部资源、PCB 设计基线 D1–D20 | §13 | references/external-resources.md |
-| GUI 菜单/官方文档 ↔ 本 skill 命令映射 | 官方文档两章 | references/official-docs.md |
-| 版本变更历史 | §14 | CHANGELOG.md |
+| 触发条件 | 文件 |
+|---|---|
+| 会话开始的工作区初始化：向用户询问工作区路径 → 在工作区建立 tmp 文件夹 → 建立初始化文件（仅路径确认与工作区准备，不含 EDA 连接/版本门禁/基线读取） | references/初始化部分/初始化部分.md |
+| 版本变更历史 | CHANGELOG.md |
 
+> §1–§9、§11–§13 的 11 份详细文档已迁出主干，按维护者框图存放于
+> `references/lib/`，由 `tmp/project-files-overview.md` 索引，SKILL.md 不再
+> 逐条路由；需要细则时经该索引文件查取。
 > §10 执行纪律在本主干内逐字保留（原编号不变）。
 
-## 3. 工作主线（12 步一行式，详见 connection-setup.md §2）
+## 3. 工作主线（12 步一行式，原文 §2）
 
 0. 先澄清需求与目标再动手（§11）；已有确认/授权沿用，执行中遇强制/条件中断点按 §11.5 暂停。
 1. 确认插件状态：`8765`/`7655` 端点可达；不可达走 daemon 链路。
@@ -111,7 +104,7 @@ PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造
     工作区 `./tmp/downloads/`。
 17. 进入路由表所列操作前，先完整读取对应 references/ 文件；主干摘要与 reference 原文冲突时以 reference 为准。
 
-## 5. 中断机制最小判据（详见 discipline-checkpoints.md §11.5）
+## 5. 中断机制最小判据（原文 §11.5）
 
 - **强制中断**：决策不可单方面定或后果不可逆（S0/`compose --replace` 清页/破坏性 `pcb clear`）须暂停；**条件中断**：信息缺失会改变设计或超授权（选型缺参数/工艺未定/门禁 `blocked`）命中才中断、齐备或已授权静默通过。
 - **不中断**：guardrail（save/reload/PLANE 顺序/天线 keepout 全层）、已授权增量执行、纯读取与验证。
@@ -136,6 +129,12 @@ PCB 布局布线、射频/模拟/数字/滤波器/电源设计、检查与制造
 - PCB mutation（rip-up/route/delete/via/track/pour）后遇 `STALE_READ` 先 `doc reload` 再重读；铜形变化后 `pour-rebuild`。
 
 ## 7. 变更摘要
+
+### v0.10.1（2026-09-15）
+
+- **路由表收窄**：SKILL.md 仅索引 `references/初始化部分/初始化部分.md`（会话初始化：询问工作区路径→建立 tmp→建立初始化文件）与 `CHANGELOG.md`。
+- 11 份详细文档（§1–§9、§11–§13）从 `references/` 根迁至维护者详细文档库，经维护者索引 `tmp/project-files-overview.md` 查取，主干不再逐条路由；全文 §N 引用含义不变。
+- frontmatter 版本 0.10.0 → 0.10.1。
 
 ### v0.10.0（2026-09-15）
 
