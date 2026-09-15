@@ -34,6 +34,7 @@
 | `Sample/easyeda-agent/` | `.md`、`.json` 文件 | 仅用于参考文档、数据文件或配置文件；不得包含敏感信息 |
 | `agents/` | `.yaml`、`.json` 文件 | 仅用于 Agent 定义；需经过权限审批 |
 | `Sample/easyeda-agent/references/` | `.md`、`.json` 文件 | 仅用于参考文档、设计流程、数据文件；不得修改核心规则 |
+| `references/` | `.md` 文件 | SKILL.md 主干的按需扩展（v0.10.0）：仅存 SKILL.md 章节的逐字迁移内容，不得在 reference 中新增独立判据；编号沿用 SKILL.md 原章节 |
 
 ### 2.2 禁止新建的文件类型
 
@@ -71,6 +72,7 @@
 | `scripts/` | 功能子文件夹 | 仅在 `scripts/` 下创建明确功能子文件夹（如 `scripts/utils/`、`scripts/test/`）；需经过批准 |
 | `Sample/easyeda-agent/` | 仅参考子文件夹 | 不得在 `Sample/easyeda-agent/` 下创建新文件夹，仅可修改现有结构 |
 | `agents/` | 仅定义文件存储 | 不得在 `agents/` 下创建新文件夹，仅存储 `.yaml`、`.json` 文件 |
+| `references/` | 仅参考文件存储 | 不得在 `references/` 下再建子文件夹；新增文件必须同步登记 SKILL.md 路由表 |
 
 ### 3.2 禁止新建的文件夹类型
 
@@ -183,6 +185,7 @@
 - **工具**：指 `read`、`write`、`edit`、`glob`、`bash` 等 Kilo 提供的工具
 
 ### 7.2 修订历史
+- **v1.2（2026-09-15）**：配合 SKILL.md v0.10.0 主干化重构，§2.1/§3.1 允许 `references/` 参考目录（仅存章节迁移文档，禁子文件夹，须登记路由表）。
 - **v1.1（2026-09-14）**：新增 §1.3（skill 目录 vs 工作区）、§2.4（`tmp/` 必须建在工作区、禁止建在 skill 目录）；重写 §5.2 为"路径安全与防止逃逸"（`Path Traversal Guard`）；§3.2 补充 skill 内 `tmp/` 与工作区外目录的禁止项。同步修复 `scripts/tool-probe.py`、`scripts/tool-probe-simulator.py` 的 `Path(__file__)` 派生输出根 → 改为工作区 `Path.cwd()`，并加入 `--project` 清洗与逃逸校验。
 - **v1.0（2026-09-14）**：初始版本发布
 
@@ -196,4 +199,4 @@
 
 **制定人：** Kilo Team  
 **生效日期：** 2026-09-14  
-**版本：** 1.1  
+**版本：** 1.2  

@@ -10,7 +10,20 @@
 EasyEDAssistant/
 ├── README.md                                  # 本文件
 ├── LICENSE                                    # MIT
-├── SKILL.md                                   # EasyEDAssistant skill 定义（Kilocode，v0.9.0）
+├── SKILL.md                                   # EasyEDAssistant skill 主干（Kilocode，v0.10.0）
+├── CHANGELOG.md                               # 变更摘要（SKILL.md §14 迁出，按版本倒序）
+├── references/                                # 按需加载参考（SKILL.md 主干扩展，11 个 md）
+│   ├── official-docs.md                       # 官方文档与 GUI 指令映射
+│   ├── connection-setup.md                    # §1 连接 + §2 开始工作
+│   ├── coordinates-model.md                   # §3 坐标/单位/数据模型
+│   ├── design-rules.md                        # §4 设计子域判据
+│   ├── api-operations.md                      # §5 核心 API 操作
+│   ├── design-decisions.md                    # §6 设计决策目录
+│   ├── project-docs.md                         # §7 项目文档任务
+│   ├── verification-delivery.md              # §8 验证与交付 + §9 已知平台限制
+│   ├── discipline-checkpoints.md              # §11 需求澄清与中断检查点
+│   ├── layout-aesthetics.md                   # §12 美观/功能布局经验
+│   └── external-resources.md                  # §13 主动学习与外部资源
 ├── AGENT-PROMPT.md                            # 精简使用指引（规范回归 SKILL.md）
 ├── .gitignore                                 # 忽略 .kilo/ 环境文件等
 ├── agents/
@@ -59,28 +72,29 @@ EasyEDAssistant/
 ## EasyEDAssistant（SKILL.md）详细文档
 
 > 对应根目录 `SKILL.md`（frontmatter `name: EasyEDAssistant`，
-> `metadata.author: EasyEDAssistant`，当前 v0.9.0）。本节说明其组件、
+> `metadata.author: EasyEDAssistant`，当前 v0.10.0，主干 + 按需加载 references/）。本节说明其组件、
 > 工作流、引用的其它 SKILL 文件及其作者。
 
 ### 组件（文档结构）
 
-| 章节 | 内容 |
+SKILL.md 主干只含入口判定、路由与 always-on 纪律；详细内容按触发条件存放在 `references/` 与 `CHANGELOG.md`（详见主干 §0、§2 路由表）。
+
+| 主干章节 | reference 文件（含原章节） |
 |---|---|
-| frontmatter | `name: EasyEDAssistant`、description、`license: MIT`、compatibility（MCP 端点 + CLI 回退）、metadata（author/version） |
-| §1 连接 | JLCEDA MCP 双端点（`ws://127.0.0.1:8765/bridge/ws`、`http://127.0.0.1:7655/mcp`）+ 原有 `easyeda` CLI/daemon 链路 + 连接异常恢复 |
-| §2 开始工作 | 需求澄清（→§11）→ 插件状态 → 工程基线读取 → **动态截图管理**（基线 + 关键步骤截图 + 清理 + stale 识别） |
-| §3 坐标/单位/数据模型 | raw/mil、y-UP、5 raw 网格、锚点 vs bbox 中心（#105）、层/翻面、无 undo |
-| §4 设计子域判据 | P0–P7 优先级总则；PCB/原理图、RF、模拟、数字、滤波器、电源子域规则；电气规范表；设计经验法则；数据手册/PDF 阅读经验 |
-| §5 核心 API 操作 | 原理图 1.4 数据路径（connectivity → compose → apply + 动态截图）、pin-aware autoconnect（含批处理截图）、PCB 上下文/布线/铺铜、SCH↔PCB 同步（含同步截图）、器件库与选型、验证门禁 |
-| §6 设计决策目录 | 10 类 S0 决策点（叠层/接地/线宽/USB-C/自动下载/选型/单双面/焊接工艺…）与推荐默认 |
-| §7 项目文档任务 | 创建许可证、生成 README、块贡献 |
-| §8 验证与交付 | 五层验证（拓扑/几何/电气/呈现/保存，不可互替）+ 交付报告要求 + §8.3 视觉质量自动评估（`scripts/visual-qa.py`） |
-| §9 已知平台限制 | 导入/泪滴/交互式布线/netLabel/截图/3D 模型/网表等承重边界 |
-| §10 执行纪律 | 10 条汇总纪律（门禁、快照、连接、授权、reload、save、MCP 一致性…） |
-| §11 用户需求澄清与目标明确 | 任务分类默认行为、必问清单、目标不变量化、沟通与授权纪律、§11.5 执行中中断机制（强制/条件中断点+CHECKPOINT 协议+用户响应处理+S0–S6/P0–P10 中断点清单） |
-| §12 美观/功能布局经验 | 原理图可读性、PCB 美观（分区/朝向/阵列/留白/丝印/收尾顺序）、交付美学一致性 |
-| §13 主动学习与外部资源（v0.9.0 新增） | §13.1 主动学习（浏览器检索，落 `./tmp/learning/`）；§13.2 网络资源下载（`scripts/net-download.py` + `scripts/net-download-policy.md`，落 `./tmp/downloads/`）；§13.3 PCB 设计基线（`Sample/easyeda-agent/references/pcb-design-spec.md` D1–D20 必答清单） |
-| §14 变更摘要 | v0.8.1（工作区核对）、v0.8.0、v0.7.0（动态截图生命周期）、v0.6.0（布局蓝图 §7.4）、v0.5.0（中断机制 §11.5）、v0.4.0（visual-qa + §8.3）、v0.3.1（更名+移根目录）、v0.3.0 |
+| §0 主干机制 / §1 连接速览 / §2 路由表 / §3 工作主线 / §7 变更摘要 / §10 执行纪律 | 主干内联（无外迁） |
+| §1 连接（双链路）、§2 开始工作 12 步 | references/connection-setup.md |
+| §3 坐标/单位/数据模型 | references/coordinates-model.md |
+| §4 设计子域判据（P0–P7、RF/模拟/数字/滤波器/电源、电气规范、数据手册） | references/design-rules.md |
+| §5 核心 API 操作（compose/apply/autoconnect/PCB 布线铺铜/同步/选型/门禁） | references/api-operations.md |
+| §6 设计决策目录（S0 摊牌） | references/design-decisions.md |
+| §7 项目文档任务（LICENSE/README/块贡献/蓝图/框图/可行性/手册） | references/project-docs.md |
+| §8 验证与交付、§9 已知平台限制 | references/verification-delivery.md |
+| §10 执行纪律（17 条，全文留主干） | SKILL.md（主干内联） |
+| §11 需求澄清与中断检查点（含 §11.5 CHECKPOINT） | references/discipline-checkpoints.md |
+| §12 美观/功能布局经验 | references/layout-aesthetics.md |
+| §13 主动学习与外部资源（学习/下载/PCB 基线 D1–D20） | references/external-resources.md |
+| 官方文档与 GUI 指令映射 | references/official-docs.md |
+| §14 变更历史 | CHANGELOG.md |
 
 ### 工作流 / 过程
 
@@ -152,7 +166,7 @@ MCP 工具与 typed CLI action 语义一致：同一套 `eda.*` API 映射、dry
 
 ## 设计知识库覆盖范围
 
-EasyEDAssistant skill 内置的设计判据（详见根目录 `SKILL.md` 第 4 节与
+EasyEDAssistant skill 内置的设计判据（详见 `SKILL.md` §4（全文见 `references/design-rules.md`）与
 行为记录 §24）：
 
 - **PCB 布局 / 原理图绘制**：P0–P7 优先级总则、九宫格分区、模块间距、
@@ -193,11 +207,11 @@ EasyEDAssistant skill 内置的设计判据（详见根目录 `SKILL.md` 第 4 �
 - **skill 定义（agent 行为规范）**：根目录 `SKILL.md`（skill 名
    **EasyEDAssistant**）— 连接契约、坐标/数据模型、子域判据、API 操作速查、
    设计决策目录、验证分层（§8.3 视觉质量自动评估 + 动态截图生命周期）、
-   执行纪律、需求澄清与美观/功能布局经验。
+   执行纪律、需求澄清与美观/功能布局经验。v0.10.0 起为入口主干，详细内容按触发条件存放于 `references/` 与 `CHANGELOG.md`。
 - **智能体提示词**：根目录 `AGENT-PROMPT.md` — 精简使用指引（v0.6.0 起）：
   仅保留触发入口与 one-liner `default_prompt`；完整规范（会话纪律、
-  需求澄清、设计执行、PDF 阅读、验证分层、文档任务、中断机制等）回归
-  `SKILL.md` 本体由 Kilocode 自动注入，不再复制到提示词层。
+   需求澄清、设计执行、PDF 阅读、验证分层、文档任务、中断机制等）回归
+   `SKILL.md` 主干（详细内容在 `references/`）由 Kilocode 自动注入，不再复制到提示词层。
   `SKILL.md` 引用的 `Sample/easyeda-agent/**` 与 `scripts/*.py` 是运行时
   经验库与设计时调用的脚本，按 `SKILL.md` 指引读取与执行。
 - **视觉质量评估脚本**：`scripts/visual-qa.py` — API 截图 + 数据驱动检查
@@ -214,7 +228,7 @@ EasyEDAssistant skill 内置的设计判据（详见根目录 `SKILL.md` 第 4 �
 2. 在 Kilocode `kilo.json` 中启用 `jlceda` MCP server（配置见上）。
 3. 会话首条命令仍为 `easyeda update --check --exit-code` 版本门禁
    （EasyEDAssistant 移植版同样适用）；升级后新开会话。
-4. 按 `SKILL.md` 第 4 节判据选择设计子域；参数真值以
+4. 按 `SKILL.md` §4（全文见 `references/design-rules.md`）判据选择设计子域；参数真值以
    `easyeda <command> --help` 与 `easyeda actions` 为准。
 
 ## 许可
