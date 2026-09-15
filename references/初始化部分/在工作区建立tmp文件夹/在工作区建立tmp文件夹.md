@@ -38,10 +38,13 @@
 
 ## 初始化最小集合
 
-初始化阶段至少建立 §8.4 契约中与基线/截图相关的两个子目录（按需建立其余子目录）：
+初始化阶段仅建立基础目录结构（不写任何运行内容、不连 EDA）：
 
-- `./tmp/baseline/` —— 承接"建立初始化文件"步骤生成的基线截图。
-- `./tmp/snapshots/` —— 承接动态截图管理（§2.9）。
+- `./tmp/` —— 根目录；确认已被 `.gitignore` 排除。
+- `./tmp/snapshots/`、`./tmp/baseline/` —— 截图类容器，仅建目录。
 
 其余子目录（sch/pcb/plan/design/parts/calc/datasheet/learning/downloads）按
 任务进展按需创建；所有 `tmp/` 子目录与文件会话结束时按 §8.4 清理纪律删除。
+
+> 注：基线截图、工具探针清单等**依赖 EDA 连接的产物不在本初始化范围**，
+> 属正式工作流（`references/lib/connection-setup.md` §2.6–2.7）。
