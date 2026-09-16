@@ -48,7 +48,7 @@ JS、不做账号登录、不下载页面上的可执行体（下载走 §13.2�
 ```
 
 **纪律**：
-- 学习笔记是**证据链**，不是新知识真值；与 `Sample/easyeda-agent/references/`
+- 学习笔记是**证据链**，不是新知识真值；与 `references/lib/`
   冲突时以本地经验库为准，再落"待验证"标签。
 - 不将笔记内容静默合并进 `SKILL.md`；如下结论要改判据，走 §11.5 中断
   点请用户拍板，再由贡献者按 `CONTRIBUTING.md` 修订流程更新 skill 本体。
@@ -92,10 +92,10 @@ JS、不做账号登录、不下载页面上的可执行体（下载走 §13.2�
 需要长期保留的（如数据手册 PDF）先由 Agent 复制到用户指定的**工作区**
 正式目录（非 skill 目录），再清 tmp。
 
-### 13.3 PCB 设计基线（`Sample/easyeda-agent/references/pcb-design-spec.md`）
+### 13.3 PCB 设计基线（`references/lib/pcb-design-spec.md`）
 
 PCB 阶段（P0）进入前，Agent **必须**读
-`Sample/easyeda-agent/references/pcb-design-spec.md` §2 **必答清单**
+`references/lib/pcb-design-spec.md` §2 **必答清单**
 D1–D20（板框 / 安装孔 / 叠层 / 铜厚 / 电源轨 / 接地 / 阻抗 / 接口 /
 天线 / 封装下限 / 热预算 / 测试点 / 丝印 / 隔离 / DFM / 拼板 / 颜色 /
 未用脚 / 成本 / 验收线），逐项问用户，答复落到**工作区**
@@ -120,7 +120,7 @@ D6 接地、D9 天线形式为条件中断——缺失会改变设计时按 §11
 **与其他章节的关系**：
 - 本清单**问用户要什么**；§4.2/§4.7/§4.8 是**定了之后怎么做**；
 - 基线文件是 §8.2 交付报告与 §7.8 技术手册的引用来源；
-- 基线里的 D15（DFM 目标）与 `Sample/easyeda-agent/references/`
+- 基线里的 D15（DFM 目标）与 `references/lib/`
   `fab-rules-jlcpcb.json` 一致时走默认，否则按用户指定的厂规；
 - 基线里的 D20（验收线）落到 §8.1 五层验证的具体门禁。
 

@@ -1,8 +1,8 @@
 # 设计流程：原理图数据到实物版图
 
 本文件只规定阶段产物和验收边界。原理图数据及转换命令读
-[schematic-data.md](./schematic-data.md)；器件选型与典型外围电路查器件数据手册；
-PCB 操作分别读 [pcb-layout.md](./pcb-layout.md) 和 [pcb-routing.md](./pcb-routing.md)。
+原理图数据及转换命令见本项目 `references/绘制原理图/` 与 `references/坐标与数据模型/`；器件选型与典型外围电路查器件数据手册；
+PCB 操作见本项目 `references/PCB绘制/`。
 
 ## 开始与恢复
 

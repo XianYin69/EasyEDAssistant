@@ -5,7 +5,7 @@
 
 ## 11. 用户需求澄清与目标明确（动手前）
 
-> 原则（与 `Sample/easyeda-agent/references/design-flow.md` S0 一致）：**缺信息会改变设计、或超出已有授权时
+> 原则（与 `references/lib/design-flow.md` S0 一致）：**缺信息会改变设计、或超出已有授权时
 > 才问**；已有确认的需求与授权沿用，不因流程表重复索取许可；用户要求逐步
 > 确认时遵守其节奏。问的是"会改变做法的选项"，不是"流程打卡"。
 
@@ -29,7 +29,7 @@
 - **未决电气/机械要求**：电源轨清单与电流预算、隔离/爬电要求、RF 频段与
   天线形式——缺失且影响设计时澄清，不影响（有唯一正确答案）的内置 guardrail
   不重复问。
-- **PCB 设计细节**：进入 PCB 阶段（P0）时逐项核对 `Sample/easyeda-agent/`
+- **PCB 设计细节**：进入 PCB 阶段（P0）时逐项核对 `references/lib/`
   `references/pcb-design-spec.md` §2 的 D1–D20 清单（板框/安装孔/叠层/
   铜厚/电源轨/接地/阻抗/接口/天线/封装/热/测试点/丝印/隔离/DFM/拼板/
   颜色/未用脚/成本/验收线），答复落 `./tmp/design/<project>-pcb-spec.md`
@@ -123,7 +123,7 @@
 - `blocked`（检查没运行/环境问题）→ 条件中断：需用户介入修环境，不自动跳过。
 - `fail`（设计不合格）→ 条件中断：用户决定改设计还是放宽（放宽须授权，
   且 `--force-unsafe` 不是恢复步骤，见 §4 开头 guardrail 与上游
-  `Sample/easyeda-agent/references/design-flow.md`）。
+  `references/lib/design-flow.md`）。
 - `pass` → 不中断，静默进入下一阶段。
 - 截图 stale + 数据通过 → 不中断（数据是权威），但报告中标注 stale。
 
