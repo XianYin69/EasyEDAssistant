@@ -33,6 +33,7 @@ metadata:
 | 询问步骤 / 读取 tmp / 执行对应步骤 markdown | 已写（references/单步执行/，含读取上下文、选择步骤、执行与回写） |
 | 交付与清理 markdown | 已写（references/交付与清理/，含交付文档、交付报告、清理） |
 | 约束部分 markdown | 已写（references/约束部分/，十一项各带同名子文件） |
+| 嘉立创EDA指令索引 markdown | 已写（references/嘉立创EDA指令索引/，总索引 + 12 子文件，条目源为 CLI v1.4.8 自描述；参数真值仍以 `--help`/`easyeda actions` 为准） |
 
 ## 5. 约束部分
 
