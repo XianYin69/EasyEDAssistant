@@ -5,7 +5,7 @@
 
 ## 步骤
 
-1. **读必答清单**：读取 [`../../../Sample/easyeda-agent/references/pcb-design-spec.md`](../../../Sample/easyeda-agent/references/pcb-design-spec.md) §2 的 D1–D20 共 20 项。
+1. **读必答清单**：读取 [`../../lib/pcb-design-spec.md`](../../lib/pcb-design-spec.md) §2 的 D1–D20 共 20 项。
 2. **逐项向用户核对**：板框与尺寸、安装孔、叠层与铜厚、电源轨与电流、接地方式、阻抗与差分、接口位置与朝向、天线与 keepout、封装下限、热预算、测试点、丝印要求、隔离要求、DFM 目标、拼板、颜色、未用脚处理、成本档、验收线。
 3. **落盘成基线**：答复写入 `./tmp/design/<工程名>-pcb-spec.md`（同名 `.json` 可选），作为本阶段设计基线。
 4. **只问会改变做法的项**：已由方案或上游阶段确认过的选项直接沿用，不重复索取。

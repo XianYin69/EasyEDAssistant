@@ -8,7 +8,7 @@
 > 数值判据为方向性规则；落地前以数据手册与实测为准。
 > 判据索引：P0–P7 优先级总则裁决冲突；硬门（layout-lint gate / DRC /
 > antenna-keepout）不可放宽，`--force-unsafe`（有审计的越门选项，见
-> `Sample/easyeda-agent/references/design-flow.md`）不是恢复步骤。
+> `references/lib/design-flow.md`）不是恢复步骤。
 
 ### 4.1 优先级总则（PCB 冲突裁决）
 
@@ -24,8 +24,7 @@
 | P7 | 网格/对齐/丝印 | 纯收尾美化，永远不得违反以上任何一级 |
 
 执行顺序 = "先 P5 粗聚簇，再 P2/P4 细约束就地改写"（自动布局执行步骤见
-上游 `Sample/easyeda-agent/references/pcb-layout.md` §11，本 skill 的收尾
-顺序见 §12.2）。
+收尾顺序见 §12.2）。
 
 ### 4.2 PCB 布局与原理图绘制
 
@@ -55,7 +54,7 @@
 
 **PCB 放置**：
 
-- 进入 PCB 阶段（P0）前，Agent 必须先读 `Sample/easyeda-agent/references/pcb-design-spec.md`
+- 进入 PCB 阶段（P0）前，Agent 必须先读 `references/lib/pcb-design-spec.md`
   §2 必答清单，逐项向用户核对板框/安装孔/叠层/铜厚/电源轨/接地/阻抗/接口/
   天线/封装下限/热预算/测试点/丝印/隔离/DFM 目标/拼板/颜色/未用脚/成本档
   /验收线共 20 项（D1–D20），答复落到**工作区** `./tmp/design/<project>-pcb-spec.md`

@@ -2,6 +2,17 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.3（2026-09-16）
+
+- **移除上游 skill 注册根源，Sample 降级为存档**：删除 `Sample/easyeda-agent/SKILL.md`（去 frontmatter，不再被 Kilo 注册为独立 skill，根除运行时劫持本项目流程的根因）、`.version`、`agents/openai.yaml`；`Sample/` 仅保留 `README.md`（本项目自撰的去注册说明）与 `LICENSE`（上游 MIT 原版）。
+- **参考正本迁入 `references/lib/`**：被 `references/` 引用的 5 份上游文档（`environment-setup.md`、`design-flow.md`、`pcb-design-spec.md`、`pcb-design-rules.md`、`fab-rules-jlcpcb.json`）整体迁入 `lib/`；`lib/design-flow.md` 内指向已删上游文档的链接改为本项目 `references/绘制原理图/`、`references/坐标与数据模型/`、`references/PCB绘制/` 等路径。
+- **14 个脚本迁入 `scripts/`**：`audit-baseline.py`、`blocks-pin-audit.py`、`bom-enrich.py`、`bulk-connect.py`、`bulk-place.py`、`calibrate.js`、`diff.py`、`lint.py`、`lint.sh`、`orient.py`、`parts-add.py`、`parts-select.py`、`probe.js`、`sch.py`；删除 `tests/`（fixtures/golden 随上游 skill 一并退场）。
+- **清空余下 Sample references**：`Sample/easyeda-agent/references/` 下未引用的 20 份（schematic*/pcb*/design-*/part-selection/actions/orientation/sheet-templates/standard-parts/symbol-pins 等）与 14 份 tests/ 目录整体删除，因逻辑多已在本项目 `lib/` 与步骤文档实现。
+- **跨目录链接改写**：`references/PCB绘制/PCB设计规范/`、`用户PCB配置文件/`、`输入读取/`、`桥接联通性测试/`（含 `门禁检查/`）、`references/lib/`（connection-setup / discipline-checkpoints / external-resources / design-rules）中的 `Sample/easyeda-agent/references/` 前缀统一改为 `references/lib/` 或本项目对应路径。
+- **`约束部分/文件与文件夹创建范围.md` 更新**：第 2 项将「`Sample/easyeda-agent/` 存参考件」改为「`Sample/` 存上游存档（仅 `.md` 与 `LICENSE`）」，并新增「`references/lib/` 存 `.md`/`.json` 正本」；第 4 项「禁止位置」的 `Sample/easyeda-agent/` 改为 `Sample/`。
+- **README / AGENT-PROMPT 同步**：组件表把 `Sample/easyeda-agent/references/*.md`、`agents/openai.yaml` 等上游条目替换为 `references/*.md`、`agents/EasyEDAssistant.yaml` 等本项目正本；删除 `Sample/easyeda-agent/agents/openai.yaml` 与 `references/*.md` 上游条目。
+- 全树相对链接经脚本核验悬空数 0；`references/`（不含 `lib/`）仍 ≤50 行、自然语言。
+
 ### v0.12.2（2026-09-16）
 
 - **新增 `references/交付与清理/`（总索引 + 3 子文件）** 作为标准流程第 6 步：流程为前置条件（检查全过、原理图/PCB 验收）→ 生成交付文档 → 用户确认 → 交付报告 → 清理 `./tmp/`（先交付后清理）。子文件：`交付文档/`（技术/功能手册，只来自回读+分析+蓝图引用，`blocked`/`fail` 不得写通过）、`交付报告/`（六字段报告 + 验证分层结果 + 清理摘要）、`清理/`（先导出保留图片再删 tmp、例外与异常收尾）。`PCB制作` 收尾指向本步骤；内容引用 `lib/project-docs.md §7.8` 与 `lib/verification-delivery.md §8.1–§8.4`。

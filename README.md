@@ -122,14 +122,14 @@ SKILL.md 主干只含入口判定、路由与 always-on 纪律；详细内容按
 
 | 文件 | 角色 | 作者 |
 |---|---|---|
-| `Sample/easyeda-agent/SKILL.md` | 上游 skill 主入口（行为规范真值，v1.4.8） | **zhoushoujianwork**（`metadata.author`，MIT；[zhoushoujianwork/easyeda-agent](https://github.com/zhoushoujianwork/easyeda-agent)） |
-| `Sample/easyeda-agent/agents/openai.yaml` | 上游 agent 接口定义（display_name "EasyEDA Agent"） | zhoushoujianwork（随上游 skill 分发） |
-| `Sample/easyeda-agent/references/*.md`、`*.json` | 上游参考文档与数据文件（判据原始来源） | zhoushoujianwork（随上游 skill 分发） |
+| `Sample/easyeda-agent/SKILL.md` | 上游 skill 主入口（行为规范真值，v1.4.8） | zhoushoujianwork（`metadata.author`，MIT；[zhoushoujianwork/easyeda-agent](https://github.com/zhoushoujianwork/easyeda-agent)） |
+| `agents/EasyEDAssistant.yaml` | Kilocode agent 定义（权威，interface: schema） | 本项目（EasyEDAssistant）维护 |
+| `references/*.md`、`*.json` | 正本/维护者参考文件（判据原始来源） | 本项目（EasyEDAssistant）维护 |
 | `Sample/easyeda-agent/scripts/*` | 上游辅助脚本（lint/选型/批量/测试） | zhoushoujianwork（随上游 skill 分发） |
 | `scripts/visual-qa.py` | 视觉质量与布局完整性自动评估（API 截图 + 数据驱动交叉评估 + 动态截图生命周期管理，§8.3） | 本项目（EasyEDAssistant）维护 |
 | `scripts/tool-probe.py` / `tool-probe-simulator.py` | 嘉立创 EDA 内建工具与已安装插件探针（生成 `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`） | 本项目（EasyEDAssistant）维护 |
 | `scripts/net-download.py` + `scripts/net-download-policy.md` | 网络资源下载器（格式白/黑名单 + 路径逃逸防护 + `index.json` 审计）与配套策略文档（§13.2） | 本项目（EasyEDAssistant）维护 |
-| `Sample/easyeda-agent/references/pcb-design-spec.md` | PCB 设计规范与 D1–D20 必答清单（PCB 阶段前向用户核对，落 `./tmp/design/<project>-pcb-spec.md`，§13.3） | 本项目（EasyEDAssistant）维护 |
+| `references/lib/pcb-design-spec.md` | PCB 设计规范与 D1–D20 必答清单（PCB 阶段前向用户核对，落 `./tmp/design/<project>-pcb-spec.md`，§13.3） | 本项目（EasyEDAssistant）维护 |
 | `AGENT-PROMPT.md` | 精简使用指引（触发入口 + one-liner default_prompt；规范回归 SKILL.md） | 本项目（EasyEDAssistant）维护 |
 | `agents/EasyEDAssistant.yaml` | Kilocode agent 定义（权威，interface: schema） | 本项目（EasyEDAssistant）维护 |
 | `Sample/easyeda-agent-skill-behavior.md` | 上游 skill 全部行为的章节化记录（本项目维护，含移植版 §23–§25 与 §25A 变更史） | 本项目（EasyEDAssistant）维护 |

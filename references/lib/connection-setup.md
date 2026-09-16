@@ -53,7 +53,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 - **版本门禁（会话第一条命令）**：`easyeda update --check --exit-code`，先于任何
   项目读取、离线规划、`health` 和 EDA 操作。CLI/Skill/daemon 必须精确等于 GitHub
   latest，Connector 与 latest 共享 `major.minor` 兼容线才返回 0；仅 patch 差异通过。
-  门禁非 0 时停止任务按 `Sample/easyeda-agent/references/environment-setup.md` 升级；**升级/替换组件后本会话不得
+  门禁非 0 时停止任务按 `references/lib/environment-setup.md` 升级；**升级/替换组件后本会话不得
   继续，必须新开会话从第一条命令重新开始**。不得用 `--version`、`--preserve`、
   `--skip-version-check` 或仅看 `health` 绕过门禁。
 - **`doc reload` 门（铁律）**：PCB mutation（rip-up/route/delete/via/track/pour）

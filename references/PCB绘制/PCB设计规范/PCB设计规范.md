@@ -5,8 +5,8 @@
 
 ## 规范来源
 
-- **必答清单**：[`../../../Sample/easyeda-agent/references/pcb-design-spec.md`](../../../Sample/easyeda-agent/references/pcb-design-spec.md) §2（板框/安装孔/叠层/铜厚/电源轨/接地/阻抗/接口/天线/封装下限/热预算/测试点/丝印/隔离/DFM 目标/拼板/颜色/未用脚/成本档/验收线）。
-- **设计规则**：[`../../../Sample/easyeda-agent/references/pcb-design-rules.md`](../../../Sample/easyeda-agent/references/pcb-design-rules.md)、[`../../../Sample/easyeda-agent/references/fab-rules-jlcpcb.json`](../../../Sample/easyeda-agent/references/fab-rules-jlcpcb.json)（板厂能力基线）。
+- **必答清单**：[`../../lib/pcb-design-spec.md`](../../lib/pcb-design-spec.md) §2（板框/安装孔/叠层/铜厚/电源轨/接地/阻抗/接口/天线/封装下限/热预算/测试点/丝印/隔离/DFM 目标/拼板/颜色/未用脚/成本档/验收线）。
+- **设计规则**：[`../../lib/pcb-design-rules.md`](../../lib/pcb-design-rules.md)、[`../../lib/fab-rules-jlcpcb.json`](../../lib/fab-rules-jlcpcb.json)（板厂能力基线）。
 - **官方入口**：[`../../官方文档映射/官方文档映射.md`](../../官方文档映射/官方文档映射.md)（菜单项 ↔ CLI 对照；官方只说明「在哪设」，数值以 daemon 规则代码为真值）。
 - **运行时可读**：`pcb drc-rules`（live 规则）、`pcb layers.list`（层数）、`pcb net-classes`（线宽阶梯）。
 
