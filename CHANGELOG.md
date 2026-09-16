@@ -2,6 +2,12 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.9（2026-09-16）
+
+- **PCB 放置纠错粒度对齐原理图为逐件（用户拍板）**：`PCB绘制` 总索引第 4/5 步与 `部分绘制与验收` 放置步——每放置/移动/修改一个器件即跑 `visual-qa.py --pcb --pcb-doc <页> --artifacts-dir ./tmp/snapshots`（截图 + 重叠/出框/drc 数据核验，stale 自动切前台重试），exit 0 才画下一个；`stage confirm-tier` 只签档位汇总不替代逐件核验。截图清理改双轨：验证图逐件滚动 3 张（snapshots），归档图逐部分两张（./tmp/pcb/）。
+- **元件编辑补「试放双通道验证」（用户拍板）**：`新建元件与替代方案` 新增建元件节——命令行建立（blocks search → lib symbol/footprint create→build → lib device build，官方件 copy 后改）+ 数据层（create 回读 + `lib footprint/symbol get` 逐项对照手册）+ 呈现层（临时页/板试放一件 → export-image/snapshot → `visual-qa.py` 阻断判定 + 目检）；任一通道不过不算建立完成；通过后清理试放件与临时文档、验证截图归档 `./tmp/sch/` 登记进检查结论。
+- 三处文件仍 ≤50 行（36/30/32），全树悬空链接 0；SKILL.md 版本对齐 0.12.9。
+
 ### v0.12.8（2026-09-16）
 
 - **指令索引补「新建对象」链路（用户问询触发，经 `easyeda actions`/`api search`/子命令 help 实测）**：
