@@ -53,18 +53,25 @@
 
 ```bash
 # PCB + 原理图双评估（需活体窗口或 daemon）
-python3 scripts/visual-qa.py --project <name> --doc <page-uuid> --both
+python3 scripts/visual-qa.py --project <name> --doc <page-uuid> --both \
+    --artifacts-dir ./tmp/snapshots
 
-# 仅 PCB，strict（WARN 也判阻塞）
-python3 scripts/visual-qa.py --project <name> --pcb --strict
+# 原理图逐件纠错（绘制步每落位一个器件调用一次；截图 + 图纸边界越界核验）
+python3 scripts/visual-qa.py --project <name> --doc <page-uuid> --schematic \
+    --artifacts-dir ./tmp/snapshots
+
+# 仅 PCB，strict（WARN 也判阻塞；--pcb-doc 供 stale 时自动切前台重试）
+python3 scripts/visual-qa.py --project <name> --pcb-doc <pcb-uuid> --pcb --strict \
+    --artifacts-dir ./tmp/snapshots
 
 # 跳过截图采集（只用已有数据打分；不触发 canvas-freeze）
 python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 ```
 
-**输出**：JSON（stdout）+ 人读摘要（stderr）。退出码：
-`0`=全通过（含截图非 stale）；`2`=有 WARN（低分维/带痕/stale 但数据通过）；
-`3`=blocking（短路/重叠/出框/间距硬违规/stale 且数据也不全）。
+**输出**：JSON（stdout，`--summary` 可关，`--out` 另存）+ 人读摘要（stderr）。退出码：
+`0`=全通过（含截图非 stale、无器件越界）；`2`=有 WARN（低分维/带痕/stale 但数据通过/
+越界检查未运行——未运行不得当作已核验）；`3`=blocking（短路/重叠/出框/间距硬违规/
+原理图器件画出图纸边界/截图未产出新图）。
 
 **评估流程**（三层）：
 1. **硬门**：`layout-score.blocking[]` 一票否决（短路/重叠/出框）。
@@ -76,14 +83,16 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 - 该脚本**不替代** `sch gate --strict` / `pcb drc` / `pcb check`——
   它是这些数据源的聚合器 + 截图终检，不是新的硬门。
 - 截图采集前的 `view fit` + 1.5s 等待是 canvas-freeze 缓解（§5.7），
-  不是保证；stale 检测是最终防线。
+  不是保证；stale 检测是最终防线，检出后经 `doc switch` 自动切前台重试（≤2 次）。
+- 只认本次调用后新产生的 PNG（mtime 新鲜度门槛），CLI 非零退出一律上报 stderr——
+  「没截出图」必显式判阻断，不允许静默复用旧图冒充新截图。
 - `--no-snapshot` 模式下只跑数据评估，不触发截图采集——适合
   CI/批量回归或已知截图 fresh 的场景。
 
 **截图生命周期（v0.12.3 起：归档 + 滚动双轨）**：
 - **归档轨**：每部分绘制/验收通过时，该部分局部图与全图即时导出归档——原理图存 `./tmp/sch/`（`sch export-image`，文档渲染无需 stale 检测），PCB 存 `./tmp/pcb/`（`pcb snapshot`，须 fresh）；命名 `<sch|pcb>-<部件号>-<局部|全图>-<时间戳>.png`，不随快照清理删除，交付期作技术手册插图。
 - **滚动轨**：`./tmp/snapshots/` 仅作工作快照，新截图生成前删最旧、只留最近 3 张，`sch-`/`pcb-` 前缀分开计数；`./tmp/baseline/` 存基线图；两目录皆在 `.gitignore` 中排除，会话结束清理。
-- **状态识别**：仅 `pcb snapshot` 用 `--previous-sha256` 检测同帧，stale 标记视为 "canvas-freeze"，触发 `easyeda view --fit` + 重取直至 fresh；脚本自动维护 `prev_sha` 闭环（上次报告 JSON → 下次 stale 检测）。
+- **状态识别**：仅 `pcb snapshot` 用 `--previous-sha256` 检测同帧，stale 标记视为 "canvas-freeze"，触发 `view fit` / `doc switch`（切前台）后重取直至 fresh（≤2 次重试）；脚本自动维护 `prev_sha` 闭环（上次报告 JSON → 下次 stale 检测）。所有视口操作经 CLI/daemon API 完成，不发送 OS 级鼠标/键盘事件。
 
 ### 8.4 工作区 tmp/ 产物目录生命周期（保存与清理）
 

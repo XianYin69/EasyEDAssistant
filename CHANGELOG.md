@@ -2,6 +2,18 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.6（2026-09-16）
+
+- **逐件截图纠错（用户拍板：画一个元件截一次图，不等整页画完）**：`绘制原理图/部分绘制与截图` 绘制与截图节重写——器件落位按件推进，每落位一个器件运行 `visual-qa.py --schematic` 截图 + 越界核验，exit 3 当场回移/重画后才画下一个；eext CSV 批量落位改为「落位后逐件核验整批」；验证图（滚动 3 张）与归档图（逐部分两张）双轨分离。
+- **图纸几何前置**：`绘制原理图/输入读取` 第 1 步并入 `sch sheet-geometry`（图纸大小、可绘制边界与坐标），输入不齐（含图纸边界）不动笔；逐件 bbox 必须完整落在边界内（针对测试中「原理图画到图纸外」事故）。
+- **`scripts/visual-qa.py` 审查与修复（确认可后台截图、无 OS 鼠标操作）**：
+  - **修复「压根没截图」三连**：① `--both/--pcb/--schematic` 为文档示例用法，但旧 argparse 只有 `--mode`，按文档调用直接 argparse 报错 exit 2（与 WARN 语义混淆）——现 flags 全部实现；② `capture=False` 路径（`view fit`/`pcb snapshot`）失败此前完全静默——现在非零退出码一律上报；③ 截图产物按「本次调用后 mtime」新鲜度过滤，不再可能误拿旧 PNG 冒充新截图，无新产物 = 阻断（exit 3）。
+  - **新增原理图越界核验**：采集 `sch sheet-geometry`，逐器件 bbox（兼容 `[x,y,w,h]`/`{x,y,width,height}`/`{x0,y0,x1,y1}`）对图纸边界判定，越界 = blocking 并列位号；边界或器件数据缺失 → 越界检查标「未运行」判 WARN，不得当作通过（单元冒烟 7 项断言全过）。
+  - **stale 自动恢复**：PCB 截图检出 canvas-freeze 后经 `doc switch`（--pcb-doc）切前台自动重试 ≤2 次；`view fit`/`doc switch` 均为 easyeda CLI/daemon API——**不发送任何 OS 级鼠标/键盘事件**；`sch export-image` 文档渲染天然支持后台。
+  - 新增 `--prev-sha`、`--summary`、`--out`（工作区内强制）；报告继续维护 `prev_sha` 闭环。
+- 同步正本与步骤文档：`lib/connection-setup.md` §2.8 的 visual-qa 命令改为含必填参数的完整示例并写明逐件 `--schematic` 要求；`lib/verification-delivery.md` §8.3 用法示例、退出码语义、边界与生命周期条目更新；`绘制原理图.md` 第 4 步挂逐件核验。
+- 全树相对链接悬空 0；本轮所改步骤文件均 ≤50 行。
+
 ### v0.12.5（2026-09-16）
 
 - **高速推理/工具/绘图优化（联网检索结论经用户批准入判据，共六条）**：
