@@ -24,6 +24,16 @@
 3. 单位红线：PCB 坐标 mil、原理图 0.01inch（y 向上），详见 [`../坐标与数据模型/坐标与数据模型.md`](../坐标与数据模型/坐标与数据模型.md)。
 4. 操作纪律（幂等性、STALE_READ、批量优先）正本在 [`../lib/api-operations.md`](../lib/api-operations.md)，本索引不重复。
 
+## 新建对象速查（跨域入口）
+
+| 对象 | 入口 | 备注 |
+|---|---|---|
+| 新建工程 | **CLI 与 138 个 typed action 均无入口** | 官方仅 `eda.dmt_Project.createProject`（@beta，经 `api search` 可发现）；推荐走 EasyEDA GUI 建工程，程序化只作 debug exec 确认门控下的例外 |
+| 新建原理图页 | `sch page-new`（action `schematic.page.create`） | 见 [`原理图指令/校验与对账/校验与对账.md`](原理图指令/校验与对账/校验与对账.md) |
+| 新建板子/PCB | `pcb new-board`（action `board.new_pcb`）；组合既有 sch+PCB 用 `board create/copy/rebind` | 见 [`PCB指令/放置与布局/放置与布局.md`](PCB指令/放置与布局/放置与布局.md)、[`会话与文档/会话与文档.md`](会话与文档/会话与文档.md) |
+| 新建元件 | 先 `blocks search` 复用块；缺库件走 `lib device build`（Symbol+Footprint+3D 一条龙） | 决策流程见 [`../元件检查/新建元件与替代方案/新建元件与替代方案.md`](../元件检查/新建元件与替代方案/新建元件与替代方案.md) |
+| 新建/编辑封装·符号 | `lib footprint/symbol create`（空资产+回读验证）→ `build`（JSON spec 全量编写，**编辑主入口**）；改官方件先 `footprint copy` 到可写库 | 见 [`器件库与块/器件库与块.md`](器件库与块/器件库与块.md)；已放置件换绑走 `sch rebind-footprint/rebind-symbol` |
+
 ## 刷新方法
 
 - `easyeda --help` 全量顶层域、`easyeda sch --help`、`easyeda pcb --help` 与本子文件条目数对照；缺项即回补。
