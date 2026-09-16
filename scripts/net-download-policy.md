@@ -3,8 +3,8 @@
 > 本文件是 `scripts/net-download.py` 的**格式与路径规范正本**；Agent 与
 > 贡献者阅读，脚本运行时不动态解析本文件（白名单在脚本内硬编码），但
 > 修改任一格式须同步两处并 review。
-> 遵循 `FILE_CREATION_POLICY.md` §1.3（skill 目录 vs 工作区）、§2.4
-> （`tmp/` 建在工作区）、§5.2（Path Traversal Guard）。
+> 遵循 `FILE_CREATION_POLICY.md` §1.3（skill 目录 vs 工作区）、§2.3
+> （`tmp/` 建在工作区）、§3（Path Traversal Guard）。
 
 ---
 

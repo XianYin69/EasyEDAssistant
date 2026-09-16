@@ -92,7 +92,7 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 ### 8.4 工作区 tmp/ 产物目录生命周期（保存与清理）
 
 所有运行产物一律落在**工作区** `cwd` 下已忽略的 `./tmp/`，按用途分子目录；
-路径全部相对工作区解析，禁止落入 skill 目录（`FILE_CREATION_POLICY.md` §1.3/§2.4），
+路径全部相对工作区解析，禁止落入 skill 目录（`FILE_CREATION_POLICY.md` §1.3/§2.3），
 `tmp/` 已在 `.gitignore` 中排除，任何 tmp 内容不得提交 git。
 
 **目录契约**：

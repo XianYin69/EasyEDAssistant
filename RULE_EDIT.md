@@ -1,6 +1,7 @@
 # RULE_EDIT（编辑规则）
 
 > 本项目规范与文档的编辑规则；Agent 与贡献者必须遵守。
+> 适用边界：本文件管 **skill 本体的编辑**（`SKILL.md`、`references/`、`scripts/`、`Sample/`、`CHANGELOG.md`）；设计执行期在工程工作区创建文件与目录的范围与权限，管在 [`FILE_CREATION_POLICY.md`](FILE_CREATION_POLICY.md) 与 [`references/约束部分/约束部分.md`](references/约束部分/约束部分.md)。
 
 ## 一、约束
 

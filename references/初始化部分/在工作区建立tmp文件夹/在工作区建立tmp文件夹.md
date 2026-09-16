@@ -12,7 +12,7 @@
 
 > 5. 临时 JSON、计划与回读结果放入**工作区**（`cwd`，非 skill 目录）下已忽略的
 >    `./tmp/` 目录；保留原始快照，在副本中设计（详见 `FILE_CREATION_POLICY.md`
->    §2.4：运行产物禁止写入 skill 目录，且不得逃逸出工作区）。`tmp/` 下按用途分
+>    §2.3：运行产物禁止写入 skill 目录，且不得逃逸出工作区）。`tmp/` 下按用途分
 >    子目录（sch/pcb/plan/design/parts/calc/datasheet/snapshots/baseline），
 >    完整目录契约与清理纪律见 §8.4。
 

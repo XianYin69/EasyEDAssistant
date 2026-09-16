@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.11.0"
+  version: "0.12.0"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -31,10 +31,11 @@ metadata:
 |---|---|
 | 电路板设计标准设计流程 markdown | 已写（references/电路设计标准设计流程/，五步与子步骤均已链接） |
 | 询问步骤 / 读取 tmp / 执行对应步骤 markdown | 待写 |
-| 约束部分 markdown | 已写（references/约束部分/，八项各带同名子文件） |
+| 约束部分 markdown | 已写（references/约束部分/，十一项各带同名子文件） |
 
 ## 5. 约束部分
 
-> 详见 [`references/约束部分/约束部分.md`](references/约束部分/约束部分.md)：文件命名规范、垃圾处理、记忆链、逻辑链的存储、文件存储格式、处罚机制、激励机制、上下文存储压缩机制。
+> 详见 [`references/约束部分/约束部分.md`](references/约束部分/约束部分.md)：文件命名规范、垃圾处理、记忆链、逻辑链的存储、文件存储格式、处罚机制、激励机制、上下文存储压缩机制、文件与文件夹创建范围、创建操作流程、安全与合规。
 > 文件存储格式总则：技术文件与数据手册可用 markdown 或 pdf，其余文档一律 markdown。
+> 适用范围划分：`FILE_CREATION_POLICY.md` 只管设计执行期的工作区文件与权限；编辑 skill 本体一律遵守 `RULE_EDIT.md`。
 > 裁决优先级：当前用户指令与代码/CLI 自描述 > 约束部分 > 各步骤文档 > `references/lib/`。

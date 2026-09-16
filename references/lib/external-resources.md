@@ -67,7 +67,7 @@ JS、不做账号登录、不下载页面上的可执行体（下载走 §13.2�
   指定的、经 `_resolve_within_workspace` 校验的子目录，如
   `tmp/downloads/datasheet/`、`tmp/downloads/images/`、
   `tmp/downloads/data/`、`tmp/downloads/edalib/`、`tmp/downloads/manufacturing/`），
-  禁止 `../`、绝对路径到 skill 目录或工作区外（FILE_CREATION_POLICY.md §5.2）；
+   禁止 `../`、绝对路径到 skill 目录或工作区外（FILE_CREATION_POLICY.md §3）；
 - 格式判定见 `scripts/net-download-policy.md` §2/§3：
   - **白名单**：`.pdf` `.md` `.txt` `.html` `.json` `.csv` `.yaml`
     `.xml` `.png` `.jpg` `.jpeg` `.gif` `.webp` `.svg` `.sch` `.pcb`
