@@ -113,11 +113,10 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
    - **P8 电源铺铜前**：运行 `python3 scripts/tool-probe.py` 检查电源插件状态，决定是否启用专用工具
    - **P10 终检前**：运行 `python3 scripts/tool-probe.py` 确认工具状态，确保视觉验证完整性
    - **每个关键步骤后**：自动运行 `python3 scripts/visual-qa.py` 进行视觉质量评估
- 9. **动态截图管理**：
-    - 每完成关键步骤后立即截一张图（原理图用 `sch export-image`，PCB 用 `pcb snapshot --previous-sha256`）；
-    - 识别截图状态：用 SHA256 校验与上次截图比对，标记是否 stale（canvas-freeze）；
-    - 动态清理：每次新截之前，删除 `./tmp/snapshots/` 中的旧截图（保留最近 3 张关键快照作为回溯依据）；
-    - 截图保存到 `./tmp/snapshots/step-<索引>-<时间戳>.png`，便于后续复盘与 visual-qa.py 调用。
+ 9. **截图双轨管理**（正本见 §8.3「截图生命周期」）：
+   - 每关键步骤后用 `sch export-image`（原理图）/ `pcb snapshot --previous-sha256`（PCB）截图；stale（canvas-freeze）检测仅适用 PCB 视口快照，须重取至 fresh，原理图导图无需；
+   - 归档轨：每部分验收通过即把局部图+全图导出 `./tmp/sch/` / `./tmp/pcb/`（`<sch|pcb>-<部件号>-<局部|全图>-<时间戳>.png`），作交付插图，不随快照清理；
+   - 滚动轨：`./tmp/snapshots/` 新截图前删最旧只留 3 张，`sch-`/`pcb-` 前缀分开计数，供复盘与 visual-qa.py 调用。
  10. **交付工件落位与清理**：原理图/PCB 字符画蓝图、计划、方案、元器件选型与比价、
      理论计算缓存、数据手册摘要、图片全部落在 `./tmp/` 对应子目录（§8.4）；
      工作结束时先在工作区根目录生成技术手册与功能手册（§7.8），再删除 `./tmp/`
