@@ -128,6 +128,40 @@ def _latest_new_png(artifacts_dir: Path, since: float) -> Path | None:
     return max(fresh, key=lambda x: x.stat().st_mtime)
 
 
+def _stamp_and_prune(artifacts_dir: Path, png: Path, prefix: str, keep: int = 3) -> Path:
+    """
+    滚动回收的脚本化实现（文档纪律「每张新截图前删最旧、只留最近 3 张」落进代码）：
+    1. 把 CLI 产物重命名为 `<prefix>-<时间戳>-<ns尾>.png`，sch/pcb 前缀分开计数；
+    2. 同前缀组内按 mtime 保留最新 keep 张，删除其余。
+    """
+    ts = time.strftime("%Y%m%d-%H%M%S")
+    ns_tail = f"{png.stat().st_mtime_ns % 100000:05d}"
+    dst = artifacts_dir / f"{prefix}-{ts}-{ns_tail}.png"
+    i = 1
+    while dst.exists():
+        i += 1
+        dst = artifacts_dir / f"{prefix}-{ts}-{ns_tail}-{i}.png"
+    png.rename(dst)
+    group = sorted(artifacts_dir.glob(f"{prefix}-*.png"),
+                   key=lambda x: x.stat().st_mtime, reverse=True)
+    for old in group[keep:]:
+        try:
+            old.unlink()
+        except OSError as e:
+            sys.stderr.write(f"[visual-qa] WARN: cannot prune {old}: {e}\n")
+    return dst
+
+
+def _discard(png: Path | None) -> None:
+    """丢弃判废的帧（stale 重试前的中间帧），不让废图占滚动配额。"""
+    if png is None:
+        return
+    try:
+        png.unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
 def capture_pcb_snapshot(
     project: str, artifacts_dir: Path, prev_sha: str | None,
     pcb_doc: str | None = None, max_retry: int = 2,
@@ -156,12 +190,15 @@ def capture_pcb_snapshot(
             out["stale"] = True  # 无图视同 stale（数据为权威）
             break
         sha = _sha256_file(snap)
-        out["path"] = str(snap)
-        out["sha256"] = sha
         out["stale"] = bool(prev_sha) and sha == prev_sha
         if not out["stale"]:
+            out["path"] = str(_stamp_and_prune(artifacts_dir, snap, "pcb"))
+            out["sha256"] = sha
             out["error"] = None
             break
+        # 废帧直接丢弃，不占滚动配额
+        out["sha256"] = sha
+        _discard(snap)
         if attempt < max_retry and pcb_doc:
             sys.stderr.write(
                 f"[visual-qa] PCB 截图 stale（canvas-freeze），切前台重取 "
@@ -190,8 +227,8 @@ def capture_sch_image(project: str, doc: str, artifacts_dir: Path) -> dict:
     if img is None:
         out["error"] = "no export-image artifact produced (见上方 [cli] 错误行)"
         return out
-    out["path"] = str(img)
-    out["sha256"] = _sha256_file(img)
+    out["path"] = str(_stamp_and_prune(artifacts_dir, img, "sch"))
+    out["sha256"] = _sha256_file(Path(out["path"]))
     return out
 
 
