@@ -2,6 +2,17 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.4（2026-09-16）
+
+- **脚本裁剪（设计流程调用审计）**：`references/` 全树扫描确认 5 个上游脚本无任何流程调用点——`audit-baseline.py`（离线审计分析）、`bulk-connect.py`/`bulk-place.py`（无调用入口的批量操作）、`parts-add.py`（写回的 standard-parts.json 已删）、`calibrate.js`（依赖的 orientation.json 已删），全部删除；保留的 13 个脚本均有 `references/` 或 `lib/` 挂接点（含 `orient.py` 被 `lint.py` import）。
+- **截图逻辑修复（用户意图：绘制期「截图 + 命令行」双通道纠错，交付期归档图作技术手册插图）**：
+  - **归档 + 滚动双轨**：每部分验收通过时局部图+全图即时归档 `./tmp/sch/`、`./tmp/pcb/`（命名 `<sch|pcb>-<部件号>-<局部|全图>-<时间戳>.png`，交付插图来源，不随清理删除）；`./tmp/snapshots/` 降为纯滚动工作快照（留最近 3 张，`sch-`/`pcb-` 前缀分开计数）。修复原「滚动 3 张上限」与「验收保存各部分局部截图」的硬矛盾。
+  - **stale 判定归位**：fresh/stale（`--previous-sha256`/canvas-freeze）仅适用于 PCB 视口快照；原理图 `sch export-image` 为文档渲染、无需上帧比对（原原理图子文档误套 stale 逻辑，已删改）。
+  - **双通道纠错挂接**：原理图/PCB「检查美观和正确」呈现层挂接归档截图判读 + `python3 scripts/visual-qa.py`（0/2/3 退出码），与数据层门禁互验，任一发现错误即回修；补上 visual-qa.py 从未被步骤文档触发的路由缺口。
+  - **交付文档插图来源放宽**：手册插图原理图用官方导图、PCB 用 fresh 归档快照；技术手册内容清单改引 `./tmp/sch/`、`./tmp/pcb/` 归档截图（引用前导出到手册路径）。
+  - 同步正本：`lib/verification-delivery.md` §8.3 改「截图生命周期（归档+滚动双轨）」；`lib/connection-setup.md` §2.9 改「截图双轨管理」并修正 stale 适用范围。
+  - 涉及文件：`绘制原理图/`（总索引+2 子文件）、`PCB绘制/`（总索引+1 子文件）、`交付与清理/交付文档/`、`lib/verification-delivery.md`、`lib/connection-setup.md`；步骤文件均 ≤50 行、自然语言；全树相对链接悬空 0。
+
 ### v0.12.3（2026-09-16）
 
 - **移除上游 skill 注册根源，Sample 降级为存档**：删除 `Sample/easyeda-agent/SKILL.md`（去 frontmatter，不再被 Kilo 注册为独立 skill，根除运行时劫持本项目流程的根因）、`.version`、`agents/openai.yaml`；`Sample/` 仅保留 `README.md`（本项目自撰的去注册说明）与 `LICENSE`（上游 MIT 原版）。

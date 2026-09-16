@@ -80,14 +80,10 @@ python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
 - `--no-snapshot` 模式下只跑数据评估，不触发截图采集——适合
   CI/批量回归或已知截图 fresh 的场景。
 
-**动态截图生命周期**（v0.7.0）：
-- **保存策略**：截图保存在 `./tmp/snapshots/step-<index>-<timestamp>.png`，
-  基线图保存在 `./tmp/baseline/`；两目录皆在 `.gitignore` 中排除。
-- **清理策略**：每次新截图生成前，自动删除 snapshots 目录中最旧的截图
-  （保留最近 3 张关键快照作为回溯）；基线截图在会话结束后清理。
-- **状态识别**：`visual-qa.py` 用 `--previous-sha256` 检测同帧，stale 标记
-  视为 "canvas-freeze"，触发 `easyeda view --fit` + 重取。脚本自动维护
-  `prev_sha` 闭环（上次报告 JSON → 下次 stale 检测）。
+**截图生命周期（v0.12.3 起：归档 + 滚动双轨）**：
+- **归档轨**：每部分绘制/验收通过时，该部分局部图与全图即时导出归档——原理图存 `./tmp/sch/`（`sch export-image`，文档渲染无需 stale 检测），PCB 存 `./tmp/pcb/`（`pcb snapshot`，须 fresh）；命名 `<sch|pcb>-<部件号>-<局部|全图>-<时间戳>.png`，不随快照清理删除，交付期作技术手册插图。
+- **滚动轨**：`./tmp/snapshots/` 仅作工作快照，新截图生成前删最旧、只留最近 3 张，`sch-`/`pcb-` 前缀分开计数；`./tmp/baseline/` 存基线图；两目录皆在 `.gitignore` 中排除，会话结束清理。
+- **状态识别**：仅 `pcb snapshot` 用 `--previous-sha256` 检测同帧，stale 标记视为 "canvas-freeze"，触发 `easyeda view --fit` + 重取直至 fresh；脚本自动维护 `prev_sha` 闭环（上次报告 JSON → 下次 stale 检测）。
 
 ### 8.4 工作区 tmp/ 产物目录生命周期（保存与清理）
 
