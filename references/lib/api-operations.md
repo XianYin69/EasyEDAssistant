@@ -15,6 +15,7 @@
 | 原理图↔PCB 同步 | `pcb import-changes` / `sync-designators` / `sync-attrs` / `add-component` | 同上 |
 | 器件库与选型 | `blocks search` → `standard-parts.json` → `lib by-lcsc` → `parts-select.py` | [`../元件检查/元件检查.md`](../元件检查/元件检查.md)、[`../成本及预算检查/成本及预算检查.md`](../成本及预算检查/成本及预算检查.md) |
 | 门禁与保存 | `sch gate --strict` / `layout-lint --gate` / `pcb drc` / `pcb check` / `layout-score`；`sch save` / `pcb save` | 各步骤文档的检查段 |
+| 批量放置（官方 eext） | `eext-batch-place-components`：CSV 坐标批量放置（表头带单位，如 `Name,X(mm),Y(mm)`），仅作初始落位，落位后仍须回读对账 | [`../绘制原理图/部分绘制与截图/部分绘制与截图.md`](../绘制原理图/部分绘制与截图/部分绘制与截图.md) |
 
 ## 操作纪律（跨步骤复用）
 
@@ -26,6 +27,7 @@
 6. 嵌入焊盘的 via 在 reload 后会被平台重置为 netless → 在 reload 后、DRC/铺铜前重新执行 `pcb via-bond`。
 7. 每步 apply 或批次连线后立即截图（`sch export-image` / `pcb snapshot --previous-sha256`）；批次连线后必跑 `sch check` 兜叠加 marker。
 8. 写前读被改对象（器件、引脚、网络、几何），位号或 primitiveId 不明确时不盲写；保存以 `saved:true` 为准。
+9. **批量优先**：一个模块一次队列派发（`sch apply` 队列、`sch autoconnect --spec` 批次），禁止逐器件逐根线多轮往返编辑器；相互独立、只读的查询与检查（`sch check`、`pcb report` 等）可同批并行发起，写操作仍保持队列内有序；大回读一律 `> ./tmp/*.json` 落盘，上下文只留统计行与路径。
 
 ## 验证分层（不能互替）
 
