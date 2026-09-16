@@ -2,6 +2,15 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.1（2026-09-16）
+
+- **核对 `references/lib/` 的引用与实现状态**：11 份中 6 份被 `references/` 引用（connection-setup / design-rules / discipline-checkpoints / external-resources / project-docs / verification-delivery，保留为正本）；5 份仅被 README 与维护者索引提及，其中 3 份内容已由步骤文档实现、2 份未实现。
+- **已实现项简化**：删除 `references/lib/design-decisions.md`（23 行，PCB 侧由 `references/PCB绘制/用户PCB配置文件/` 的 D1–D20 承接，未覆盖的 9 个决策点（叠层/VCC 内层/地域/线宽分级/USB 架构/自动下载/选型档位/单双面/焊接工艺）已补入该文件的「附加决策点」段）；压缩 `references/lib/api-operations.md`（153 → 32 行，保留命令族索引与跨步骤操作纪律：autoconnect 幂等与硬拒与 35s 预算、`sch connect` 不幂等、apply 保护队列契约、`doc reload` 铁律、via-bond、截图与验证分层）；压缩 `references/lib/layout-aesthetics.md`（63 → 27 行，保留原理图可读性与 PCB 美观经验要点）。
+- **未实现项迁出后删除**：`coordinates-model.md` → 新建 `references/坐标与数据模型/坐标与数据模型.md`（raw/mil/mm 与 y-UP、数据模型五要点）；`official-docs.md` → 新建 `references/官方文档映射/`（总索引 + `官方文档索引/` + `GUI指令映射/`，含原理图 11 项、PCB 15 项菜单→命令对照）。
+- **接入引用**：`引脚索引`、`绘制原理图/输入读取`、`PCB绘制/输入读取` 挂接坐标与数据模型；`桥接联通性测试`、`PCB绘制/PCB设计规范` 挂接官方文档映射，避免新文档成为孤链。
+- **README 改为目录级说明**：目录树与章节表不再逐条列 lib 文件（原 11 条路径写作 `references/xxx.md` 已失效），改述 `references/<步骤>/`、`references/约束部分/`、`references/lib/`（8 份，维护者文档，不参与运行时加载）；两处 `references/design-rules.md` 更正为 `references/lib/design-rules.md`，版本标注 0.10.0 → 0.12.0。
+- lib 精简后为 8 份（早前 1524 行 → 1145 行），全部文件 ≤ 50 行、自然语言。
+
 ### v0.12.0（2026-09-16）
 
 - **`FILE_CREATION_POLICY.md` 瘦身为 v2.0（203 行 → 50 行，符合 RULE_EDIT ≤50 行）**：只保留「设计执行期大模型使用文件的范围、工作区的范围及权限」——§1 概述与 skill 目录/工作区边界、§2 文件使用范围（允许/禁止/运行产物落位）、§3 路径逃逸防护、§4 权限与审批、§5 细则索引、§6 修订历史；节号迁移 §2.4 → §2.3、§5.2 → §3。
