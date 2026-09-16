@@ -72,7 +72,7 @@
 | `scripts/` | 功能子文件夹 | 仅在 `scripts/` 下创建明确功能子文件夹（如 `scripts/utils/`、`scripts/test/`）；需经过批准 |
 | `Sample/easyeda-agent/` | 仅参考子文件夹 | 不得在 `Sample/easyeda-agent/` 下创建新文件夹，仅可修改现有结构 |
 | `agents/` | 仅定义文件存储 | 不得在 `agents/` 下创建新文件夹，仅存储 `.yaml`、`.json` 文件 |
-| `references/` | 仅参考文件存储 | 不得在 `references/` 下再建子文件夹；新增文件必须同步登记 SKILL.md 路由表 |
+| `references/` | 参考与步骤文档存储 | 允许按 RULE_EDIT「总索引 + 子文件」在 `references/<步骤>/` 下建子文件夹（v1.3 例外）；主文档与文件夹同名，子文件与其子文件夹同名；新增步骤文档须同步登记 SKILL.md 路由表 |
 
 ### 3.2 禁止新建的文件夹类型
 
@@ -185,6 +185,7 @@
 - **工具**：指 `read`、`write`、`edit`、`glob`、`bash` 等 Kilo 提供的工具
 
 ### 7.2 修订历史
+- **v1.3（2026-09-16）**：§3.1 `references/` 行改为允许按 RULE_EDIT「总索引 + 子文件」建子文件夹（主文档与文件夹同名、子文件与其子文件夹同名），消除与现行 `references/电气检查/硬编码规则/`、`references/元件检查/` 等结构的矛盾；路由表登记要求不变。
 - **v1.2（2026-09-15）**：配合 SKILL.md v0.10.0 主干化重构，§2.1/§3.1 允许 `references/` 参考目录（仅存章节迁移文档，禁子文件夹，须登记路由表）。
 - **v1.1（2026-09-14）**：新增 §1.3（skill 目录 vs 工作区）、§2.4（`tmp/` 必须建在工作区、禁止建在 skill 目录）；重写 §5.2 为"路径安全与防止逃逸"（`Path Traversal Guard`）；§3.2 补充 skill 内 `tmp/` 与工作区外目录的禁止项。同步修复 `scripts/tool-probe.py`、`scripts/tool-probe-simulator.py` 的 `Path(__file__)` 派生输出根 → 改为工作区 `Path.cwd()`，并加入 `--project` 清洗与逃逸校验。
 - **v1.0（2026-09-14）**：初始版本发布
@@ -199,4 +200,4 @@
 
 **制定人：** Kilo Team  
 **生效日期：** 2026-09-14  
-**版本：** 1.2  
+**版本：** 1.3  
