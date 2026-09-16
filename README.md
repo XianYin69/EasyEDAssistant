@@ -64,7 +64,13 @@ EasyEDAssistant/
 
 ### 流程图综述
 
-> 完整交互式流程图请打开 [`stream.html`](./stream.html)（基于 diagrams.net）。
+<html>
+  <iframe
+  src="./stream.html"
+  style="width: 100%; height: 40vh"
+  ></iframe>
+</html>
+
 > 主要流程：用户输入请求 → 识别用户意图 → 判断首次设计 → 是则走「电路板设计标准设计流程」六步（初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理），否则走「单步执行」（读取 /tmp 上下文 → 询问并选择步骤 → 只执行该步骤 → 回写与报告）。
 
 ## EasyEDAssistant（SKILL.md）详细文档
