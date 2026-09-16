@@ -39,7 +39,7 @@ PCB 操作见本项目 `references/PCB绘制/`。
 
 ### S2 — 分配位号并完成模块数据
 
-存在缺失或非标准位号时，按 [schematic-data.md](./schematic-data.md) 使用 `sch designators allocate`，
+存在缺失或非标准位号时，按 [坐标与数据模型](../坐标与数据模型/坐标与数据模型.md) 使用 `sch designators allocate`，
 从官方库测得的前缀分配缺失编号，保留已有合法位号及声明顺序。编号后同步本地模块、
 接口、placement、terminal 的引用；仅修位号时用 `sch designators plan/verify`，
 不重新计算布局或重建电路。
@@ -51,7 +51,7 @@ PCB 操作见本项目 `references/PCB绘制/`。
 
 先放核心，再依据引脚方向放外围，模块内部优先直接短导线。供电/GND 可重复使用
 标记；端子信号优先水平直出、按文字占用错开引线长度。不得为避碰改变电气网络。
-布局与呈现细节见 [schematic-placement.md](./schematic-placement.md)。
+布局与呈现细节见 [绘制原理图](../绘制原理图/绘制原理图.md)。
 
 Lib 内部几何用 `sch lib-layout` 从连接图、实测姿态与布局意图计算；`compose` 消费它的输出。
 保留输入和参数，先核对不变量，再交给组合器；需额外自编计算时保留脚本。已有完整模块几何可直接复用。
