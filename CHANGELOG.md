@@ -2,6 +2,13 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.8（2026-09-16）
+
+- **指令索引补「新建对象」链路（用户问询触发，经 `easyeda actions`/`api search`/子命令 help 实测）**：
+  - 总索引新增**新建对象速查**跨域表：新建工程——**CLI 与 138 个 typed action 均无入口**，官方仅 `eda.dmt_Project.createProject`（@beta），推荐 GUI、程序化只作 debug exec 确认门控例外；新建页/板/元件/封装条目与子文件锚点。
+  - `器件库与块` 展开 `lib footprint|symbol|device` 全套子命令：`create`（空资产+回读验证）/`build`（JSON spec 编写，**封装/符号编辑主入口**，全量重写式）/`copy`（官方件改前先复制到可写库）/`get`/`delete`/`model3d`，`device build` 为新建元件一条龙；已放置件换绑指向 `sch rebind-footprint/rebind-symbol`。
+- 两文件仍 ≤50 行（45/43），悬空链接 0；`SKILL.md` frontmatter 版本 0.12.2 → **0.12.8** 与 CHANGELOG 对齐。
+
 ### v0.12.7（2026-09-16）
 
 - **新增 `references/嘉立创EDA指令索引/`（总索引 + 12 子文件，共 13 份，用户批准建子文件夹）**：嘉立创 EDA（`easyeda` CLI v1.4.8 自描述 + MCP typed action）的**运行时指令入口索引**——条目 + 一句话语义 + 流程落点，参数真值仍指向 `--help` 与 `easyeda actions`。补上上游 `actions.md` 随 Sample 清理后缺失的运行时命令目录层（`lib/api-operations.md` 为维护者速查、不参与运行时加载）。
