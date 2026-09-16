@@ -2,6 +2,14 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.7（2026-09-16）
+
+- **新增 `references/嘉立创EDA指令索引/`（总索引 + 12 子文件，共 13 份，用户批准建子文件夹）**：嘉立创 EDA（`easyeda` CLI v1.4.8 自描述 + MCP typed action）的**运行时指令入口索引**——条目 + 一句话语义 + 流程落点，参数真值仍指向 `--help` 与 `easyeda actions`。补上上游 `actions.md` 随 Sample 清理后缺失的运行时命令目录层（`lib/api-operations.md` 为维护者速查、不参与运行时加载）。
+- **结构**：总索引（真值优先级/刷新方法/使用纪律）→ 会话与文档（全局 flag、门禁、doc/view/board/workflow/apply/spec/audit）；原理图指令 →（放置与编辑 / 连线与网络 / 校验与对账）；PCB指令 →（放置与布局 / 布线与过孔 / 铺铜与区域 / 检查与导出）；器件库与块（lib/blocks/bom + parts-select 管道 + eext 批量放置）；动作目录与队列（actions/call/api/debug 与 apply playbook 契约）。
+- **条目来源**：`easyeda --help`、`easyeda sch/pcb/lib/blocks/bom/board/doc/workflow/apply/spec/view/api/call/debug/audit/project/daemon/update/skill/notify --help` 实测采集（v1.4.8）；发现 v1.4.8 顶层无 `pcb via-hop/via-bond/line.create` CLI 封装——过孔等图元操作归入「动作目录与队列」经 `actions`/`call`，与 `easyeda workflow` 帮助中 `pcb.line.create`/`pcb.via.create` 为 action 名的表述一致。
+- **流程关键步骤挂接 7 处**：`SKILL.md` §4 路由登记；`绘制原理图/输入读取`（原理图指令索引）、`绘制原理图/部分绘制与截图`（对账步查索引）、`PCB绘制/输入读取`（PCB 指令索引）、`PCB绘制/部分绘制与验收`（对账步）、`元件检查`（器件库与块）、`桥接联通性测试`（会话与文档 + 动作目录与队列）。
+- 全部新文件 ≤50 行、自然语言；主文档与文件夹同名、子文件与其子文件夹同名；全树相对链接悬空 0。
+
 ### v0.12.6（2026-09-16）
 
 - **逐件截图纠错（用户拍板：画一个元件截一次图，不等整页画完）**：`绘制原理图/部分绘制与截图` 绘制与截图节重写——器件落位按件推进，每落位一个器件运行 `visual-qa.py --schematic` 截图 + 越界核验，exit 3 当场回移/重画后才画下一个；eext CSV 批量落位改为「落位后逐件核验整批」；验证图（滚动 3 张）与归档图（逐部分两张）双轨分离。
