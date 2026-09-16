@@ -2,6 +2,17 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.5（2026-09-16）
+
+- **高速推理/工具/绘图优化（联网检索结论经用户批准入判据，共六条）**：
+  - **① 主干静态化 + 只增不改升格性能判据**（依据：Anthropic Claude Code prompt-cache 前缀匹配经验、arXiv 2605.26289 相邻轮 85–95% 前缀复用）：`约束部分/上下文存储压缩机制` 新增第 8 条——SKILL.md 主干与路由表会话内保持静态、变更走文末追加或子文件，按需加载以消息注入不回写主干；`逻辑链的存储` 第 5 条「只增不改」补注缓存复用前提并互链。
+  - **② 批量优先**（依据：Anthropic code-execution-with-MCP、mcp-batchit、claudecodeguides 批处理模式）：`lib/api-operations.md` 新增操作纪律 9——一模块一队列（apply 队列、`autoconnect --spec`），禁止逐器件多轮编辑器往返，独立只读检查同批并行，写操作队列内有序。
+  - **③ 大输出落盘、上下文只进摘要**：`上下文存储压缩机制` 第 4 条强化为硬判据——大回读一律 `> ./tmp/<子目录>/<名>.json`，上下文只留统计行与路径（`api-operations` 纪律 9 同步）。
+  - **④ 写路径首选 CLI/daemon**（依据：MindStudio MCP-vs-CLI token 研究）：`lib/connection-setup.md` §1.1 与 `桥接联通性测试` 链路选择更新——两条链路都连通时优先 CLI/daemon（批量写一次派发、开销低），MCP 留作交互式细查；选定后仍全程单链路不切换。
+  - **⑤ 每页 ≤150 元件**（依据：官方 place-device 文档，原理图引擎非新引擎超限卡顿）：写入 `部分绘制与截图` 技术细节拍板判据，拆页优先于密排。
+  - **⑥ 官方批量放置 eext 入流程**（依据：github.com/easyeda/eext-batch-place-components）：`api-operations` 命令族索引与 `部分绘制与截图` 绘制步挂接——用户装有该扩展（tool-probe 清单可查）时可用 CSV 坐标批量初始落位（表头带单位），之后照常回读对账；此为官方路径，替代已删的 bulk-place.py。
+- 全树相对链接悬空 0；本轮修改的步骤文件均 ≤50 行、自然语言。
+
 ### v0.12.4（2026-09-16）
 
 - **脚本裁剪（设计流程调用审计）**：`references/` 全树扫描确认 5 个上游脚本无任何流程调用点——`audit-baseline.py`（离线审计分析）、`bulk-connect.py`/`bulk-place.py`（无调用入口的批量操作）、`parts-add.py`（写回的 standard-parts.json 已删）、`calibrate.js`（依赖的 orientation.json 已删），全部删除；保留的 13 个脚本均有 `references/` 或 `lib/` 挂接点（含 `orient.py` 被 `lint.py` import）。
