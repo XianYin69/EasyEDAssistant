@@ -114,7 +114,7 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
    - **P6 布线前**：运行 `python3 scripts/tool-probe.py` 扫描插件状态，自动触发 §11.5 条件中断点询问用户是否启用对应插件
    - **P8 电源铺铜前**：运行 `python3 scripts/tool-probe.py` 检查电源插件状态，决定是否启用专用工具
    - **P10 终检前**：运行 `python3 scripts/tool-probe.py` 确认工具状态，确保视觉验证完整性
-   - **每个关键步骤后**：自动运行 `python3 scripts/visual-qa.py` 进行视觉质量评估
+   - **每个关键步骤后**：自动运行 `python3 scripts/visual-qa.py --project <工程> --doc <页> --both --artifacts-dir ./tmp/snapshots` 进行视觉质量评估；**原理图每落位一个器件即运行一次 `--schematic` 核验**（截图 + 器件越出图纸边界 = exit 3 阻断，画完再查为时已晚）。
  9. **截图双轨管理**（正本见 §8.3「截图生命周期」）：
    - 每关键步骤后用 `sch export-image`（原理图）/ `pcb snapshot --previous-sha256`（PCB）截图；stale（canvas-freeze）检测仅适用 PCB 视口快照，须重取至 fresh，原理图导图无需；
    - 归档轨：每部分验收通过即把局部图+全图导出 `./tmp/sch/` / `./tmp/pcb/`（`<sch|pcb>-<部件号>-<局部|全图>-<时间戳>.png`），作交付插图，不随快照清理；
