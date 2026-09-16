@@ -10,10 +10,11 @@
 EasyEDAssistant/
 ├── README.md                                  # 本文件
 ├── LICENSE                                    # MIT
-├── SKILL.md                                   # EasyEDAssistant skill 主干（Kilocode，v0.12.0）
+├── SKILL.md                                   # EasyEDAssistant skill 主干（Kilocode，v0.12.2）
 ├── CHANGELOG.md                               # 变更摘要（SKILL.md §14 迁出，按版本倒序）
 ├── references/                                # 步骤文档：每步骤一个同名目录（总索引 + 子文件）
-│   ├── 初始化部分/ … PCB制作/                  # 初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作
+│   ├── 初始化部分/ … 交付与清理/                # 六步：初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理
+│   ├── 单步执行/                              # 非首次设计：读 /tmp 上下文 → 选步骤 → 只执行该步骤 → 回写报告
 │   ├── 约束部分/                              # 十一项约束（命名/格式/垃圾/记忆链/逻辑链/压缩/处罚/激励/创建范围/流程/安全）
 │   └── lib/                                   # 维护者文档（8 份，原 SKILL.md §1–§13 正文，不参与运行时加载）
 ├── AGENT-PROMPT.md                            # 精简使用指引（规范回归 SKILL.md）
@@ -64,12 +65,12 @@ EasyEDAssistant/
 ### 流程图综述
 
 > 完整交互式流程图请打开 [`stream.html`](./stream.html)（基于 diagrams.net）。
-> 主要流程：用户输入请求 → 识别用户意图 → 判断首次设计 → 是则走「电路板设计标准设计流程」（初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作），否则询问需要执行的步骤后读取 /tmp 上下文文件继续。
+> 主要流程：用户输入请求 → 识别用户意图 → 判断首次设计 → 是则走「电路板设计标准设计流程」六步（初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理），否则走「单步执行」（读取 /tmp 上下文 → 询问并选择步骤 → 只执行该步骤 → 回写与报告）。
 
 ## EasyEDAssistant（SKILL.md）详细文档
 
 > 对应根目录 `SKILL.md`（frontmatter `name: EasyEDAssistant`，
-> `metadata.author: EasyEDAssistant`，当前 v0.12.0，主干 + 按需加载 references/）。本节说明其组件、
+> `metadata.author: EasyEDAssistant`，当前 v0.12.2，主干 + 按需加载 references/）。本节说明其组件、
 > 工作流、引用的其它 SKILL 文件及其作者。
 
 ### 组件（文档结构）
@@ -79,7 +80,8 @@ SKILL.md 主干只含入口判定、路由与 always-on 纪律；详细内容按
 | 内容 | 位置 |
 |---|---|
 | 流程入口、路由、执行纪律 | `SKILL.md` 主干内联 |
-| 各步骤流程（初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作） | `references/<步骤>/`（总索引 + 子文件） |
+| 各步骤流程（六步：初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理） | `references/<步骤>/`（总索引 + 子文件） |
+| 非首次设计的续跑与单步执行 | `references/单步执行/`（读取上下文、选择步骤、执行与回写） |
 | 步骤级细则（桥接联通性测试、绘制原理图、绘制 PCB、检查步骤等） | 同上，各步骤目录内的同名子文件 |
 | 坐标与数据模型、官方文档与 GUI 映射 | `references/坐标与数据模型/`、`references/官方文档映射/` |
 | 约束（命名、格式、清理、证据链、处置等十一项） | `references/约束部分/` |
@@ -88,8 +90,9 @@ SKILL.md 主干只含入口判定、路由与 always-on 纪律；详细内容按
 
 ### 工作流 / 过程
 
-1. **连接**：JLCEDA MCP（VS Code 插件）为主链路，`easyeda` CLI/daemon 为回退
-   链路；两链路语义一致（同一套 `eda.*` API 映射与验证纪律）。
+1. **连接**：JLCEDA MCP（VS Code 插件）与 `easyeda` CLI/daemon 互为**替代链路**
+   （不是级联备用）：先测 MCP `7655`，不通再测 CLI/daemon `60832`，选定后全程使用，
+   重试最多 3 轮后转用户；两链路语义一致（同一套 `eda.*` API 映射与验证纪律）。
 2. **会话门禁**：首条命令 `easyeda update --check --exit-code`；升级后新开会话。
 3. **需求澄清**（§11）：按任务类型走默认行为；只问"答案会改变做法"的选项；
    把模糊需求落成可验证的目标不变量（pin→net 黄金表、skew 预算、DRC 目标）。
@@ -107,9 +110,10 @@ SKILL.md 主干只含入口判定、路由与 always-on 纪律；详细内容按
    旧图自动清理。
 6. **验证与保存**：分层验证（§8），`blocked`/`fail` 区分，显式 `save`
    确认 `saved:true`。
-7. **收尾**（§12.2）：功能定稿 → 清 blocking → `pcb refine` →
-   `pcb beautify` → 丝印整理 → 全量验证。
-8. **文档任务**（§7）：按需生成 LICENSE / README（内容只来自工程回读）。
+7. **收尾与交付**（见 `references/交付与清理/`）：功能定稿 → 清 blocking → `pcb refine` →
+   `pcb beautify` → 丝印整理 → 全量验证 → 出技术手册/功能手册与交付报告（用户确认）
+   → 清理 `./tmp/`（先交付后清理，blocked/fail 如实列出）。
+8. **文档任务**（随交付与清理生成）：按需生成 LICENSE / README（内容只来自工程回读）。
 
 ### 引用的其它 SKILL 文件与作者
 
@@ -135,7 +139,7 @@ EasyEDAssistant skill 同时支持两条到 EDA 引擎的链路，原有方式�
 |---|---|---|
 | JLCEDA MCP（VS Code 插件） | WebSocket `ws://127.0.0.1:8765/bridge/ws` | 动作派发、心跳、窗口上下文 |
 | JLCEDA MCP（VS Code 插件） | HTTP `http://127.0.0.1:7655/mcp` | MCP 工具/资源入口（Kilocode 经 `kilo.json` 接入） |
-| 原有链路 | `easyeda` CLI + daemon（端口 `60832`）+ EasyEDA Agent Connector | 必须保留；MCP 端点不可用时回退 |
+| 原有链路 | `easyeda` CLI + daemon（端口 `60832`）+ EasyEDA Agent Connector | 与 MCP 互为替代（非级联备用）；MCP 不通才用，选定后全程使用 |
 
 Kilocode 接入配置（`kilo.json`）：
 
@@ -213,8 +217,8 @@ EasyEDAssistant skill 内置的设计判据（详见 `SKILL.md` §4（全文见 
 
 ## 使用
 
-1. 启动 JLCEDA MCP VS Code 插件（监听 `8765` / `7655`）；不可用时安装
-   `easyeda` CLI/daemon 作为回退链路。
+1. 启动 JLCEDA MCP VS Code 插件（监听 `8765` / `7655`）；MCP 不通时安装
+   `easyeda` CLI/daemon 作为替代链路（选定后全程使用，不重复探测）。
 2. 在 Kilocode `kilo.json` 中启用 `jlceda` MCP server（配置见上）。
 3. 会话首条命令仍为 `easyeda update --check --exit-code` 版本门禁
    （EasyEDAssistant 移植版同样适用）；升级后新开会话。

@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.0"
+  version: "0.12.2"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -19,18 +19,19 @@ metadata:
 ## 2. 电路板设计标准设计流程
 
 > 详见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)。
-> 步骤：初始化部分 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作（各步骤与其子步骤均已挂接连接 markdown，无悬空链接）。
+> 步骤：初始化部分 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理（各步骤与其子步骤均已挂接连接 markdown，无悬空链接）。
 
-## 3. 询问步骤 + 读取 /tmp + 执行对应步骤（待补）
+## 3. 询问步骤 + 读取 /tmp + 执行对应步骤
 
-> 详细流程 markdown 后续写入。
+> 详见 [`references/单步执行/单步执行.md`](references/单步执行/单步执行.md)：读取 `/tmp` 上下文 → 列出可执行步骤并询问用户 → 只执行被选步骤 → 回写上下文与三段式报告。
 
 ## 4. 待补文档占位
 
 | 文档 | 状态 |
 |---|---|
-| 电路板设计标准设计流程 markdown | 已写（references/电路设计标准设计流程/，五步与子步骤均已链接） |
-| 询问步骤 / 读取 tmp / 执行对应步骤 markdown | 待写 |
+| 电路板设计标准设计流程 markdown | 已写（references/电路设计标准设计流程/，六步与子步骤均已链接） |
+| 询问步骤 / 读取 tmp / 执行对应步骤 markdown | 已写（references/单步执行/，含读取上下文、选择步骤、执行与回写） |
+| 交付与清理 markdown | 已写（references/交付与清理/，含交付文档、交付报告、清理） |
 | 约束部分 markdown | 已写（references/约束部分/，十一项各带同名子文件） |
 
 ## 5. 约束部分
