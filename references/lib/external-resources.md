@@ -62,7 +62,7 @@ JS、不做账号登录、不下载页面上的可执行体（下载走 §13.2�
 
 **Agent 调用规范**：
 - 先按 §13.1 在 `./tmp/learning/` 记下**为什么要下载**这个 URL；
-- 再执行：`python3 scripts/net-download.py --url <URL> [--name <filename>]`；
+- 再执行：`python scripts/net-download.py --url <URL> [--name <filename>]`；
 - 输出根**强制** `Path.cwd() / "tmp/downloads"`（或 `--out-dir`
   指定的、经 `_resolve_within_workspace` 校验的子目录，如
   `tmp/downloads/datasheet/`、`tmp/downloads/images/`、

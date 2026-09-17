@@ -53,19 +53,19 @@
 
 ```bash
 # PCB + 原理图双评估（需活体窗口或 daemon）
-python3 scripts/visual-qa.py --project <name> --doc <page-uuid> --both \
+python scripts/visual-qa.py --project <name> --doc <page-uuid> --both \
     --artifacts-dir ./tmp/snapshots
 
 # 原理图逐件纠错（绘制步每落位一个器件调用一次；截图 + 图纸边界越界核验）
-python3 scripts/visual-qa.py --project <name> --doc <page-uuid> --schematic \
+python scripts/visual-qa.py --project <name> --doc <page-uuid> --schematic \
     --artifacts-dir ./tmp/snapshots
 
 # 仅 PCB，strict（WARN 也判阻塞；--pcb-doc 供 stale 时自动切前台重试）
-python3 scripts/visual-qa.py --project <name> --pcb-doc <pcb-uuid> --pcb --strict \
+python scripts/visual-qa.py --project <name> --pcb-doc <pcb-uuid> --pcb --strict \
     --artifacts-dir ./tmp/snapshots
 
 # 跳过截图采集（只用已有数据打分；不触发 canvas-freeze）
-python3 scripts/visual-qa.py --project <name> --pcb --no-snapshot
+python scripts/visual-qa.py --project <name> --pcb --no-snapshot
 ```
 
 **输出**：JSON（stdout，`--summary` 可关，`--out` 另存）+ 人读摘要（stderr）。退出码：

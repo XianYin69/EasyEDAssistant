@@ -6,7 +6,7 @@ visual-qa.py — EasyEDAssistant 视觉质量与布局完整性自动评估
 （layout-score / pcb check / pcb drc）交叉评估原理图与 PCB 的视觉质量，
 聚焦：组件间距、走线间距、整体整齐度。
 
-设计原则（见 SKILL.md §8.1 验证分层）：
+设计原则（见 references/lib/verification-delivery.md §8.1 验证分层）：
   - 呈现层（截图）不可互替，但数据校验是权威——截图只做视觉终检。
   - PCB snapshot 可能 stale（--previous-sha256 检测同帧）；sch export-image
     是文档渲染，不依赖视口刷新。
@@ -19,7 +19,7 @@ visual-qa.py — EasyEDAssistant 视觉质量与布局完整性自动评估
   3 = 有 blocking（短路/重叠/出框/间距硬违规/截图 stale 且数据也不全）
 
 用法：
-  python3 scripts/visual-qa.py --project <name> [--doc <原理图页>] [--pcb-doc <PCB页>]
+  python scripts/visual-qa.py --project <name> [--doc <原理图页>] [--pcb-doc <PCB页>]
       [--artifacts-dir ./tmp/snapshots]   # 工作区相对路径，禁止逃逸 cwd
       [--schematic | --pcb | --both]      # 默认 --both
       [--strict]                          # WARN 也判阻塞（退出码 3）
@@ -214,7 +214,7 @@ def capture_pcb_snapshot(
 
 def capture_sch_image(project: str, doc: str, artifacts_dir: Path) -> dict:
     """
-    采原理图官方导图（文档渲染，不依赖视口刷新；见 SKILL.md §5.7）。
+    采原理图官方导图（文档渲染，不依赖视口刷新；见 references/lib/verification-delivery.md §8.3）。
     sch export-image 不需要 previous-sha256（文档渲染），支持后台执行。
     只认本次调用后新产生的 PNG；无新产物即报错，不再静默复用旧图。
     """
@@ -251,7 +251,7 @@ def collect_pcb_data(project: str) -> dict:
     if isinstance(check, dict):
         data["check"] = check
 
-    # drc 前台窗口执行；超时装前景跑一次不循环重试（SKILL.md §5.7）
+    # drc 前台窗口执行；超时装前景跑一次不循环重试（references/lib/verification-delivery.md §8.3）
     drc = _cli_json(
         ["pcb", "drc", "--project", project, "--json"], timeout=90
     )
@@ -558,7 +558,7 @@ def evaluate_sch(image: dict, data: dict, strict: bool) -> dict:
 
 
 def _sanitize_project(name: str) -> str:
-    """剥离任何路径分隔符与 .. 序列，防止注入到文件名/路径（FILE_CREATION_POLICY §5.2）。"""
+    """剥离任何路径分隔符与 .. 序列，防止注入到文件名/路径（FILE_CREATION_POLICY §3）。"""
     return Path(name).name or "default"
 
 
@@ -581,7 +581,7 @@ def main() -> int:
     ap.add_argument("--project", required=True)
     ap.add_argument("--doc", help="原理图页 UUID/名（导图与越界核验用）")
     ap.add_argument("--pcb-doc", help="PCB 文档 UUID/名（stale 时切前台重试）")
-    ap.add_argument("--artifacts-dir", default="tmp")
+    ap.add_argument("--artifacts-dir", default="tmp/snapshots")
     mode_g = ap.add_mutually_exclusive_group()
     mode_g.add_argument("--schematic", dest="mode", action="store_const",
                         const="schematic", help="仅原理图评估")

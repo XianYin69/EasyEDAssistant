@@ -10,7 +10,7 @@ tool-probe.py — 探针脚本：获取嘉立创 EDA 专业版内建工具与已
   4. 供 Agent 在特定设计步骤时查阅并按需调用
 
 用法：
-  python3 scripts/tool-probe.py [--project <name>] [--output-dir ./tmp]
+  python scripts/tool-probe.py [--project <name>] [--output-dir ./tmp]
 """
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def _cli(args: list[str], timeout: int = 30) -> str:
 
 
 def _sanitize_project(name: str) -> str:
-    """剥离任何路径分隔符与 .. 序列，防止注入到路径/文件名（见 FILE_CREATION_POLICY §5.2）。"""
+    """剥离任何路径分隔符与 .. 序列，防止注入到路径/文件名（见 FILE_CREATION_POLICY §3）。"""
     return Path(name).name or "default"
 
 
@@ -71,9 +71,13 @@ def main() -> int:
     # 尝试通过 easyeda CLI 获取系统/健康状态与扩展信息
     health_raw = _cli(["health", "--project", args.project, "--json"])
     plugins_raw = _cli(["api", "search", "plugin", "--json"])
+    probe_ok = bool(health_raw)
 
-    # 模拟/解析内建工具与插件清单（若 CLI 返回 JSON 则解析，否则生成标准结构供 Agent 参考）
+    # 内建工具清单为静态参考（官方能力描述），非运行时探针结果；
+    # 运行时事实只有 health 与插件目录两项，CLI 不可达时如实标注。
     manifest = {
+        "probe_status": "cli_ok" if probe_ok else "cli_unavailable",
+        "note": "builtin_tools 为静态参考清单；installed_extensions 仅在 daemon 可达时来自实时回读。",
         "builtin_tools": [
             {"id": "teardrop", "name": "泪滴工具", "category": "pcb", "status": "available_via_ui_or_api"},
             {"id": "copper_manager", "name": "铺铜管理器", "category": "pcb", "status": "available"},
@@ -100,6 +104,7 @@ def main() -> int:
     md_content = f"""# 嘉立创 EDA 工具与插件探针报告
 
 > 生成时间：自动探针
+> 探针状态：{'cli_ok（health 来自实时回读）' if probe_ok else 'cli_unavailable —— 以下内建工具清单仅为静态参考，未经运行时验证；不可当作已探得事实使用'}
 > 目标工程：{args.project}
 
 ## 1. 内建工具清单（Built-in Tools）
@@ -122,6 +127,9 @@ def main() -> int:
     md_path.write_text(md_content, encoding="utf-8")
 
     sys.stderr.write(f"[tool-probe] 探针完成！已生成:\n  - {json_path}\n  - {md_path}\n")
+    if not probe_ok:
+        sys.stderr.write("[tool-probe] 警告：easyeda CLI 不可达，清单未经运行时验证（exit 2），先起 daemon 再重跑。\n")
+        return 2
     return 0
 
 

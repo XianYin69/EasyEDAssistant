@@ -9,15 +9,15 @@ net-download.py — 网络资源下载器（配合 scripts/net-download-policy.m
   4. 记录元数据（URL/时间戳/HTTP 状态/字节数/SHA256）到 `./tmp/downloads/index.json`
 
 用法：
-  python3 scripts/net-download.py --url <URL> [--name <filename>] [--out-dir ./tmp/downloads]
-  python3 scripts/net-download.py --url-file list.txt          # 每行一个 URL
-  python3 scripts/net-download.py --url <URL> --dry-run        # 只判定格式与目标路径
+  python scripts/net-download.py --url <URL> [--name <filename>] [--out-dir ./tmp/downloads]
+  python scripts/net-download.py --url-file list.txt          # 每行一个 URL
+  python scripts/net-download.py --url <URL> --dry-run        # 只判定格式与目标路径
 
 安全：
   - 拒绝 `file://`、`ftp://`、本地绝对路径、`..` 段与转义
   - 拒绝可执行/脚本扩展名（见 net-download-policy.md §2 黑名单）
   - 单文件默认上限 32 MiB（`--max-bytes` 可调，仍受策略文件约束）
-  - 遵守 FILE_CREATION_POLICY.md §1.3/§2.4/§5.2：只写工作区 `./tmp/`，不写 skill 目录
+  - 遵守 FILE_CREATION_POLICY.md §1.3/§2.3/§3：只写工作区 `./tmp/`，不写 skill 目录
 """
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ USER_AGENT = "EasyEDAssistant-net-download/1.0 (+https://github.com/EasyEDAssist
 
 
 def _resolve_within_workspace(raw: str) -> Path:
-    """把 raw 解析为绝对路径并强制落在工作区 cwd 内；逃逸则拒绝（FILE_CREATION_POLICY §5.2）。"""
+    """把 raw 解析为绝对路径并强制落在工作区 cwd 内；逃逸则拒绝（FILE_CREATION_POLICY §3）。"""
     workspace = Path.cwd().resolve()
     p = Path(raw)
     candidate = (p if p.is_absolute() else workspace / p).resolve()
@@ -119,6 +119,8 @@ def _download(url: str, dest: Path, max_bytes: int) -> dict:
                     break
                 total += len(chunk)
                 if total > max_bytes:
+                    fh.close()
+                    dest.unlink(missing_ok=True)  # 超限不留半成品（net-download-policy §4）
                     raise SystemExit(
                         f"[net-download] 拒绝：下载字节数 {total} 超过上限 {max_bytes}"
                     )

@@ -2,6 +2,19 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.12（2026-09-16）
+
+- **阻断级修复：SKILL.md frontmatter YAML 解析失败**。`metadata.version` 缩进多 2 空格使整个 frontmatter 报 `mapping values are not allowed here`，skill 可能整体加载失败；已对齐为 2 空格并通过 `yaml.safe_load` 校验。
+- **路径逃逸修复：`/tmp` → `./tmp/`（7 处）**。SKILL.md §1/§3、AGENT-PROMPT、README、单步执行索引、读取上下文、记忆链把工作区运行产物目录写成 Unix 绝对路径 `/tmp`；统一为工作区相对 `./tmp/`，杜绝产物落错位置。
+- **新增 PCB 侧阶段对照检查文档（补断链）**：新建 [`references/PCB制作/检查是否符合规范技术手册及方案/`](references/PCB制作/检查是否符合规范技术手册及方案/检查是否符合规范技术手册及方案.md)（五项检查 + 分支 + 依据），与原理图侧同名文档对称；PCB制作第 3 步与流程索引、电路设计标准设计流程均接链。此前 PCB 侧「检查是否符合规范/手册/方案」整步无承接文档。
+- **修复三处硬矛盾**：① 链路选定规则——`端口探测与插件确认`「MCP 可达即不再探测」与正本 `connection-setup.md §1.1`「可达仍探 60832，双通优先 CLI/daemon」冲突，子文件与 AGENT-PROMPT 已按正本改写；② 版本门禁——总索引把门禁失败并入 10s×3 重试环，与「版本门禁非 0 属终止性失败」冲突，已加例外分支；③ 方案回退幅度——`生成最终方案`「回成本及预算检查重新执行」与 `检查方案及敲定`「只重跑未通过项」冲突，已统一为「只重跑未通过项，实质变更才回成本/元件重算」。
+- **纠错闭环补强**：`处理设计问题` 增「同一问题重新搜索并征询最多 3 轮，满轮摊牌」熔断（此前无上限、可无限循环）；`元件检查` 总索引补「同一元件最多 2 次新建尝试」上限；`门禁检查` 通过后出口由写死「进入原理图制作」改为「返回调用方阶段」；`电气检查` 触发时机编号 ⑧ → 第 7 项。
+- **命令真值对齐 CLI v1.4.8（本机 `--help` 实证）**：`pcb nets.list`→`pcb nets`、`pcb components.list`→`pcb list --include-bbox --include-pads`、`pcb layers.list`→`pcb layers`；删除不存在的 `pcb apply`（保留 `sch apply`/`easyeda apply`）；`pcb stage` 子命令补 `confirm-tier`（已被 CLI 证实存在）；`布线与过孔` 索引把「CLI 无顶层封装」更正为真实命令族（`pcb via`/`via-bond`/`via-hop`/`via-list`/`via-stitch`/`via-delete`）；`检查与导出` 补 `pcb nets`；制造文件导出明确「经官方 GUI，程序化无入口」。
+- **低级模型可用性**：`python3 scripts/...` 统一为 `python scripts/...`（win32 通用入口，并写入指令索引使用纪律第 5 条）；`visual-qa.py` 示例补必填 `--project`（此前裸 `--pcb` 直接 argparse 报错）；`封装与引脚检查`/`检查是否符合技术手册及方案` 补具体回读命令（`sch list --include-device-identity/--include-pins`、`lib footprint get`、`sch connectivity --all-pages`、`pcb list --include-pads`）；`系统框图` 确认形式、`元件关系图` 对账基准、「差异超预期」判据（新增/消失网络非 0 或器件数不符）、成本损耗率默认值均量化落文；`目录契约` 补 `./tmp/init/` 行；数值正本表述统一为「daemon 规则代码（Go）+ JLC 官网」。
+- **脚本裁剪与加固（判据：被流程挂接 + 可运行）**：删 7 个无挂接且断链脚本（`lint.py`/`lint.sh`/`diff.py`/`orient.py`/`sch.py`/`probe.js`/`blocks-pin-audit.py`，均依赖已删数据文件 `orientation.json`/`standard-parts.json`/`symbol-pins.json`）；修 6 个保留脚本——`tool-probe.py` 探针失败不再产出「伪清单」（加 `probe_status` 并 exit 2）、`net-download.py` 超限删除半成品文件、`bom-enrich.py` 缺失标准件库时优雅退出并加 `--out` 工作区校验、`visual-qa.py` 默认 `--artifacts-dir` 改为 `./tmp/snapshots` 并修过时节号、`tool-probe-simulator.py` 文档串与实际输出对齐；新增 [`scripts/check-links.py`](scripts/check-links.py) 全树链接扫描（悬空必须 0），并写入 RULE_EDIT 第 6 步。
+- **文档事实修复**：README 重写失实内容（v0.12.2→v0.12.11、虚构的 `Sample/easyeda-agent/` 目录树、脚本清单、链路选定规则、失效的 §4/§8 节号引用、重复行与编号错乱）；CONTRIBUTING 重写（删除不存在 `requirements.txt`/pytest 测试套件与错误命名约定，首行声明 RULE_EDIT 优先，发布流程改 `git merge --no-ff dev`）；agents yaml 的 `default_prompt` 由 v0.6.0 旧纪律同步为现行 one-liner 并升版本、homepage 修正为真实远端 `XianYin69/EasyEDAssistant`；删除 `agents/EasyEDAssistant.json`（Kilo 客户端 config validator 会把 skill 目录下 `agents/*.json` 当 agent 定义发现并报警，且文件自述「Kilocode 不加载 agents 下的 .json」，纯冗余）；lib 内 `project-docs` 去 `blocks-pin-audit` 悬挂引用、`discipline-checkpoints` 快照命名对齐滚动轨、脚本旧节号 §5.2/§2.3 与 `.gitignore` §2.4 修正。
+- 校验：`python scripts/check-links.py` → **182 个 md，悬空 0，孤立 0**；7 个脚本 `py_compile` 全过；references/（非 lib）全部 ≤50 行；SKILL.md 44 行、frontmatter 可解析；版本对齐 0.12.12。
+
 ### v0.12.11（2026-09-16）
 
 - **用户PCB配置文件补 R1–R5 扩展必答项 + 硬门禁（测试未被确认事故的整改）**：新增 R1 走线拐角角度、R2 走线策略（关键网/等长组/换层/是否允许自动布线）、R3 铺铜策略、R4 **版权信息与标识**（文本/层/字号下限，「不加」也要记录）、R5 其它偏好兜底（防逐项漏问）。门禁升级：D1–D20+R1–R5 **逐条闭环**——未问或未答即不得开工（P0 强制中断）；「沿用」必须出示出处，无出处视为未问过；禁止代用户填默认值、禁止把「用户没提」当「同意默认」。原「只问会改变做法的项」措辞系漏问根因，已改写。

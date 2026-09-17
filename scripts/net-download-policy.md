@@ -67,15 +67,15 @@
 
 ```bash
 # 单个：数据手册
-python3 scripts/net-download.py \
+python scripts/net-download.py \
   --url https://www.renesas.com/document/dst/ics1893ds.pdf \
   --name ics1893ds.pdf --out-dir tmp/downloads/datasheet
 
 # 批量：从清单文件
-python3 scripts/net-download.py --url-file ./tmp/plan/dl-list.txt
+python scripts/net-download.py --url-file ./tmp/plan/dl-list.txt
 
 # 判定（不下载）
-python3 scripts/net-download.py --url https://x.example/foo.zip --dry-run
+python scripts/net-download.py --url https://x.example/foo.zip --dry-run
 # 预期：拒绝：.zip 在黑名单
 ```
 

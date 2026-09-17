@@ -36,9 +36,9 @@
   `pcb_layout`/`signals`/`silk`/`keepout`。
 - 同名多脚全并联写 `J.VBUS*`，不省略后缀让工具猜；引脚引用优先功能名，
   同名脚用真实引脚号。
-- 验证：`go test ./internal/blocks/` + `make blocks-audit`；安装态
-  `python3 scripts/blocks-pin-audit.py`（离线，无源码时从 CLI 内嵌库逐项取模板）；
-  `--probe` 模式清专用空白测量页、放件读脚再清页（须已获准清空该页）。
+- 验证（上游仓库维护者流程，安装态不适用）：`go test ./internal/blocks/` +
+  `make blocks-audit`；原 `scripts/blocks-pin-audit.py` 审计脚本已随脚本精简移除
+  （其依赖的 `standard-parts.json` 数据文件已删，无挂接点）。
 - `verification` 四项（schematic/component_selection/pcb_drc/bringup）均
   `passed` 且有证据才能设 `production_ready:true`；草稿可贡献但不能声称
   生产验证。

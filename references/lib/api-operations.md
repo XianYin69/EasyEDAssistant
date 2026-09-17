@@ -10,7 +10,7 @@
 | 原理图数据路径 | connectivity → lib-layout → compose → apply → 回读对账 | [`../绘制原理图/部分绘制与截图/部分绘制与截图.md`](../绘制原理图/部分绘制与截图/部分绘制与截图.md) |
 | 连线 | `sch autoconnect`（pin-aware，`--spec` 批次） | 同上 |
 | 位号 / 框 / 标题 | `sch designators allocate→plan→verify`、`sch frame apply/check` | 同上 |
-| PCB 上下文 | `pcb board-info` / `components.list` / `layers.list` / `nets.list` / `report` / `check` / `drc` / `net-classes` | [`../PCB绘制/部分绘制与验收/部分绘制与验收.md`](../PCB绘制/部分绘制与验收/部分绘制与验收.md) |
+| PCB 上下文 | `pcb board-info` / `pcb list` / `pcb layers` / `pcb nets` / `report` / `check` / `drc` / `net-classes` | [`../PCB绘制/部分绘制与验收/部分绘制与验收.md`](../PCB绘制/部分绘制与验收/部分绘制与验收.md) |
 | PCB 布线铺铜 | `line.create` / `via.create` / `route.rip_up` / `via-hop` / `pour.create` / `power-pour` / `power-planes` / `region create` / `beautify` | 同上 |
 | 原理图↔PCB 同步 | `pcb import-changes` / `sync-designators` / `sync-attrs` / `add-component` | 同上 |
 | 器件库与选型 | `blocks search` → `standard-parts.json` → `lib by-lcsc` → `parts-select.py` | [`../元件检查/元件检查.md`](../元件检查/元件检查.md)、[`../成本及预算检查/成本及预算检查.md`](../成本及预算检查/成本及预算检查.md) |
