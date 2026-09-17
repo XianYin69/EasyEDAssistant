@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-    version: "0.12.11"
+  version: "0.12.12"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -14,26 +14,27 @@ metadata:
 1. **识别用户请求**：判断用户意图与目标。
 2. **判断是否为第一次设计**：
    - **是** → 执行「电路板设计标准设计流程」（见 §2）。
-   - **否** → 询问用户需要执行哪一个步骤；先读取 `/tmp` 下的上下文文件，再执行对应步骤（见 §3）。
+   - **否** → 询问用户需要执行哪一个步骤；先读取 `./tmp/` 下的上下文文件，再执行对应步骤（见 §3）。
 
 ## 2. 电路板设计标准设计流程
 
 > 详见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)。
 > 步骤：初始化部分 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理（各步骤与其子步骤均已挂接连接 markdown，无悬空链接）。
 
-## 3. 询问步骤 + 读取 /tmp + 执行对应步骤
+## 3. 询问步骤 + 读取 ./tmp/ + 执行对应步骤
 
-> 详见 [`references/单步执行/单步执行.md`](references/单步执行/单步执行.md)：读取 `/tmp` 上下文 → 列出可执行步骤并询问用户 → 只执行被选步骤 → 回写上下文与三段式报告。
+> 详见 [`references/单步执行/单步执行.md`](references/单步执行/单步执行.md)：读取 `./tmp/` 上下文 → 列出可执行步骤并询问用户 → 只执行被选步骤 → 回写上下文与三段式报告。
 
-## 4. 待补文档占位
+## 4. 文档地图（均已建）
 
 | 文档 | 状态 |
 |---|---|
 | 电路板设计标准设计流程 markdown | 已写（references/电路设计标准设计流程/，六步与子步骤均已链接） |
-| 询问步骤 / 读取 tmp / 执行对应步骤 markdown | 已写（references/单步执行/，含读取上下文、选择步骤、执行与回写） |
+| 询问步骤 / 读取 ./tmp/ / 执行对应步骤 markdown | 已写（[`references/单步执行/`](references/单步执行/单步执行.md)，含读取上下文、选择步骤、执行与回写） |
 | 交付与清理 markdown | 已写（references/交付与清理/，含交付文档、交付报告、清理） |
 | 约束部分 markdown | 已写（references/约束部分/，十一项各带同名子文件） |
-| 嘉立创EDA指令索引 markdown | 已写（references/嘉立创EDA指令索引/，总索引 + 12 子文件，条目源为 CLI v1.4.8 自描述；参数真值仍以 `--help`/`easyeda actions` 为准） |
+| 嘉立创EDA指令索引 markdown | 已写（[`references/嘉立创EDA指令索引/`](references/嘉立创EDA指令索引/嘉立创EDA指令索引.md)，总索引 + 12 子文件，条目源为 CLI v1.4.8 自描述；参数真值仍以 `--help`/`easyeda actions` 为准） |
+| 维护工具脚本 | [`scripts/check-links.py`](scripts/check-links.py) 全树链接扫描（悬空必须为 0）；`scripts/` 其余脚本均有流程挂接点 |
 
 ## 5. 约束部分
 

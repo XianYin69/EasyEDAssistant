@@ -10,48 +10,44 @@
 EasyEDAssistant/
 ├── README.md                                  # 本文件
 ├── LICENSE                                    # MIT
-├── SKILL.md                                   # EasyEDAssistant skill 主干（Kilocode，v0.12.2）
-├── CHANGELOG.md                               # 变更摘要（SKILL.md §14 迁出，按版本倒序）
+├── SKILL.md                                   # EasyEDAssistant skill 主干（Kilocode，v0.12.11）
+├── RULE_EDIT.md                               # skill 本体编辑规则（≤50 行、总索引+子文件、CHANGELOG、git）
+├── FILE_CREATION_POLICY.md                    # 设计执行期工作区文件范围与权限
+├── CHANGELOG.md                               # 变更摘要（按版本倒序）
+├── stream.html                                # 流程图（draw.io 导出，README 内嵌渲染）
 ├── references/                                # 步骤文档：每步骤一个同名目录（总索引 + 子文件）
 │   ├── 初始化部分/ … 交付与清理/                # 六步：初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理
-│   ├── 单步执行/                              # 非首次设计：读 /tmp 上下文 → 选步骤 → 只执行该步骤 → 回写报告
+│   ├── 单步执行/                              # 非首次设计：读 ./tmp/ 上下文 → 选步骤 → 只执行该步骤 → 回写报告
 │   ├── 约束部分/                              # 十一项约束（命名/格式/垃圾/记忆链/逻辑链/压缩/处罚/激励/创建范围/流程/安全）
-│   └── lib/                                   # 维护者文档（8 份，原 SKILL.md §1–§13 正文，不参与运行时加载）
+│   ├── 嘉立创EDA指令索引/                     # easyeda CLI v1.4.8 运行时指令入口（总索引 + 12 子文件）
+│   ├── 电气检查/硬编码规则/                   # 子域判据与公式（电气检查与 PCB 规范同源）
+│   └── lib/                                   # 维护者文档（13 份，原 SKILL.md §1–§13 正文，不参与运行时加载）
 ├── AGENT-PROMPT.md                            # 精简使用指引（规范回归 SKILL.md）
-├── .gitignore                                 # 忽略 .kilo/ 环境文件等
+├── .gitignore                                 # 忽略 .kilo/ 环境注入文件与 tmp/ 运行产物等
 ├── agents/
 │   ├── EasyEDAssistant.yaml                   # Kilocode agent 定义（权威，interface: schema）
-│   ├── EasyEDAssistant.md                    # 人读镜像
-│   └── EasyEDAssistant.json                   # JSON 可发现性清单（Kilocode 不加载）
+│   └── EasyEDAssistant.md                     # 人读镜像（原 .json 可发现性清单已删）
 ├── scripts/
-│   ├── visual-qa.py                           # 视觉质量与布局完整性自动评估
+│   ├── check-links.py                         # 全树 markdown 链接扫描（悬空必须为 0；RULE_EDIT 第 6 步）
+│   ├── visual-qa.py                           # 视觉质量与布局完整性自动评估（截图+数据双检，滚动保留 3 张）
 │   ├── tool-probe.py                          # 内建工具与插件探针（生成 ./tmp/eda-tools-manifest.json）
 │   ├── tool-probe-simulator.py                # 工具调用示例文档生成器
+│   ├── parts-select.py                        # 选型查询（离线库已随上游清理移除，实时目录走 --online）
+│   ├── bom-enrich.py                          # BOM 补 LCSC C 号（需自备 --parts 标准件库）
 │   ├── net-download.py                        # 网络资源下载器（白名单 + 逃逸防护，§13.2）
 │   └── net-download-policy.md                 # 网络资源下载策略（格式/路径/协议规范）
 └── Sample/
     ├── easyeda-agent-skill-behavior.md        # easyeda-agent skill 全部行为记录（含移植版章节）
-    └── easyeda-agent/                         # 参考样本（上游 Codex skill 原样）
-        ├── SKILL.md                           # 上游 skill 主入口（行为规范）
-        ├── agents/openai.yaml                 # agent 接口定义
-        ├── references/                        # 参考文档与数据文件
-        │   ├── schematic*.md  pcb*.md        # 原理图 / PCB 操作参考
-        │   ├── design-flow.md  design-decisions.md  # 设计流程与决策目录
-        │   ├── part-selection.md              # 立创/JLC 选型
-        │   ├── pcb-design-spec.md             # PCB 设计规范与 D1–D20 必答清单（v0.9.0 新增，§13.3）
-        │   ├── standard-parts.json            # 标准器件库（LCSC C 号 + deviceUuid）
-        │   ├── symbol-pins.json               # 实测符号引脚
-        │   ├── orientation.json               # 朝向单一真源
-        │   ├── fab-rules-jlcpcb.json          # JLCPCB 制造规则基线
-        │   ├── sheet-templates.json           # 图纸/图签 keep-out 比例表
-        │   └── ...
-        └── scripts/                           # 辅助脚本（lint / 选型 / 批量操作 / 测试）
+    └── easyeda-agent/                         # 上游样本存档（仅 README + LICENSE；
+        ├── README.md                          #   正文已迁为 references/lib/ 维护者文档与 嘉立创EDA指令索引）
+        └── LICENSE
 ```
 
 ## 概述
 
-本项目围绕 `Sample/easyeda-agent/` 目录下的上游 skill（Codex 使用，MIT 许可，
-上游项目：[zhoushoujianwork/easyeda-agent](https://github.com/zhoushoujianwork/easyeda-agent)）
+本项目围绕上游 **easyeda-agent** skill（Codex 使用，MIT 许可，上游项目：
+[zhoushoujianwork/easyeda-agent](https://github.com/zhoushoujianwork/easyeda-agent)，
+其正文已迁入 `references/lib/` 与 `references/嘉立创EDA指令索引/`，`Sample/easyeda-agent/` 仅存 README + LICENSE 存档）
 构建两层内容：
 
 1. **行为记录** — `Sample/easyeda-agent-skill-behavior.md` 记录该 skill 的全部行为：
@@ -68,17 +64,17 @@ EasyEDAssistant/
 
 > 交互式流程图源文件为同目录 [`stream.html`](./stream.html)（draw.io 导出，依赖 diagrams.net viewer 脚本渲染）。若当前渲染环境屏蔽内联框架（如 GitHub 网页版会过滤 `<iframe>`），请点击上方链接直接打开。
 
-> 主要流程：用户输入请求 → 识别用户意图 → 判断首次设计 → 是则走「电路板设计标准设计流程」六步（初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理），否则走「单步执行」（读取 /tmp 上下文 → 询问并选择步骤 → 只执行该步骤 → 回写与报告）。
+> 主要流程：用户输入请求 → 识别用户意图 → 判断首次设计 → 是则走「电路板设计标准设计流程」六步（初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理），否则走「单步执行」（读取 ./tmp/ 上下文 → 询问并选择步骤 → 只执行该步骤 → 回写与报告）。
 
 ## EasyEDAssistant（SKILL.md）详细文档
 
 > 对应根目录 `SKILL.md`（frontmatter `name: EasyEDAssistant`，
-> `metadata.author: EasyEDAssistant`，当前 v0.12.2，主干 + 按需加载 references/）。本节说明其组件、
-> 工作流、引用的其它 SKILL 文件及其作者。
+> `metadata.author: EasyEDAssistant`，当前 v0.12.11，主干 + 按需加载 references/）。本节说明其组件、
+> 工作流、引用的其它文件及其作者。
 
 ### 组件（文档结构）
 
-SKILL.md 主干只含入口判定、路由与 always-on 纪律；详细内容按触发条件存放在 `references/` 与 `CHANGELOG.md`（详见主干 §0、§2 路由表）。
+SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详细内容按触发条件存放在 `references/` 与 `CHANGELOG.md`。
 
 | 内容 | 位置 |
 |---|---|
@@ -94,44 +90,42 @@ SKILL.md 主干只含入口判定、路由与 always-on 纪律；详细内容按
 ### 工作流 / 过程
 
 1. **连接**：JLCEDA MCP（VS Code 插件）与 `easyeda` CLI/daemon 互为**替代链路**
-   （不是级联备用）：先测 MCP `7655`，不通再测 CLI/daemon `60832`，选定后全程使用，
-   重试最多 3 轮后转用户；两链路语义一致（同一套 `eda.*` API 映射与验证纪律）。
+   （不是级联备用）：先测 MCP `7655`，可达再测 `60832`，双通优先 CLI/daemon，
+   一旦选定全程使用，重试最多 3 轮后转用户；两链路语义一致（同一套 `eda.*` API 映射与验证纪律）。
+   版本门禁 `easyeda update --check --exit-code` 非 0 属终止性失败（升级后新开会话），不占重试额度。
 2. **会话门禁**：首条命令 `easyeda update --check --exit-code`；升级后新开会话。
 3. **需求澄清**（§11）：按任务类型走默认行为；只问"答案会改变做法"的选项；
    把模糊需求落成可验证的目标不变量（pin→net 黄金表、skew 预算、DRC 目标）。
    执行中遇强制/条件中断点（§11.5）按 CHECKPOINT 协议暂停等用户确认。
 4. **基线读取**：`sch connectivity` / `sch list` / `pcb list --include-bbox`
    + `sheet-geometry`；写前读被改器件/引脚/网络/几何。
-4. **工具探针**：**Agent 自动执行** `python3 scripts/tool-probe.py --project <name>`，生成
-   `./tmp/eda-tools-manifest.json` 与
-   `eda-tools-guide.md`；在 P1/P6/P8/P10 等关键步骤前查阅清单，按需触发 §11.5
-   条件中断点询问用户是否启用专用插件。
-5. **设计执行**：按子域判据（§4，全文见 `references/lib/design-rules.md`）与用户已拍板的决策点执行；原理图走 S0–S6
+5. **工具探针**：**Agent 自动执行** `python scripts/tool-probe.py --project <name>`，生成
+   `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`（CLI 不可达时 exit 2，清单标注未经运行时验证）；
+   在 P1/P6/P8/P10 等关键步骤前查阅清单，按需触发 §11.5 条件中断点询问用户是否启用专用插件。
+6. **设计执行**：按子域判据（[`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md)，维护者全文见 `references/lib/design-rules.md`）与用户已拍板的决策点执行；原理图走 S0–S6
    （IR → Lib 几何 → compose → apply + 动态截图），PCB 走 P0–P10
    （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）；
    关键步骤后截图（`./tmp/snapshots/`），SHA256 校验 stale，
    旧图自动清理。
-6. **验证与保存**：分层验证（§8），`blocked`/`fail` 区分，显式 `save`
+7. **验证与保存**：分层验证（§8），`blocked`/`fail` 区分，显式 `save`
    确认 `saved:true`。
-7. **收尾与交付**（见 `references/交付与清理/`）：功能定稿 → 清 blocking → `pcb refine` →
+8. **收尾与交付**（见 `references/交付与清理/`）：功能定稿 → 清 blocking → `pcb refine` →
    `pcb beautify` → 丝印整理 → 全量验证 → 出技术手册/功能手册与交付报告（用户确认）
    → 清理 `./tmp/`（先交付后清理，blocked/fail 如实列出）。
-8. **文档任务**（随交付与清理生成）：按需生成 LICENSE / README（内容只来自工程回读）。
+9. **文档任务**（随交付与清理生成）：按需生成 LICENSE / README（内容只来自工程回读）。
 
 ### 引用的其它 SKILL 文件与作者
 
 | 文件 | 角色 | 作者 |
 |---|---|---|
-| `Sample/easyeda-agent/SKILL.md` | 上游 skill 主入口（行为规范真值，v1.4.8） | zhoushoujianwork（`metadata.author`，MIT；[zhoushoujianwork/easyeda-agent](https://github.com/zhoushoujianwork/easyeda-agent)） |
 | `agents/EasyEDAssistant.yaml` | Kilocode agent 定义（权威，interface: schema） | 本项目（EasyEDAssistant）维护 |
 | `references/*.md`、`*.json` | 正本/维护者参考文件（判据原始来源） | 本项目（EasyEDAssistant）维护 |
-| `Sample/easyeda-agent/scripts/*` | 上游辅助脚本（lint/选型/批量/测试） | zhoushoujianwork（随上游 skill 分发） |
+| `scripts/`（根） | 运行时辅助脚本：check-links / visual-qa / tool-probe / tool-probe-simulator / parts-select / bom-enrich / net-download | 本项目（EasyEDAssistant）维护（上游同名脚本已迁入并按挂接判据裁剪） |
 | `scripts/visual-qa.py` | 视觉质量与布局完整性自动评估（API 截图 + 数据驱动交叉评估 + 动态截图生命周期管理，§8.3） | 本项目（EasyEDAssistant）维护 |
 | `scripts/tool-probe.py` / `tool-probe-simulator.py` | 嘉立创 EDA 内建工具与已安装插件探针（生成 `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`） | 本项目（EasyEDAssistant）维护 |
 | `scripts/net-download.py` + `scripts/net-download-policy.md` | 网络资源下载器（格式白/黑名单 + 路径逃逸防护 + `index.json` 审计）与配套策略文档（§13.2） | 本项目（EasyEDAssistant）维护 |
 | `references/lib/pcb-design-spec.md` | PCB 设计规范与 D1–D20 必答清单（PCB 阶段前向用户核对，落 `./tmp/design/<project>-pcb-spec.md`，§13.3） | 本项目（EasyEDAssistant）维护 |
 | `AGENT-PROMPT.md` | 精简使用指引（触发入口 + one-liner default_prompt；规范回归 SKILL.md） | 本项目（EasyEDAssistant）维护 |
-| `agents/EasyEDAssistant.yaml` | Kilocode agent 定义（权威，interface: schema） | 本项目（EasyEDAssistant）维护 |
 | `Sample/easyeda-agent-skill-behavior.md` | 上游 skill 全部行为的章节化记录（本项目维护，含移植版 §23–§25 与 §25A 变更史） | 本项目（EasyEDAssistant）维护 |
 
 ## 连接方式（双链路）
@@ -142,7 +136,7 @@ EasyEDAssistant skill 同时支持两条到 EDA 引擎的链路，原有方式�
 |---|---|---|
 | JLCEDA MCP（VS Code 插件） | WebSocket `ws://127.0.0.1:8765/bridge/ws` | 动作派发、心跳、窗口上下文 |
 | JLCEDA MCP（VS Code 插件） | HTTP `http://127.0.0.1:7655/mcp` | MCP 工具/资源入口（Kilocode 经 `kilo.json` 接入） |
-| 原有链路 | `easyeda` CLI + daemon（端口 `60832`）+ EasyEDA Agent Connector | 与 MCP 互为替代（非级联备用）；MCP 不通才用，选定后全程使用 |
+| 原有链路 | `easyeda` CLI + daemon（端口 `60832`）+ EasyEDA Agent Connector | 与 MCP 互为替代（非级联备用）；MCP 可达仍再探 `60832`，双通优先 CLI/daemon；一旦选定全程使用 |
 
 Kilocode 接入配置（`kilo.json`）：
 
@@ -163,7 +157,7 @@ MCP 工具与 typed CLI action 语义一致：同一套 `eda.*` API 映射、dry
 
 ## 设计知识库覆盖范围
 
-EasyEDAssistant skill 内置的设计判据（详见 `SKILL.md` §4（全文见 `references/lib/design-rules.md`）与
+EasyEDAssistant skill 内置的设计判据（详见 [`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md)，维护者全文见 `references/lib/design-rules.md`）与
 行为记录 §24）：
 
 - **PCB 布局 / 原理图绘制**：P0–P7 优先级总则、九宫格分区、模块间距、
@@ -205,7 +199,7 @@ EasyEDAssistant skill 内置的设计判据（详见 `SKILL.md` §4（全文见 
    **EasyEDAssistant**）— 连接契约、坐标/数据模型、子域判据、API 操作速查、
    设计决策目录、验证分层（§8.3 视觉质量自动评估 + 动态截图生命周期）、
    执行纪律、需求澄清与美观/功能布局经验。v0.10.0 起为入口主干，详细内容按触发条件存放于 `references/` 与 `CHANGELOG.md`。
-- **智能体提示词**：根目录 `AGENT-PROMPT.md` — 精简使用指引（v0.6.0 起）：
+- **智能体提示词**：根目录 `AGENT-PROMPT.md` — 精简使用指引（对应 SKILL v0.12.x）：
   仅保留触发入口与 one-liner `default_prompt`；完整规范（会话纪律、
    需求澄清、设计执行、PDF 阅读、验证分层、文档任务、中断机制等）回归
    `SKILL.md` 主干（详细内容在 `references/`）由 Kilocode 自动注入，不再复制到提示词层。
@@ -214,9 +208,9 @@ EasyEDAssistant skill 内置的设计判据（详见 `SKILL.md` §4（全文见 
 - **视觉质量评估脚本**：`scripts/visual-qa.py` — API 截图 + 数据驱动检查
    交叉评估组件间距/走线间距/整齐度（§8.3），含动态截图生命周期管理
    （每步截图、stale 识别、旧图清理）。
-- **上游参考真值**：`Sample/easyeda-agent/references/*.md` 与
-  `Sample/easyeda-agent/scripts/*` — SKILL.md 中判据的原始来源；数值冲突时以
-  daemon 规则代码（`pcb_rules.go` / `pcb_netclass.go` / `pcb_check*.go`）为准。
+- **判据原始来源**：`references/lib/*.md`（上游 SKILL 正文迁移而来的维护者文档）与
+  `Sample/easyeda-agent-skill-behavior.md`（行为记录）；数值冲突时以
+  daemon 规则代码（`pcb_rules.go` / `pcb_netclass.go` / `pcb_check*.go`）与 JLC 官网为准。
 
 ## 使用
 
@@ -225,7 +219,7 @@ EasyEDAssistant skill 内置的设计判据（详见 `SKILL.md` §4（全文见 
 2. 在 Kilocode `kilo.json` 中启用 `jlceda` MCP server（配置见上）。
 3. 会话首条命令仍为 `easyeda update --check --exit-code` 版本门禁
    （EasyEDAssistant 移植版同样适用）；升级后新开会话。
-4. 按 `SKILL.md` §4（全文见 `references/lib/design-rules.md`）判据选择设计子域；参数真值以
+4. 按 [`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md) 选择设计子域判据（维护者全文见 `references/lib/design-rules.md`）；参数真值以
    `easyeda <command> --help` 与 `easyeda actions` 为准。
 
 ## 许可

@@ -103,18 +103,18 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
 4. 按任务选子域判据（第 4 节），只加载相关参考；以 `easyeda <domain> <command>
    --help` 与 `easyeda actions` 为参数真值。
 5. 临时 JSON、计划与回读结果放入**工作区**（`cwd`，非 skill 目录）下已忽略的 `./tmp/` 目录；保留原始快照，在副本中设计（详见 `FILE_CREATION_POLICY.md` §2.3：运行产物禁止写入 skill 目录，且不得逃逸出工作区）。`tmp/` 下按用途分子目录（sch/pcb/plan/design/parts/calc/datasheet/snapshots/baseline），完整目录契约与清理纪律见 §8.4。
-6. **工具与插件探针**：**Agent 必须自动运行** `python3 scripts/tool-probe.py --project <project>` 获取嘉立创 EDA 内建工具与已安装插件清单；
+6. **工具与插件探针**：**Agent 必须自动运行** `python scripts/tool-probe.py --project <project>` 获取嘉立创 EDA 内建工具与已安装插件清单；
     生成 `./tmp/eda-tools-manifest.json` 与 `./tmp/eda-tools-guide.md`；
     此清单供后续设计步骤查阅并按需调用专用工具或插件。
 7. **基线截图**：读取工程基线（原理图 PDF 导图或 PCB 视口快照），**Agent 自动保存**截图到 `./tmp/baseline/`（自动按时间戳命名）；
     这条截图作为后续差异对比的参考。
 
 8. **辅助脚本自动调用**：Agent 必须在特定设计步骤前自动运行以下脚本：
-   - **P1 导入前**：运行 `python3 scripts/tool-probe-simulator.py` 生成工具调用示例文档，供用户参考
-   - **P6 布线前**：运行 `python3 scripts/tool-probe.py` 扫描插件状态，自动触发 §11.5 条件中断点询问用户是否启用对应插件
-   - **P8 电源铺铜前**：运行 `python3 scripts/tool-probe.py` 检查电源插件状态，决定是否启用专用工具
-   - **P10 终检前**：运行 `python3 scripts/tool-probe.py` 确认工具状态，确保视觉验证完整性
-   - **每个关键步骤后**：自动运行 `python3 scripts/visual-qa.py --project <工程> --doc <页> --both --artifacts-dir ./tmp/snapshots` 进行视觉质量评估；**原理图每落位一个器件即运行一次 `--schematic` 核验**（截图 + 器件越出图纸边界 = exit 3 阻断，画完再查为时已晚）。
+   - **P1 导入前**：运行 `python scripts/tool-probe-simulator.py` 生成工具调用示例文档，供用户参考
+   - **P6 布线前**：运行 `python scripts/tool-probe.py` 扫描插件状态，自动触发 §11.5 条件中断点询问用户是否启用对应插件
+   - **P8 电源铺铜前**：运行 `python scripts/tool-probe.py` 检查电源插件状态，决定是否启用专用工具
+   - **P10 终检前**：运行 `python scripts/tool-probe.py` 确认工具状态，确保视觉验证完整性
+   - **每个关键步骤后**：自动运行 `python scripts/visual-qa.py --project <工程> --doc <页> --both --artifacts-dir ./tmp/snapshots` 进行视觉质量评估；**原理图每落位一个器件即运行一次 `--schematic` 核验**（截图 + 器件越出图纸边界 = exit 3 阻断，画完再查为时已晚）。
  9. **截图双轨管理**（正本见 §8.3「截图生命周期」）：
    - 每关键步骤后用 `sch export-image`（原理图）/ `pcb snapshot --previous-sha256`（PCB）截图；stale（canvas-freeze）检测仅适用 PCB 视口快照，须重取至 fresh，原理图导图无需；
    - 归档轨：每部分验收通过即把局部图+全图导出 `./tmp/sch/` / `./tmp/pcb/`（`<sch|pcb>-<部件号>-<局部|全图>-<时间戳>.png`），作交付插图，不随快照清理；

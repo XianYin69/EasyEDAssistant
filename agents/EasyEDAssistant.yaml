@@ -1,11 +1,11 @@
 interface:
   name: EasyEDAssistant
   display_name: "EasyEDAssistant"
-  short_description: "基于 JLCEDA MCP VS Code 插件桥接操作嘉立创 EasyEDA 的电路设计智能体：原理图/PCB/射频/模拟/数字/滤波器/电源设计与检查。"
-  default_prompt: "使用 EasyEDAssistant skill 设计或安全重构 EasyEDA 原理图/PCB：先跑版本门禁（easyeda update --check --exit-code）；写前读新鲜快照；保留拓扑与 NC 意图；按 S0–S6 / P0–P10 与子域判据执行；严格验证（sch gate --strict / pcb drc + check / export-image）后才显式保存并确认 saved:true；报告如实列出未验证项与 blocked/fail，不把聚合数当全部通过。"
+  short_description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计智能体：原理图/PCB/射频/模拟/数字/滤波器/电源设计与检查。"
+  default_prompt: "使用 EasyEDAssistant skill 设计或安全重构嘉立创 EDA 原理图/PCB：先完成桥接连通性测试与版本门禁（easyeda update --check --exit-code，升级后新开会话）；写前读新鲜快照与数据手册，参数真值以 CLI 自描述为准；按标准流程六步执行，凡改变做法或超出已授权范围的选择一律中断等用户拍板，检查失败只重跑未通过项；验证分层（拓扑/几何/电气/呈现/保存）全过并确认 saved:true 才算完成；收尾先出技术手册、功能手册与交付报告（blocked/fail 与未运行检查如实列出），再清理 ./tmp/；运行产物只写工作区，禁止落入 skill 目录。"
   license: MIT
   metadata:
     author: EasyEDAssistant
-    version: "0.6.0"
-    homepage: "https://github.com/EasyEDAssistant/easyeda-agent"
+    version: "0.12.12"
+    homepage: "https://github.com/XianYin69/EasyEDAssistant"
     skill: "EasyEDAssistant"

@@ -23,6 +23,7 @@
 2. 索引未收录的新命令：走 `easyeda actions` 或 `easyeda api search <query>` 发现后**回补本索引对应子文件**（追加行，不改写既有条目）。
 3. 单位红线：PCB 坐标 mil、原理图 0.01inch（y 向上），详见 [`../坐标与数据模型/坐标与数据模型.md`](../坐标与数据模型/坐标与数据模型.md)。
 4. 操作纪律（幂等性、STALE_READ、批量优先）正本在 [`../lib/api-operations.md`](../lib/api-operations.md)，本索引不重复。
+5. Python 脚本调用一律写 `python scripts/<名>.py`（Windows/Linux 通用入口为 `python`；仅当环境只有 `python3` 时才替换），且必带 `--project` 等必填参数——以脚本 `--help` 为准。
 
 ## 新建对象速查（跨域入口）
 

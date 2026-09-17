@@ -80,7 +80,7 @@
 
 ```
 [CHECKPOINT <阶段> | <类型>]
-快照：<截图文件路径 ./tmp/snapshots/step-N-*.png> + <状态 fresh/stale>
+快照：<截图文件路径 ./tmp/snapshots/<sch|pcb>-*-*.png> + <状态 fresh/stale>
 背景：<当前状态与为什么要问，≤3 句，含证据（回读数据/DRC/快照）>
 决策点：<要用户拍什么，列出选项与推荐默认>
   - 选项 A：<描述> → 后果：<对后续流程的影响>

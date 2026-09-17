@@ -5,14 +5,16 @@ EasyEDA's `create({libraryUuid, uuid})` instantiates a part whose `SupplierId` i
 `<MPN>.1`, NOT the device's LCSC C-number, and `setState_SupplierId` does not
 persist (the field is device-bound). So the exported BOM's "Supplier Part" column
 is not directly orderable. We DO know the real C-numbers — they're in
-`tools/standard-parts.json` (and recoverable via `lib_Device.search`). This tool
+`standard-parts.json` (and recoverable via `lib_Device.search`). This tool
 joins them in: for every BOM row whose Manufacturer Part matches a standard part,
 it rewrites "Supplier Part" to the C-number (and fills an empty Value).
 
-    bom-enrich.py <bom.tsv/csv> [--out enriched.tsv] [--parts standard-parts.json]
+    python scripts/bom-enrich.py <bom.tsv/csv> [--out enriched.tsv] [--parts standard-parts.json]
 
 Reads the EasyEDA BOM (tab-separated, UTF-16/UTF-8), writes UTF-8. Reports the
 match rate and any unmatched MPNs (candidates to add to standard-parts.json).
+标准件库 standard-parts.json 未随本仓库分发：缺失时须用 --parts 指定，或改走
+`easyeda lib by-lcsc` / parts-select.py --online 联网解析。
 """
 import json
 import os
@@ -56,6 +58,17 @@ def main():
         out_path = av[av.index('--out') + 1]
     if '--parts' in av:
         parts_path = av[av.index('--parts') + 1]
+    if not os.path.exists(parts_path):
+        print(f"[bom-enrich] 标准件库缺失：{parts_path}。本仓库不分发 standard-parts.json："
+              "用 --parts 指定自备库，或改走 `easyeda lib by-lcsc` / parts-select.py --online。",
+              file=sys.stderr)
+        return 2
+    if out_path is not None:
+        out_abs = os.path.abspath(out_path)
+        if os.path.relpath(out_abs, os.getcwd()).startswith('..'):
+            print('[bom-enrich] 拒绝 --out 写出工作区 cwd 之外（FILE_CREATION_POLICY §3）',
+                  file=sys.stderr)
+            return 2
 
     mpn_map = load_mpn_map(parts_path)
     lines = read_text(bom_path).splitlines()
