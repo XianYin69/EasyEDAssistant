@@ -51,6 +51,18 @@ from pathlib import Path
 # ───────────────────────── CLI 封装 ─────────────────────────
 
 
+def guard_not_skill_repo() -> None:
+    """cwd 疑似 skill 仓库本体时拒绝运行（FILE_CREATION_POLICY §1/§2.3：产物只落工作区）。"""
+    if "--help" in sys.argv or "-h" in sys.argv:
+        return
+    _cwd = Path.cwd()
+    if (_cwd / "SKILL.md").exists() and (_cwd / "RULE_EDIT.md").exists():
+        raise SystemExit(
+            "[{}] 拒绝运行：cwd 是 skill 仓库 {}。先 cd 到用户确认的工作区根目录再执行"
+            "（产物只写工作区 ./tmp/）。".format(Path(__file__).name, _cwd)
+        )
+
+
 def _cli(args: list[str], capture: bool = True, timeout: int = 60) -> str:
     """Run easyeda CLI; return stdout (captured) or empty string.
 
@@ -577,6 +589,7 @@ def _resolve_within_workspace(raw: str) -> Path:
 
 
 def main() -> int:
+    guard_not_skill_repo()
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--project", required=True)
     ap.add_argument("--doc", help="原理图页 UUID/名（导图与越界核验用）")

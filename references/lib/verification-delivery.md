@@ -114,7 +114,7 @@ python scripts/visual-qa.py --project <name> --pcb --no-snapshot
 | `./tmp/snapshots/` | 动态截图（§2.9 既有） | png |
 | `./tmp/baseline/` | 基线截图（§2.7 既有） | png |
 | `./tmp/learning/` | 主动学习笔记（§13.1，浏览器检索结果整理） | md |
-| `./tmp/downloads/` | 网络资源下载（§13.2 `scripts/net-download.py`），含 datasheet/docs/images/data/edalib/manufacturing 子目录 + `index.json` | 见 `net-download-policy.md` §2 |
+| `./tmp/downloads/` | 网络资源下载（`scripts/net-download.py`），含 datasheet/docs/images/data/edalib/manufacturing 子目录 + `index.json` | 见 [`../../scripts/net-download-policy/格式白名单/格式白名单.md`](../../scripts/net-download-policy/格式白名单/格式白名单.md) |
 
 **清理纪律**（工作结束时执行）：
 1. 先按 §7.8 在**工作区根目录**生成技术手册与功能手册，按 §8.2 出交付报告。

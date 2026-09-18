@@ -23,6 +23,18 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 
+def guard_not_skill_repo() -> None:
+    """cwd 疑似 skill 仓库本体时拒绝运行（FILE_CREATION_POLICY §1/§2.3：产物只落工作区）。"""
+    if "--help" in sys.argv or "-h" in sys.argv:
+        return
+    _cwd = Path.cwd()
+    if (_cwd / "SKILL.md").exists() and (_cwd / "RULE_EDIT.md").exists():
+        raise SystemExit(
+            "[{}] 拒绝运行：cwd 是 skill 仓库 {}。先 cd 到用户确认的工作区根目录再执行"
+            "（产物只写工作区 ./tmp/）。".format(Path(__file__).name, _cwd)
+        )
+
+
 def read_text(path):
     raw = open(path, 'rb').read()
     for enc in ('utf-16', 'utf-16-le', 'utf-8-sig', 'utf-8'):
@@ -44,6 +56,7 @@ def load_mpn_map(parts_path):
 
 
 def main():
+    guard_not_skill_repo()
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     if not args:
         print('usage: bom-enrich.py <bom.csv> [--out file] [--parts standard-parts.json]', file=sys.stderr)

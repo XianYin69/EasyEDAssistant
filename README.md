@@ -10,7 +10,7 @@
 EasyEDAssistant/
 ├── README.md                                  # 本文件
 ├── LICENSE                                    # MIT
-├── SKILL.md                                   # EasyEDAssistant skill 主干（Kilocode，v0.12.11）
+├── SKILL.md                                   # EasyEDAssistant skill 主干（Kilocode，版本见 SKILL.md frontmatter）
 ├── RULE_EDIT.md                               # skill 本体编辑规则（≤50 行、总索引+子文件、CHANGELOG、git）
 ├── FILE_CREATION_POLICY.md                    # 设计执行期工作区文件范围与权限
 ├── CHANGELOG.md                               # 变更摘要（按版本倒序）
@@ -39,8 +39,8 @@ EasyEDAssistant/
 │   ├── tool-probe-simulator.py                # 工具调用示例文档生成器
 │   ├── parts-select.py                        # 选型查询（离线库已随上游清理移除，实时目录走 --online）
 │   ├── bom-enrich.py                          # BOM 补 LCSC C 号（需自备 --parts 标准件库）
-│   ├── net-download.py                        # 网络资源下载器（白名单 + 逃逸防护，§13.2）
-│   └── net-download-policy.md                 # 网络资源下载策略（格式/路径/协议规范）
+│   ├── net-download.py                        # 网络资源下载器（白名单 + 逃逸防护）
+│   └── net-download-policy/                   # 网络资源下载策略（总索引 + 格式白名单/格式黑名单/URL与路径防护/用法与会话纪律）
 └── Sample/
     ├── easyeda-agent-skill-behavior.md        # easyeda-agent skill 全部行为记录（含移植版章节）
     └── easyeda-agent/                         # 上游样本存档（仅 README + LICENSE；
@@ -74,7 +74,7 @@ EasyEDAssistant/
 ## EasyEDAssistant（SKILL.md）详细文档
 
 > 对应根目录 `SKILL.md`（frontmatter `name: EasyEDAssistant`，
-> `metadata.author: EasyEDAssistant`，当前 v0.12.11，主干 + 按需加载 references/）。本节说明其组件、
+> `metadata.author` + `metadata.version` 为版本唯一真值，本文件不复制版本号），主干 + 按需加载 references/。本节说明其组件、
 > 工作流、引用的其它文件及其作者。
 
 ### 组件（文档结构）
@@ -89,7 +89,7 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 | 步骤级细则（桥接联通性测试、绘制原理图、绘制 PCB、检查步骤等） | 同上，各步骤目录内的同名子文件 |
 | 坐标与数据模型、官方文档与 GUI 映射 | `references/坐标与数据模型/`、`references/官方文档映射/` |
 | 约束（命名、格式、清理、证据链、处置、逐步执行门禁等十二项） | `references/约束部分/` |
-| 原 SKILL.md §1–§13 正文与子域判据（维护者参考，不参与运行时加载） | `references/lib/`（8 份） |
+| 原 SKILL.md §1–§13 正文与子域判据（维护者参考，不参与运行时加载） | `references/lib/`（12 份 md + 1 份 json） |
 | 变更历史 | `CHANGELOG.md` |
 
 ### 工作流 / 过程
@@ -101,12 +101,12 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 2. **会话门禁**：首条命令 `easyeda update --check --exit-code`；升级后新开会话。
 3. **需求澄清**（§11）：按任务类型走默认行为；只问"答案会改变做法"的选项；
    把模糊需求落成可验证的目标不变量（pin→net 黄金表、skew 预算、DRC 目标）。
-   执行中遇强制/条件中断点（§11.5）按 CHECKPOINT 协议暂停等用户确认。
+   执行中遇强制/条件中断点（正本 `references/lib/discipline-checkpoints.md` §11.5）按 CHECKPOINT 协议暂停等用户确认。
 4. **基线读取**：`sch connectivity` / `sch list` / `pcb list --include-bbox`
    + `sheet-geometry`；写前读被改器件/引脚/网络/几何。
 5. **工具探针**：**Agent 自动执行** `python scripts/tool-probe.py --project <name>`，生成
    `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`（CLI 不可达时 exit 2，清单标注未经运行时验证）；
-   在 P1/P6/P8/P10 等关键步骤前查阅清单，按需触发 §11.5 条件中断点询问用户是否启用专用插件。
+   在 P1/P6/P8/P10 等关键步骤前查阅清单，按需触发条件中断点（`references/lib/discipline-checkpoints.md` §11.5）询问用户是否启用专用插件。
 6. **设计执行**：按子域判据（[`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md)，维护者全文见 `references/lib/design-rules.md`）与用户已拍板的决策点执行；原理图走 S0–S6
    （IR → Lib 几何 → compose → apply + 动态截图），PCB 走 P0–P10
    （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）；
@@ -128,8 +128,8 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 | `scripts/`（根） | 运行时辅助脚本：门禁/账本类 check-links、check-progress、progress-log、link-probe、sch-verify、pcb-gate；视觉/探针类 visual-qa、tool-probe、tool-probe-simulator；选型与下载类 parts-select、bom-enrich、net-download | 本项目（EasyEDAssistant）维护（上游同名脚本已迁入并按挂接判据裁剪；重复命令序列已封装为一键脚本） |
 | `scripts/visual-qa.py` | 视觉质量与布局完整性自动评估（API 截图 + 数据驱动交叉评估 + 动态截图生命周期管理，§8.3） | 本项目（EasyEDAssistant）维护 |
 | `scripts/tool-probe.py` / `tool-probe-simulator.py` | 嘉立创 EDA 内建工具与已安装插件探针（生成 `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`） | 本项目（EasyEDAssistant）维护 |
-| `scripts/net-download.py` + `scripts/net-download-policy.md` | 网络资源下载器（格式白/黑名单 + 路径逃逸防护 + `index.json` 审计）与配套策略文档（§13.2） | 本项目（EasyEDAssistant）维护 |
-| `references/lib/pcb-design-spec.md` | PCB 设计规范与 D1–D20 必答清单（PCB 阶段前向用户核对，落 `./tmp/design/<project>-pcb-spec.md`，§13.3） | 本项目（EasyEDAssistant）维护 |
+| `scripts/net-download.py` + `scripts/net-download-policy/`（总索引 + 4 子文件） | 网络资源下载器（格式白/黑名单 + 路径逃逸防护 + `index.json` 审计）与配套策略文档 | 本项目（EasyEDAssistant）维护 |
+| `references/lib/pcb-design-spec.md` | PCB 设计规范与 D1–D20 必答清单（PCB 阶段前向用户核对，落 `./tmp/design/<project>-pcb-spec.md`；流程侧挂接见 `references/PCB绘制/用户PCB配置文件/`） | 本项目（EasyEDAssistant）维护 |
 | `AGENT-PROMPT.md` | 精简使用指引（触发入口 + one-liner default_prompt；规范回归 SKILL.md） | 本项目（EasyEDAssistant）维护 |
 | `Sample/easyeda-agent-skill-behavior.md` | 上游 skill 全部行为的章节化记录（本项目维护，含移植版 §23–§25 与 §25A 变更史） | 本项目（EasyEDAssistant）维护 |
 
