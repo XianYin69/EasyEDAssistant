@@ -31,6 +31,8 @@ from pathlib import Path
 
 def guard_not_skill_repo() -> None:
     """cwd 疑似 skill 仓库本体时拒绝运行（FILE_CREATION_POLICY §1/§2.3：产物只落工作区）。"""
+    if "--help" in sys.argv or "-h" in sys.argv:
+        return
     cwd = Path.cwd()
     if (cwd / "SKILL.md").exists() and (cwd / "RULE_EDIT.md").exists():
         raise SystemExit(

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-net-download.py — 网络资源下载器（配合 scripts/net-download-policy.md 使用）
+net-download.py — 网络资源下载器（配合 scripts/net-download-policy/net-download-policy.md 使用）
 
 功能：
   1. 从 http(s):// URL 抓取远程资源（curl 兼容封装，优先 stdlib urllib）
-  2. 按 scripts/net-download-policy.md 定义的**格式白名单**过滤，非白名单直接拒绝
+  2. 按 scripts/net-download-policy/net-download-policy.md 定义的**格式白名单**过滤，非白名单直接拒绝
   3. 输出根**强制**落在工作区 `./tmp/downloads/`（`Path.cwd()` 派生），拒绝逃逸
   4. 记录元数据（URL/时间戳/HTTP 状态/字节数/SHA256）到 `./tmp/downloads/index.json`
 
@@ -15,7 +15,7 @@ net-download.py — 网络资源下载器（配合 scripts/net-download-policy.m
 
 安全：
   - 拒绝 `file://`、`ftp://`、本地绝对路径、`..` 段与转义
-  - 拒绝可执行/脚本扩展名（见 net-download-policy.md §2 黑名单）
+  - 拒绝可执行/脚本扩展名（见 net-download-policy/格式黑名单/ 子文件）
   - 单文件默认上限 32 MiB（`--max-bytes` 可调，仍受策略文件约束）
   - 遵守 FILE_CREATION_POLICY.md §1.3/§2.3/§3：只写工作区 `./tmp/`，不写 skill 目录
 """
@@ -33,9 +33,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 # 策略文件位置（人读文档，脚本运行时参考；不在运行时读取，只作对照）
-POLICY_DOC = "scripts/net-download-policy.md"
+POLICY_DOC = "scripts/net-download-policy/net-download-policy.md"
+POLICY_FORBIDDEN = "scripts/net-download-policy/格式黑名单/格式黑名单.md"
+POLICY_ALLOWED = "scripts/net-download-policy/格式白名单/格式白名单.md"
 
-# 格式白名单（详见 net-download-policy.md §2）
+# 格式白名单（详见 net-download-policy/格式白名单/ 子文件）
 ALLOWED_EXTENSIONS = {
     ".pdf", ".md", ".txt", ".html", ".htm",
     ".json", ".csv", ".yaml", ".yml", ".xml",
@@ -55,6 +57,18 @@ FORBIDDEN_EXTENSIONS = {
 
 MAX_BYTES_DEFAULT = 32 * 1024 * 1024  # 32 MiB
 USER_AGENT = "EasyEDAssistant-net-download/1.0 (+https://github.com/EasyEDAssistant/easyeda-agent)"
+
+
+def guard_not_skill_repo() -> None:
+    """cwd 疑似 skill 仓库本体时拒绝运行（FILE_CREATION_POLICY §1/§2.3：产物只落工作区）。"""
+    if "--help" in sys.argv or "-h" in sys.argv:
+        return
+    _cwd = Path.cwd()
+    if (_cwd / "SKILL.md").exists() and (_cwd / "RULE_EDIT.md").exists():
+        raise SystemExit(
+            "[{}] 拒绝运行：cwd 是 skill 仓库 {}。先 cd 到用户确认的工作区根目录再执行"
+            "（产物只写工作区 ./tmp/）。".format(Path(__file__).name, _cwd)
+        )
 
 
 def _resolve_within_workspace(raw: str) -> Path:
@@ -97,11 +111,11 @@ def _extension_of(name_or_url: str) -> str:
 def _check_format(ext: str) -> None:
     if ext in FORBIDDEN_EXTENSIONS:
         raise SystemExit(
-            f"[net-download] 拒绝：{ext} 在黑名单（可执行/脚本/归档，见 {POLICY_DOC} §3）"
+            f"[net-download] 拒绝：{ext} 在黑名单（可执行/脚本/归档，见 {POLICY_FORBIDDEN}）"
         )
     if ext not in ALLOWED_EXTENSIONS:
         raise SystemExit(
-            f"[net-download] 拒绝：{ext or '<no-extension>'} 不在白名单（见 {POLICY_DOC} §2）"
+            f"[net-download] 拒绝：{ext or '<no-extension>'} 不在白名单（见 {POLICY_ALLOWED}）"
         )
 
 
@@ -142,6 +156,7 @@ def _download(url: str, dest: Path, max_bytes: int) -> dict:
 
 
 def main() -> int:
+    guard_not_skill_repo()
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--url", help="单个下载 URL（http/https）")
     ap.add_argument("--url-file", help="URL 列表文件（每行一个 URL，`#` 起注释）")

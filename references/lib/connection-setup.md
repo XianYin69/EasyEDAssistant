@@ -129,4 +129,4 @@ Kilocode 接入（`kilo.json`，与原有链路并存、不互斥）：
      同类问题，结果整理为 markdown 落 `./tmp/learning/`；需下载资源
      （数据手册 PDF / 参考图 / 结构化数据 / EDA 库文件）时调用
      `scripts/net-download.py`，输出根强制 `./tmp/downloads/`，格式判定见
-     `scripts/net-download-policy.md`（§13.1/§13.2）。
+     `scripts/net-download-policy/net-download-policy.md`（§13.1/§13.2）。

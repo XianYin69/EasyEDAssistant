@@ -6,7 +6,8 @@
 
 - `SKILL.md`：主干入口（≤50 行），只做流程入口与路由。
 - `references/`：步骤文档（总索引 + 同名子文件，单文件 ≤50 行）；`电气检查/硬编码规则/` 为判据库；`嘉立创EDA指令索引/` 为运行时指令入口；`lib/` 为维护者文档（不参与运行时加载）。
-- `scripts/`：设计执行期调用的辅助脚本，全部 **Python 标准库实现，无第三方依赖、无 requirements.txt**；命名用连字符（`tool-probe.py`）。
+- `references/lib/`：上游 SKILL 正文迁入的**维护者存档**（不参与运行时加载、裁决优先级最低）；其中出现的 `AGENTS.md`、`standard-parts.json`、`concepts.md`、`make blocks-audit` 等指向上游仓库工件，本仓库不含，勿在本树追这些路径。
+- `scripts/`：设计执行期调用的辅助脚本，全部 **Python 标准库实现，无第三方依赖、无 requirements.txt**；命名用连字符（`tool-probe.py`）。写产物的脚本自带 cwd 守卫：在 skill 仓库内运行会被拒绝。
 - `Sample/`：上游行为记录存档；上游正文已迁入 `references/lib/`。
 - `agents/`：外部 agent 定义（yaml 权威、md 人读镜像）。
 - `CHANGELOG.md`：每次变更必须登记（RULE_EDIT 第 7 步）。

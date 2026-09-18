@@ -68,7 +68,7 @@ JS、不做账号登录、不下载页面上的可执行体（下载走 §13.2�
   `tmp/downloads/datasheet/`、`tmp/downloads/images/`、
   `tmp/downloads/data/`、`tmp/downloads/edalib/`、`tmp/downloads/manufacturing/`），
    禁止 `../`、绝对路径到 skill 目录或工作区外（FILE_CREATION_POLICY.md §3）；
-- 格式判定见 `scripts/net-download-policy.md` §2/§3：
+- 格式判定见 `scripts/net-download-policy/net-download-policy.md` §2/§3（现见 `格式白名单/` 与 `格式黑名单/` 子文件）：
   - **白名单**：`.pdf` `.md` `.txt` `.html` `.json` `.csv` `.yaml`
     `.xml` `.png` `.jpg` `.jpeg` `.gif` `.webp` `.svg` `.sch` `.pcb`
     `.brd` `.elib` `.dip` `.epow` `.esym` `.epcb` `.gbr` `.drl`
@@ -125,6 +125,6 @@ D6 接地、D9 天线形式为条件中断——缺失会改变设计时按 §11
 - 基线里的 D20（验收线）落到 §8.1 五层验证的具体门禁。
 
 **skill 维护者**：新增必答项须同步更新 `pcb-design-spec.md` §2 表与本节
-引用；`scripts/net-download.py` 与 `net-download-policy.md` 修改格式
+引用；`scripts/net-download.py` 与 `net-download-policy/net-download-policy.md` 修改格式
 列表时同步 §13.2 内联白/黑名单，两处不一致以策略文件为准，脚本更新
 走 `CONTRIBUTING.md` 评审。

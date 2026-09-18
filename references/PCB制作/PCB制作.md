@@ -24,3 +24,4 @@
 - 原理图与 PCB 以 `pcb import-changes` 同步：PCB 侧改动不回写原理图，差异须显式对账。
 - 门禁数值运行时正本在 Go 代码与 JLC 官网；文档数值冲突时以代码与官网为准并回改文档。
 - 未通过检查不得导出制造文件；保存以 `saved:true` 为准，daemon 防抖自动保存只作兜底。
+- **本步骤结束前记账**：`python scripts/progress-log.py --step 5 --name PCB制作 --cmd "python scripts/pcb-gate.py --project <工程>" --art ./tmp/pcb/gate-<时间>.json --result pass`；未记账或 `pcb-gate` 非 0 = 本步未完成，不得进入「交付与清理」。
