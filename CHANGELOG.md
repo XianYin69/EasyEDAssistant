@@ -2,6 +2,16 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.20（2026-09-18）
+
+**connector 源码快照入库 + 封装脚本 + 所有检查更新/版本门禁全面禁用（用户指令）**：
+
+- **新增 `Sample/easyeda-agent-connector/`（40 文件 ≈1.2MB 纯文本）**：上游 easyeda-agent tag **v1.5.1**（commit `24eb9800`）`extension/` 目录源码快照——28 个 `.ts` 全部插件源、`extension.json` 清单、config/scripts/build 脚本、上游 CHANGELOG（226KB 逐版接口史，排查漂移的富矿）与 LICENSE；按维护者决定排除 `images/`（二进制图标）与 `package-lock.json`（机器工件）；出处/时间/sha256 全清单固化在 `.snapshot.json`。抓取方式：维护期 `git clone --depth 1 --branch v1.5.1`（blob:none 过滤），非设计执行期行为，用户指令授权。
+- **新增 `scripts/connector-src/`（独立文件夹，封装脚本+政策）**：`eext-src.py` 四子命令——`verify`（对照 .snapshot.json 重算 sha256，防篡改/漏文件，实测 40/40 全绿）、`report`（快照元数据+manifest+菜单+API 域统计+本机 CLI 版本**仅记录**聚合 JSON）、`apis [--domain sch]`（从 TS 源提取 **59 域/193 个 `eda.*` API** 实现清单，离线查「插件到底实现了什么」）、`fetch --tag vX --out <目录>`（维护窗口下载新 tag extension/ 并打印与现快照 diff，**不自动覆盖仓库**；解包同样排除 images/lock）。配套 `connector-src.md` 政策：编辑期专用、快照只读、真值优先级不变（运行时仍以 `--help`/actions 自描述为准）、与 cli_compat 的分工（探测漂移 vs 解释漂移）。
+- **检查更新/版本门禁全面禁用**（用户指令 2026-09-18；根因：v0.12.19 的 versionGate 门禁自身成为工作流断点，而合法修复渠道——升级——又被运行环境不可变禁止，判定与处置脱节）：`link-probe.py` 退出码**只由链路连通性决定**，`version_gate` 段落 JSON 标 `judged:false` 仅记录，删除 `--skip-version-gate` 参数，非 ok 从 blocked 分支降为提示；compat 接口漂移探测保留（本机 `--help`，零联网，非「检查更新」）。文档全链改写：`运行环境不可变` §三改名「更新检查全面禁用」并新增第 9 条离线源码真值通道、`门禁检查` 检查项 1 改「组件版本记录（只记录不判定）」并删 blocked 分支、`桥接联通性测试` 第 5 步与判据同步、`SKILL.md` §1.2、`AGENT-PROMPT.md` 两条、`会话与文档` 三条目（`--skip-version-check` 出现即异常/`update --check`/`skill status` 行去掉「改用 versionGate 判定」语义）、`指令索引` 刷新方法（核对＝对照 compat+源码快照，非查版本号）、`约束部分` 第 13 条摘要、`处罚机制` L3（执行任何检查更新/版本门禁步骤均违规；顺带修复上轮编辑截断拼接的残句）。
+- **配套修例**：`文件与文件夹创建范围` 第 4 条增「编辑期经用户明确指令可新增上游归档子目录」例外（运行期仍全禁）；README 目录树（connector-src/、Sample/easyeda-agent-connector/、许可证出处）、scripts/ 清单行、快速开始第 3 条；`agents/EasyEDAssistant.yaml` one-liner 残留的相对路径 `python scripts/link-probe.py` 补 `<SKILL_DIR>` 并同步新语义（v0.12.17 批量替换未覆盖 yaml 的漏网）。
+- 校验：`check-links` 189+ md 悬空 0/孤立 0；14 脚本 py_compile 全过；非 lib references ≤50 行；功能实测——`eext-src verify` 40 文件全匹配、`apis` 59 域输出、`report` 聚合正常、`link-probe` 健康链路 rc=0（versionGate 已无判定路径）、cli_compat 断言不回归。版本对齐 **0.12.20**。
+
 ### v0.12.19（2026-09-18）
 
 **防上游接口漂移的系统性机制（用户判据：「上游新版本发布后，针对老版本的 skill 完全没法用了」）**。v0.12.18 只修了 v1.5.1 当次断点；本轮把「CLI 自描述为唯一真值」的既有裁决落到脚本层，使 skill 对未来的 1.5.x/1.6.x 破坏性变更自适应降级、并在会话开始即报警：
