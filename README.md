@@ -42,7 +42,7 @@ EasyEDAssistant/
 │   ├── bom-enrich.py                          # BOM 补 LCSC C 号（需自备 --parts 标准件库）
 │   ├── net-download.py                        # 网络资源下载器（白名单 + 逃逸防护）
 │   ├── net-download-policy/                   # 网络资源下载策略（总索引 + 格式白名单/格式黑名单/URL与路径防护/用法与会话纪律）
-│   └── connector-src/                         # connector 源码快照封装（编辑期维护：eext-src.py + connector-src.md 政策）
+│   └── connector-src/                         # connector 源码快照封装（编辑期维护：eext-src.py verify/report/apis/fetch/eext + 政策）
 └── Sample/
     ├── easyeda-agent-skill-behavior.md        # easyeda-agent skill 全部行为记录（含移植版章节）
     ├── easyeda-agent/                         # 上游样本存档（仅 README + LICENSE；
@@ -164,6 +164,30 @@ Kilocode 接入配置（`kilo.json`）：
 
 MCP 工具与 typed CLI action 语义一致：同一套 `eda.*` API 映射、dry-run/回读/
 `saved:true` 验证纪律、破坏性操作确认门控。MCP 不豁免任何验证，不改变授权范围。
+
+## 安装扩展插件（easyeda-agent-connector，用户手工动作）
+
+CLI/daemon 链路依赖 EDA 内的 **EDA Agent Connector** 插件（link-probe 探测 60832 不通、
+或 compat 报告 connector 异常时需要安装/更新）。**插件安装一律由用户本人完成**——设计执行期
+Agent 禁下载/安装任何 `.eext`（运行环境不可变 L3），以下两条通道任选其一，同一编辑器 profile 只保留一种：
+
+**通道 1 · 用本 skill 的封装脚本取官方包（推荐：与源码快照同 tag，带校验）**
+
+```bash
+# 用户在终端运行（维护窗口，非设计会话内）：
+python <SKILL_DIR>/scripts/connector-src/eext-src.py eext --out <你的下载目录>
+```
+
+脚本下载对应 tag 的 `easyeda-agent-connector.eext` 并按 release `checksums.txt` 校验 sha256，
+随后打印导入步骤：① EasyEDA Pro 扩展管理器卸载旧版（平台按 UUID 去重）→ ② 导入下载的 `.eext`
+→ ③ 完全退出并重开 EasyEDA（仅重导不保证已打开页面执行新代码）→ ④ 新会话跑 `link-probe` 确认链路。
+产物是工具输出物，**不要放回 skill 仓库**。
+
+**通道 2 · 立创插件市场**：<https://jlc-ext.com/item/zhoushoujian/easyeda-agent-connector>
+（平台支持原地自动更新；市场版本落后 patch 无碍，major.minor 与 CLI 同线即可）。
+
+安装/升级渠道正本与注意事项见 [`references/lib/environment-setup.md`](references/lib/environment-setup.md)；
+源码级行为排查见 `scripts/connector-src/connector-src.md`（本地快照，零联网）。
 
 ## 设计知识库覆盖范围
 

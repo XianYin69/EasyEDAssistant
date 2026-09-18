@@ -12,6 +12,9 @@
   python scripts/connector-src/eext-src.py apis [--domain sch] # 列出源码实现的 eda.* API
   python scripts/connector-src/eext-src.py fetch --tag v1.6.0 --out <目录>   # 仅维护窗口：
       # 下载新版本 tag 的 extension/ 源到指定目录并打印与现快照的文件差异；不自动覆盖仓库。
+  python scripts/connector-src/eext-src.py eext [--tag v1.5.1] [--out <目录>]  # 仅维护窗口：
+      # 下载官方 easyeda-agent-connector.eext 发行资产（默认取快照同 tag），按 release
+      # checksums.txt 校验 sha256 后输出 EDA 扩展管理器导入步骤——安装动作始终由用户手工完成。
 
 安全纪律：verify/report/apis 纯本地零网络；fetch 属维护期人工动作（设计执行期禁止运行本
 脚本 fetch；下载归档 zip 不违反运行期禁令的正本见 references/约束部分/运行环境不可变/——
@@ -161,6 +164,45 @@ def cmd_fetch(tag: str, out_dir: str) -> int:
     return 0
 
 
+def cmd_eext(tag: str | None, out_dir: str) -> int:
+    """维护窗口：取与源码快照配套 tag 的官方 .eext 发行资产，sha256 校验后交用户手工导入。"""
+    meta = _meta()
+    tag = tag or meta["tag"]
+    asset = "easyeda-agent-connector.eext"
+    base = f"https://github.com/zhoushoujianwork/easyeda-agent/releases/download/{tag}"
+    print(f"[eext-src] 维护窗口动作：下载 {base}/{asset}（设计执行期禁止运行本命令）", file=sys.stderr)
+    try:
+        import urllib.request
+        sums = urllib.request.urlopen(base + "/checksums.txt", timeout=60).read().decode()
+        want = next((ln.split()[0] for ln in sums.splitlines() if asset in ln), None)
+        if not want:
+            print(f"[eext-src] checksums.txt 中无 {asset}（tag 不存在或资产更名），放弃", file=sys.stderr)
+            return 2
+        raw = urllib.request.urlopen(f"{base}/{asset}", timeout=300).read()
+    except Exception as e:
+        print(f"[eext-src] 下载失败：{e}", file=sys.stderr)
+        return 2
+    got = hashlib.sha256(raw).hexdigest()
+    if got != want:
+        print(f"[eext-src] sha256 不匹配！期望 {want} 实得 {got}——文件已丢弃，勿导入", file=sys.stderr)
+        return 2
+    dest = Path(out_dir) / f"easyeda-agent-connector-{tag}.eext"
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(raw)
+    print(json.dumps({"eext": str(dest.resolve()), "tag": tag, "sha256": got,
+                      "size_bytes": len(raw),
+                      "import_steps": [
+                          "1) EasyEDA Pro 扩展管理器中卸载旧版 easyeda-agent-connector（平台按 UUID 去重）",
+                          f"2) 导入本文件：{dest.resolve()}",
+                          "3) 完全退出并重开 EasyEDA（仅重导不保证已打开页面执行新代码）",
+                          "4) 新会话跑 link-probe 确认 daemon 连通（版本只记录，无门禁）"],
+                      "alt_channel": "立创插件市场 https://jlc-ext.com/item/zhoushoujian/easyeda-agent-connector （支持原地自动更新）"},
+                     ensure_ascii=False, indent=2))
+    print("[eext-src] 注意：Agent 不得在设计执行期代装（.eext 属运行期禁下载项，正本见 约束/运行环境不可变）；"
+          "本产物是工具输出物，不要放回 skill 仓库。", file=sys.stderr)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -172,6 +214,9 @@ def main() -> int:
     ft = sub.add_parser("fetch")
     ft.add_argument("--tag", required=True)
     ft.add_argument("--out", required=True)
+    ee = sub.add_parser("eext")
+    ee.add_argument("--tag", help="默认取快照 .snapshot.json 的 tag（与源码配套）")
+    ee.add_argument("--out", default=".", help="保存目录（工作区/下载目录，勿放 skill 仓库）")
     args = ap.parse_args()
     if not (SNAP / ".snapshot.json").exists():
         print(f"[eext-src] 快照不存在：{SNAP}", file=sys.stderr)
@@ -182,6 +227,8 @@ def main() -> int:
         return cmd_report(args.out)
     if args.cmd == "apis":
         return cmd_apis(args.domain)
+    if args.cmd == "eext":
+        return cmd_eext(args.tag, args.out)
     return cmd_fetch(args.tag, args.out)
 
 
