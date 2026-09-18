@@ -30,6 +30,10 @@ EasyEDAssistant/
 ├── scripts/
 │   ├── check-links.py                         # 全树 markdown 链接扫描（悬空必须为 0；RULE_EDIT 第 6 步）
 │   ├── check-progress.py                      # 步骤门禁校验：进度账本完整性 + 证据产物存在性
+│   ├── progress-log.py                        # 进度账本写入（幂等追加 ./tmp/init/progress.md）
+│   ├── link-probe.py                          # 桥接探测序列：MCP/daemon 探活 + 版本门禁 + health → 选定链路 JSON
+│   ├── sch-verify.py                          # 原理图验证序列：gate/connectivity/list/sheet-geometry → 聚合 JSON
+│   ├── pcb-gate.py                            # PCB 门禁序列：drc/check/lint/score/report/net-classes → 聚合 JSON
 │   ├── visual-qa.py                           # 视觉质量与布局完整性自动评估（截图+数据双检，滚动保留 3 张）
 │   ├── tool-probe.py                          # 内建工具与插件探针（生成 ./tmp/eda-tools-manifest.json）
 │   ├── tool-probe-simulator.py                # 工具调用示例文档生成器
@@ -121,7 +125,7 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 |---|---|---|
 | `agents/EasyEDAssistant.yaml` | Kilocode agent 定义（权威，interface: schema） | 本项目（EasyEDAssistant）维护 |
 | `references/*.md`、`*.json` | 正本/维护者参考文件（判据原始来源） | 本项目（EasyEDAssistant）维护 |
-| `scripts/`（根） | 运行时辅助脚本：check-links / visual-qa / tool-probe / tool-probe-simulator / parts-select / bom-enrich / net-download | 本项目（EasyEDAssistant）维护（上游同名脚本已迁入并按挂接判据裁剪） |
+| `scripts/`（根） | 运行时辅助脚本：门禁/账本类 check-links、check-progress、progress-log、link-probe、sch-verify、pcb-gate；视觉/探针类 visual-qa、tool-probe、tool-probe-simulator；选型与下载类 parts-select、bom-enrich、net-download | 本项目（EasyEDAssistant）维护（上游同名脚本已迁入并按挂接判据裁剪；重复命令序列已封装为一键脚本） |
 | `scripts/visual-qa.py` | 视觉质量与布局完整性自动评估（API 截图 + 数据驱动交叉评估 + 动态截图生命周期管理，§8.3） | 本项目（EasyEDAssistant）维护 |
 | `scripts/tool-probe.py` / `tool-probe-simulator.py` | 嘉立创 EDA 内建工具与已安装插件探针（生成 `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`） | 本项目（EasyEDAssistant）维护 |
 | `scripts/net-download.py` + `scripts/net-download-policy.md` | 网络资源下载器（格式白/黑名单 + 路径逃逸防护 + `index.json` 审计）与配套策略文档（§13.2） | 本项目（EasyEDAssistant）维护 |

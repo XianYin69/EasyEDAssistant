@@ -2,6 +2,18 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.15（2026-09-18）
+
+- **重复交互操作脚本化（用户拍板 4 项全做）**：把散落在多份 markdown 里反复手敲的命令序列固化为一键脚本，markdown 改为连接脚本调用。新增：
+  - [`scripts/link-probe.py`](scripts/link-probe.py)：桥接探测一键（MCP 7655 / 桥接 8765 / daemon 60832-60841 TCP 探活 → `update --check --exit-code` 版本门禁 → `health --json` → 按 connection-setup §1.1 输出选定链路），聚合落 `./tmp/init/link-probe.json`，退出码 0/2/3 即门禁结论。
+  - [`scripts/sch-verify.py`](scripts/sch-verify.py)：原理图验证一键（`sch gate --strict --json` 四联超集 + `connectivity --all-pages` + `list --include-device-identity --include-pins` + `sheet-geometry`；gate blocked 时兜底补 `sch check`），聚合落 `./tmp/sch/verify-*.json`。
+  - [`scripts/pcb-gate.py`](scripts/pcb-gate.py)：PCB 门禁一键（`drc --json` + `check --json --strict` + `layout-lint --json` + `layout-score --json` + `net-classes --json` + `report` 文本；可选 `--with-gate` 推进 `pre_route_passed`），聚合落 `./tmp/pcb/gate-*.json`。
+  - [`scripts/progress-log.py`](scripts/progress-log.py)：进度账本一键写入（按步骤门禁格式幂等追加/替换同步进步骤行），替代 Agent 手编 markdown。
+- **子命令 JSON 支持实测**（本机 CLI v1.4.8 `--help`）：`sch gate --json`（含每阶段原生报告，四联超集）、`pcb check --json --strict`、`layout-lint/--score --json`、`net-classes --json` 可用；`report`/`connectivity`/`list`/`sheet-geometry` 无 `--json`，脚本按文本原样捕获，判据以 rc 为准。
+- **脚本层防污染守卫**：4 个新脚本启动即检测 `cwd` 是否为 skill 仓库（存在 SKILL.md+RULE_EDIT.md 即拒绝运行并提示先 cd 工作区），把 FILE_CREATION_POLICY §1/§2.3 从文字约束升级为机器强制；实测从 skill 目录跑 `progress-log.py` 被拒（此前实测确会写出 `skill仓库/tmp/` 污染，已清理）。
+- **markdown 接链改写（10 处）**：`桥接联通性测试`（流程前置脚本说明，人工步骤降为判据描述与失败兜底）、`门禁检查`、`端口探测与插件确认`、`部分绘制与验收`（数据层四条→一条）、`检查是否符合规范技术手册及方案`（规范硬门→一条）、`部分绘制与截图`（每步对账+数据层→一条）、`交付报告`（门禁明细改引用聚合 JSON，保留 not_run 纪律）、`校验与对账`/`检查与导出`（索引表各加一键脚本行）、`步骤门禁`+`执行与回写`（账本一律走 progress-log.py）、指令索引使用纪律加第 6 条「重复序列优先走封装脚本」、SKILL.md §4 文档地图登记 4 脚本。README 脚本清单同步。
+- 校验：`check-links` → **183 个 md，悬空 0、孤立 0**；12 个脚本 `py_compile` 全过；非 lib references 全部 ≤50 行；功能实测——link-probe 真实检出本机双链路连通→选定 cli-daemon、版本门禁 rc=10 → exit 3（终止性）；pcb-gate 对不存在工程逐项 rc=1 → 聚合 JSON + exit 3（不误报通过）；progress-log ↔ check-progress 账本往返一致。SKILL.md/agent 版本对齐 **0.12.15**。
+
 ### v0.12.14（2026-09-18）
 
 - **修复漏问 PCB 走线宽度**：用户实测反馈「仍然没有问我 PCB 走线角度和宽度」。根因：R1 只问了拐角角度，**没把走线宽度作为独立必答项**；且 `硬编码规则/PCB/间距与线宽.md` 正本里只有图形质量条、无走线宽度档位表，导致实际执行时宽度被漏问。

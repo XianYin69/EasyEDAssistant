@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.14"
+  version: "0.12.15"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -31,7 +31,7 @@ metadata:
 
 ## 4. 文档地图
 
-> 全量路由见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)（六步 + 子步 + 运行时指令速查）；约束见 §5；维护工具 [`scripts/check-links.py`](scripts/check-links.py)（悬空链接必须为 0）与 [`scripts/check-progress.py`](scripts/check-progress.py)（步骤门禁账本校验）。
+> 全量路由见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)（六步 + 子步 + 运行时指令速查）；约束见 §5；重复命令序列已封装为一键脚本——`scripts/link-probe.py`（桥接探测+门禁）、`scripts/sch-verify.py`（原理图验证）、`scripts/pcb-gate.py`（PCB 门禁）、`scripts/progress-log.py`（账本写入）；校验用 [`scripts/check-links.py`](scripts/check-links.py)（悬空必须为 0）与 [`scripts/check-progress.py`](scripts/check-progress.py)（步骤门禁账本）。
 
 ## 5. 约束部分
 
