@@ -71,6 +71,8 @@ Node 版本遵循 bundle 的要求（至少 20.17）。
 
 连接器有两种安装渠道，同一编辑器 profile 保留一种：
 
+> **本项目已版本钉定**（正本 [`../约束部分/运行环境不可变/运行环境不可变.md`](../约束部分/运行环境不可变/运行环境不可变.md) §四）：只用 connector 快照钉定版本（`Sample/easyeda-agent-connector/.snapshot.json`），下表「市场原地自动更新」与「升级重导」路径对本项目**不适用**——发现新版只删除回退到钉定包（`scripts/connector-src/eext-src.py eext` 取包）。
+
 | 渠道 | 安装/升级方法 |
 |---|---|
 | GitHub Release `.eext` 侧载 | 跨 minor/major 时下载与 CLI 兼容线对应的包，在 EasyEDA 扩展管理器卸载旧项，再导入新包。平台按 UUID 去重，侧载没有自动更新。 |

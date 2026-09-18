@@ -2,6 +2,16 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.22（2026-09-18）
+
+**connector 版本钉定策略（用户指令：只用/只基于快照版本开发；不要任何自动更新含市场原地更新；发现新版→删除回退此版本）**：
+
+- **检测落地 `link-probe.py` 增 `version_gate.pin`**：读 `Sample/easyeda-agent-connector/.snapshot.json` 的 `connector_version` 为钉定值（权威单源，文档不复制数字），与 `versionGate.cli/daemon` 版本比对；mismatch → stderr WARN + JSON `action` 给出「维护窗口卸载新版→`eext-src.py eext` 重导入→关闭自动更新」指引。**比对不判门**（不改退出码，与「判定与处置脱节」教训一致）；快照缺失时静默跳过。实测本机全 1.5.1 → `pinned:1.5.1, mismatch:false`，rc=0。（CLI 无直接 connector 版本上报口——`api search plugin` 空、health 仅 cli/daemon——connector 版本以扩展管理器人工核对 + 三件套整体钉定近似覆盖，指引中已注明。）
+- **约束正本 `运行环境不可变` 新增 §四「connector 版本钉定（只回退，不升级）」**（11–13 条：钉定值单源、自动更新全关（市场原地更新/daemon 自同步/升级弹窗）、发现非钉定版→用户删除回退、Agent 报告+指引不代卸/代装）；违规后果补「检测偏离未报告 / 代装卸 / 接受市场自动更新 = L3」；文件 42 行 ≤50。
+- **README 安装章重写为钉定版**：顶部加版本钉定声明与「发现新版只回退」方向；`eext` 命令 `--tag` 缺省即钉定版；导入步骤①改「卸载现装版本（含更高版本）」、④加 `pin.mismatch=false` 验收；市场渠道从「任选」降级为「**不推荐**——原地自动更新与钉定冲突，若用须关自动更新并核对版本」。
+- **同步链**：`eext-src.py` `eext` 输出 JSON 补 `pinned` 字段与回退语义、`connector-src.md` 纪律新增第 6 条钉定、`约束部分` #13 摘要、`SKILL.md` §1.2、`AGENT-PROMPT.md` 速览第 3 条、`lib/environment-setup.md` 渠道表加「本项目不适用自动更新」服从句（lib 服从严肃约束优先级）。
+- 校验：14 脚本 py_compile 过；link-probe 活体 rc=0 pin 段正确；`check-links` 190 md 悬空 0/孤立 0；约束文件全部 ≤50 行；`eext-src verify` 快照 39 文件不回归。版本对齐 **0.12.22**。
+
 ### v0.12.21（2026-09-18）
 
 **README 新增「安装扩展插件」条目 + 封装脚本增 `eext` 取包子命令（用户指令）**：

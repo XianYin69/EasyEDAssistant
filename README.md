@@ -167,26 +167,31 @@ MCP 工具与 typed CLI action 语义一致：同一套 `eda.*` API 映射、dry
 
 ## 安装扩展插件（easyeda-agent-connector，用户手工动作）
 
-CLI/daemon 链路依赖 EDA 内的 **EDA Agent Connector** 插件（link-probe 探测 60832 不通、
-或 compat 报告 connector 异常时需要安装/更新）。**插件安装一律由用户本人完成**——设计执行期
-Agent 禁下载/安装任何 `.eext`（运行环境不可变 L3），以下两条通道任选其一，同一编辑器 profile 只保留一种：
+**版本钉定（本项目只基于此版本开发）**：connector 钉定为本 skill 源码快照版本（当前 **v1.5.1**，
+权威值见 `Sample/easyeda-agent-connector/.snapshot.json` 的 `connector_version`）。**所有自动更新一律关闭**——
+不使用/关闭插件市场的「原地自动更新」，daemon 保持 `--auto-update-skill=false`，EDA 升级弹窗不响应；
+**若发现任何新版本（含市场自动升级），处置方向是删除新版、回到钉定版**，而不是升级适配。
+会话首条命令 `link-probe.py` 会做钉定比对（`version_gate.pin`），不符即 WARN 并给出回退指引。
 
-**通道 1 · 用本 skill 的封装脚本取官方包（推荐：与源码快照同 tag，带校验）**
+CLI/daemon 链路依赖 EDA 内的 **EDA Agent Connector** 插件（link-probe 探测 60832 不通、
+或 pin/mismatch 告警、compat 报告 connector 异常时需要安装/回退）。**插件装卸一律由用户本人完成**——设计执行期
+Agent 禁下载/安装/卸载 `.eext`（运行环境不可变 L3），且 Agent 检测到偏离钉定版本必须如实报告：
+
+**取钉定包（推荐：与源码快照同 tag，带校验）**
 
 ```bash
-# 用户在终端运行（维护窗口，非设计会话内）：
+# 用户在终端运行（维护窗口，非设计会话内）；--tag 缺省即取快照钉定版本：
 python <SKILL_DIR>/scripts/connector-src/eext-src.py eext --out <你的下载目录>
 ```
 
-脚本下载对应 tag 的 `easyeda-agent-connector.eext` 并按 release `checksums.txt` 校验 sha256，
-随后打印导入步骤：① EasyEDA Pro 扩展管理器卸载旧版（平台按 UUID 去重）→ ② 导入下载的 `.eext`
-→ ③ 完全退出并重开 EasyEDA（仅重导不保证已打开页面执行新代码）→ ④ 新会话跑 `link-probe` 确认链路。
+脚本下载钉定 tag 的 `easyeda-agent-connector.eext` 并按 release `checksums.txt` 校验 sha256，
+随后打印导入步骤：① EasyEDA Pro 扩展管理器**卸载现装版本（含更高版本）**（平台按 UUID 去重）→ ② 导入钉定 `.eext`
+→ ③ 完全退出并重开 EasyEDA（仅重导不保证已打开页面执行新代码）→ ④ 新会话跑 `link-probe` 确认链路且 `pin.mismatch=false`。
 产物是工具输出物，**不要放回 skill 仓库**。
 
-**通道 2 · 立创插件市场**：<https://jlc-ext.com/item/zhoushoujian/easyeda-agent-connector>
-（平台支持原地自动更新；市场版本落后 patch 无碍，major.minor 与 CLI 同线即可）。
-
-安装/升级渠道正本与注意事项见 [`references/lib/environment-setup.md`](references/lib/environment-setup.md)；
+**替代渠道（不推荐）**：立创插件市场 <https://jlc-ext.com/item/zhoushoujian/easyeda-agent-connector>
+支持原地自动更新——**与版本钉定冲突**；若因故从市场安装，装后必须关闭自动更新并确认版本号＝钉定版。
+安装渠道机制正本见 [`references/lib/environment-setup.md`](references/lib/environment-setup.md)（其自动更新描述服从此钉定政策）；
 源码级行为排查见 `scripts/connector-src/connector-src.md`（本地快照，零联网）。
 
 ## 设计知识库覆盖范围
