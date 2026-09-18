@@ -53,6 +53,9 @@ FORBIDDEN_EXTENSIONS = {
     ".bat", ".cmd", ".sh", ".ps1", ".vbs", ".js", ".jar",
     ".zip", ".rar", ".7z", ".tar", ".gz", ".bz2", ".xz",
     ".iso", ".img", ".dmg",
+    # EDA 插件/扩展包与通用安装器：禁止运行期获取或安装（约束/运行环境不可变）
+    ".eext", ".msi", ".pkg", ".apk", ".deb", ".rpm",
+    ".vsix", ".crx", ".xpi", ".ocx", ".sys", ".pyd", ".elf",
 }
 
 MAX_BYTES_DEFAULT = 32 * 1024 * 1024  # 32 MiB
@@ -111,7 +114,7 @@ def _extension_of(name_or_url: str) -> str:
 def _check_format(ext: str) -> None:
     if ext in FORBIDDEN_EXTENSIONS:
         raise SystemExit(
-            f"[net-download] 拒绝：{ext} 在黑名单（可执行/脚本/归档，见 {POLICY_FORBIDDEN}）"
+            f"[net-download] 拒绝：{ext} 在黑名单（可执行/脚本/归档/EDA 插件与安装器，禁止运行期获取，见 {POLICY_FORBIDDEN}）"
         )
     if ext not in ALLOWED_EXTENSIONS:
         raise SystemExit(

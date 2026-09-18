@@ -18,8 +18,8 @@ EasyEDAssistant/
 ├── references/                                # 步骤文档：每步骤一个同名目录（总索引 + 子文件）
 │   ├── 初始化部分/ … 交付与清理/                # 六步：初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理
 │   ├── 单步执行/                              # 非首次设计：读 ./tmp/ 上下文 → 选步骤 → 只执行该步骤 → 回写报告
-│   ├── 约束部分/                              # 十二项约束（命名/格式/垃圾/记忆链/逻辑链/压缩/处罚/激励/创建范围/流程/安全/步骤门禁）
-│   ├── 嘉立创EDA指令索引/                     # easyeda CLI v1.4.8 运行时指令入口（总索引 + 12 子文件）
+│   ├── 约束部分/                              # 十三项约束（命名/格式/垃圾/记忆链/逻辑链/压缩/处罚/激励/创建范围/流程/安全/步骤门禁/运行环境不可变）
+│   ├── 嘉立创EDA指令索引/                     # easyeda CLI v1.5.1 运行时指令入口（总索引 + 12 子文件）
 │   ├── 电气检查/硬编码规则/                   # 子域判据与公式（电气检查与 PCB 规范同源）
 │   └── lib/                                   # 维护者文档（13 份，原 SKILL.md §1–§13 正文，不参与运行时加载）
 ├── AGENT-PROMPT.md                            # 精简使用指引（规范回归 SKILL.md）
@@ -31,7 +31,7 @@ EasyEDAssistant/
 │   ├── check-links.py                         # 全树 markdown 链接扫描（悬空必须为 0；RULE_EDIT 第 6 步）
 │   ├── check-progress.py                      # 步骤门禁校验：进度账本完整性 + 证据产物存在性
 │   ├── progress-log.py                        # 进度账本写入（幂等追加 ./tmp/init/progress.md）
-│   ├── link-probe.py                          # 桥接探测序列：MCP/daemon 探活 + 版本门禁 + health → 选定链路 JSON
+│   ├── link-probe.py                          # 桥接探测序列：MCP/daemon 探活 + 本机环境自检（不查最新版）→ 选定链路 JSON
 │   ├── sch-verify.py                          # 原理图验证序列：gate/connectivity/list/sheet-geometry → 聚合 JSON
 │   ├── pcb-gate.py                            # PCB 门禁序列：drc/check/lint/score/report/net-classes → 聚合 JSON
 │   ├── visual-qa.py                           # 视觉质量与布局完整性自动评估（截图+数据双检，滚动保留 3 张）
@@ -56,7 +56,7 @@ EasyEDAssistant/
 构建两层内容：
 
 1. **行为记录** — `Sample/easyeda-agent-skill-behavior.md` 记录该 skill 的全部行为：
-   会话版本门禁、原理图 1.4 数据路径（connectivity IR → Lib 几何 → compose →
+   本机环境自检、原理图 1.4 数据路径（connectivity IR → Lib 几何 → compose →
    sch apply → 回读对账）、设计流程 S0–S6 / P0–P10、执行与验证约束、器件选型、
    制造规则、朝向系统、图纸 keep-out 推导，以及移植版新增章节
    （§23 JLCEDA MCP 桥接、§24 现代电子产品设计规范知识库、§25 项目文档任务）。
@@ -88,7 +88,7 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 | 非首次设计的续跑与单步执行 | `references/单步执行/`（读取上下文、选择步骤、执行与回写） |
 | 步骤级细则（桥接联通性测试、绘制原理图、绘制 PCB、检查步骤等） | 同上，各步骤目录内的同名子文件 |
 | 坐标与数据模型、官方文档与 GUI 映射 | `references/坐标与数据模型/`、`references/官方文档映射/` |
-| 约束（命名、格式、清理、证据链、处置、逐步执行门禁等十二项） | `references/约束部分/` |
+| 约束（命名、格式、清理、证据链、处置、逐步执行门禁、运行环境不可变等十三项） | `references/约束部分/` |
 | 原 SKILL.md §1–§13 正文与子域判据（维护者参考，不参与运行时加载） | `references/lib/`（12 份 md + 1 份 json） |
 | 变更历史 | `CHANGELOG.md` |
 
@@ -97,8 +97,8 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 1. **连接**：JLCEDA MCP（VS Code 插件）与 `easyeda` CLI/daemon 互为**替代链路**
    （不是级联备用）：先测 MCP `7655`，可达再测 `60832`，双通优先 CLI/daemon，
    一旦选定全程使用，重试最多 3 轮后转用户；两链路语义一致（同一套 `eda.*` API 映射与验证纪律）。
-   版本门禁 `easyeda update --check --exit-code` 非 0 属终止性失败（升级后新开会话），不占重试额度。
-2. **会话门禁**：首条命令 `easyeda update --check --exit-code`；升级后新开会话。
+   本机环境自检 `easyeda health` 的 `versionGate` 非 ok 属终止性失败（由用户自行升级后新开会话），不占重试额度；**不查最新发行版**。
+2. **会话门禁**：首条命令 `python scripts/link-probe.py`（本机自检，不联网查 latest）；组件升级由用户自行完成后新开会话。
 3. **需求澄清**（§11）：按任务类型走默认行为；只问"答案会改变做法"的选项；
    把模糊需求落成可验证的目标不变量（pin→net 黄金表、skew 预算、DRC 目标）。
    执行中遇强制/条件中断点（正本 `references/lib/discipline-checkpoints.md` §11.5）按 CHECKPOINT 协议暂停等用户确认。
@@ -222,7 +222,7 @@ EasyEDAssistant skill 内置的设计判据（详见 [`references/电气检查/�
 1. 启动 JLCEDA MCP VS Code 插件（监听 `8765` / `7655`）；MCP 不通时安装
    `easyeda` CLI/daemon 作为替代链路（选定后全程使用，不重复探测）。
 2. 在 Kilocode `kilo.json` 中启用 `jlceda` MCP server（配置见上）。
-3. 会话首条命令仍为 `easyeda update --check --exit-code` 版本门禁
+3. 会话首条命令为本机自检（`scripts/link-probe.py` / `easyeda health`），不查询最新发行版
    （EasyEDAssistant 移植版同样适用）；升级后新开会话。
 4. 按 [`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md) 选择设计子域判据（维护者全文见 `references/lib/design-rules.md`）；参数真值以
    `easyeda <command> --help` 与 `easyeda actions` 为准。

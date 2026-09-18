@@ -74,6 +74,8 @@ def _cli(args: list[str], capture: bool = True, timeout: int = 60) -> str:
         cmd,
         capture_output=capture,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=timeout,
     )
     if r.returncode != 0:

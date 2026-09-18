@@ -37,7 +37,7 @@ def guard_not_skill_repo() -> None:
 def _cli(args: list[str], timeout: int = 30) -> str:
     cmd = ["easyeda", *args]
     try:
-        r = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
         if r.returncode != 0:
             sys.stderr.write(f"[tool-probe-sim] CLI warning {cmd}: {r.stderr.strip()}\n")
         return r.stdout

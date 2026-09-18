@@ -1,6 +1,6 @@
-# EasyEDAssistant Reference：嘉立创EDA指令索引
+﻿# EasyEDAssistant Reference：嘉立创EDA指令索引
 
-> 本文件是 `easyeda` CLI（easyeda-agent，来源版本 v1.4.8）与 MCP 动作目录的**运行时指令入口索引**：只给指令条目与一句话语义，供流程关键步骤速查「有什么命令、去哪一步用」。
+> 本文件是 `easyeda` CLI（easyeda-agent，来源版本 v1.5.1）与 MCP 动作目录的**运行时指令入口索引**：只给指令条目与一句话语义，供流程关键步骤速查「有什么命令、去哪一步用」。
 > 编辑遵守 RULE_EDIT.md：文本 ≤ 50 行、自然语言；各子文件与其子文件夹同名。
 
 ## 真值优先级
@@ -23,14 +23,14 @@
 2. 索引未收录的新命令：走 `easyeda actions` 或 `easyeda api search <query>` 发现后**回补本索引对应子文件**（追加行，不改写既有条目）。
 3. 单位红线：PCB 坐标 mil、原理图 0.01inch（y 向上），详见 [`../坐标与数据模型/坐标与数据模型.md`](../坐标与数据模型/坐标与数据模型.md)。
 4. 操作纪律（幂等性、STALE_READ、批量优先）正本在 [`../lib/api-operations.md`](../lib/api-operations.md)，本索引不重复。
-5. Python 脚本调用一律写 `python scripts/<名>.py`（Windows/Linux 通用入口为 `python`；仅当环境只有 `python3` 时才替换），且必带 `--project` 等必填参数——以脚本 `--help` 为准。**运行前 cwd 必须是用户确认的工作区根目录**：所有写产物的脚本会检测 cwd，落在 skill 仓库时直接拒绝运行（exit 1，`--help` 除外）。
+5. Python 脚本调用一律写 `python <SKILL_DIR>/scripts/<名>.py`，其中 **`<SKILL_DIR>` = 本 skill 的安装根目录绝对路径（即含 `SKILL.md` 的目录，如 `~/.kilocode/skills/EasyEDAssistant`）**，从该根取脚本、不要写工作区相对 `scripts/`（脚本不在工作区）。入口统一用 `python`（Windows/Linux 通用；仅当环境只有 `python3` 时才替换），并必带 `--project` 等必填参数——以脚本 `--help` 为准。**运行前 cwd 必须是用户确认的工作区根目录**（产物落 `./tmp/`）：所有写产物的脚本会检测 cwd，落在 skill 仓库时直接拒绝运行（exit 1，`--help` 除外）。
 6. **重复命令序列优先走封装脚本**：PCB 门禁一键 `scripts/pcb-gate.py`、原理图验证一键 `scripts/sch-verify.py`、桥接探测一键 `scripts/link-probe.py`、账本写入一键 `scripts/progress-log.py`；脚本产物（`./tmp/` 下 JSON）即留证来源，单条命令细节仍查本索引。
 
 ## 新建对象速查（跨域入口）
 
 | 对象 | 入口 | 备注 |
 |---|---|---|
-| 新建工程 | **CLI 与 138 个 typed action 均无入口** | 官方仅 `eda.dmt_Project.createProject`（@beta，经 `api search` 可发现）；推荐走 EasyEDA GUI 建工程，程序化只作 debug exec 确认门控下的例外 |
+| 新建工程 | **CLI 与全部 typed action 均无入口**（v1.5.1 实测 139 个，真值以 `easyeda actions` 为准） | 官方仅 `eda.dmt_Project.createProject`（@beta，经 `api search` 可发现）；推荐走 EasyEDA GUI 建工程，程序化只作 debug exec 确认门控下的例外 |
 | 新建原理图页 | `sch page-new`（action `schematic.page.create`） | 见 [`原理图指令/校验与对账/校验与对账.md`](原理图指令/校验与对账/校验与对账.md) |
 | 新建板子/PCB | `pcb new-board`（action `board.new_pcb`）；组合既有 sch+PCB 用 `board create/copy/rebind` | 见 [`PCB指令/放置与布局/放置与布局.md`](PCB指令/放置与布局/放置与布局.md)、[`会话与文档/会话与文档.md`](会话与文档/会话与文档.md) |
 | 新建元件 | 先 `blocks search` 复用块；缺库件走 `lib device build`（Symbol+Footprint+3D 一条龙） | 决策流程见 [`../元件检查/新建元件与替代方案/新建元件与替代方案.md`](../元件检查/新建元件与替代方案/新建元件与替代方案.md) |
@@ -39,9 +39,9 @@
 ## 刷新方法
 
 - `easyeda --help` 全量顶层域、`easyeda sch --help`、`easyeda pcb --help` 与本子文件条目数对照；缺项即回补。
-- CLI/daemon/Connector 升级后（版本门禁通过的新会话内）做一次核对，结果记 `CHANGELOG.md`。
+- CLI/daemon/Connector 由用户自行升级后（本机 `health` 的 `versionGate: ok` 的新会话内）做一次核对，结果记 `CHANGELOG.md`。**比对与升级不由 Agent 在会话内触发**（禁 `easyeda update`、`easyeda skill status/sync`，见 [`../约束部分/运行环境不可变/运行环境不可变.md`](../约束部分/运行环境不可变/运行环境不可变.md)）。
 
 ## 依据来源
 
-- `easyeda version` = easyeda-agent v1.4.8（本索引采集快照）；上游存档见 [`../../Sample/easyeda-agent/README.md`](../../Sample/easyeda-agent/README.md)。
+- `easyeda version` = easyeda-agent v1.5.1（本索引采集快照；对 145 条 `sch/pcb/lib/blocks/...` 子命令与 v1.4.8 时期条目做过实测比对，无漂移）；上游存档见 [`../../Sample/easyeda-agent/README.md`](../../Sample/easyeda-agent/README.md)。
 - GUI 菜单 ↔ 命令对照见 [`../官方文档映射/官方文档映射.md`](../官方文档映射/官方文档映射.md)（人读入口，不定义真值）。
