@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.13"
+  version: "0.12.14"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
