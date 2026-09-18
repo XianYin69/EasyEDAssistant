@@ -28,6 +28,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+import cli_compat as cc  # 同目录共享模块：接口漂移运行时探测（见其 docstring）
+
 
 def guard_not_skill_repo() -> None:
     """cwd 疑似 skill 仓库本体时拒绝运行（FILE_CREATION_POLICY §1/§2.3：产物只落工作区）。"""
@@ -82,18 +84,24 @@ def main() -> int:
     sel = ["--project", args.project]
     if args.pcb_doc:
         sel += ["--doc", args.pcb_doc]
+    # 可选 flag（--json/--strict/--gate）经 cli_compat 探测附加：上游增删不再打断一键门禁
+    d = ["easyeda", "pcb"]
     seq = [
-        ("drc",          ["easyeda", "pcb", "drc", "--json", *sel]),
-        ("check",        ["easyeda", "pcb", "check", "--json", "--strict", *sel]),
-        ("layout_lint",  ["easyeda", "pcb", "layout-lint", "--json", *sel]),
-        ("layout_score", ["easyeda", "pcb", "layout-score", "--json", *sel]),
-        ("net_classes",  ["easyeda", "pcb", "net-classes", "--json", *sel]),
-        ("report",       ["easyeda", "pcb", "report", *sel]),
+        ("drc",          cc.with_flag([*d, "drc", *sel], "--json")),
+        ("check",        cc.with_flag(cc.with_flag([*d, "check", *sel], "--json"), "--strict")),
+        ("layout_lint",  cc.with_flag([*d, "layout-lint", *sel], "--json")),
+        ("layout_score", cc.with_flag([*d, "layout-score", *sel], "--json")),
+        ("net_classes",  cc.with_flag([*d, "net-classes", *sel], "--json")),
+        ("report",       [*d, "report", *sel]),
     ]
-    if args.with_gate:
-        seq.append(("lint_gate", ["easyeda", "pcb", "layout-lint", "--gate", "--json", *sel]))
-
     results, failed = {}, []
+    if args.with_gate:
+        if cc.flag_supported(["pcb", "layout-lint"], "--gate"):
+            seq.append(("lint_gate", cc.with_flag([*d, "layout-lint", "--gate", *sel], "--json")))
+        else:  # 探测不到推进门的能力：显式 blocked，绝不静默跳过或伪通过
+            results["lint_gate"] = {"cmd": "pcb layout-lint --gate", "rc": None, "ok": False,
+                                    "blocked": "cli_compat 探测：本机 CLI 不支持 --gate（接口漂移），不得当作已推进"}
+            failed.append("lint_gate")
     for key, cmd in seq:
         r = run(cmd)
         results[key] = r

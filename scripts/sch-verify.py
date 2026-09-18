@@ -29,6 +29,8 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+import cli_compat as cc  # 同目录共享模块：接口漂移运行时探测（见其 docstring）
+
 
 def guard_not_skill_repo() -> None:
     """cwd 疑似 skill 仓库本体时拒绝运行（FILE_CREATION_POLICY §1/§2.3：产物只落工作区）。"""
@@ -79,11 +81,16 @@ def main() -> int:
     sel = ["--project", args.project]
     if args.doc:
         sel += ["--doc", args.doc]
+    # 可选 flag 一律经 cli_compat 探测后附加：上游跨版本增删 flag 不再打断一键验证（fail-closed 自适应）
+    gate_cmd = cc.with_flag(["easyeda", "sch", "gate", "--strict", *sel], "--json")
+    conn_cmd = cc.with_flag(["easyeda", "sch", "connectivity", *sel], "--all-pages")
+    list_args = cc.with_flag(["easyeda", "sch", "list", *sel], "--all-pages")
+    for f in ("--include-device-identity", "--include-pins"):
+        list_args = cc.with_flag(list_args, f)
     seq = [
-        ("gate",          ["easyeda", "sch", "gate", "--strict", "--json", *sel]),
-        ("connectivity",  ["easyeda", "sch", "connectivity", "--all-pages", *sel]),
-        ("list",          ["easyeda", "sch", "list", "--all-pages",
-                           "--include-device-identity", "--include-pins", *sel]),
+        ("gate",          gate_cmd),
+        ("connectivity",  conn_cmd),
+        ("list",          list_args),
         ("sheet_geometry", ["easyeda", "sch", "sheet-geometry", *sel]),
     ]
     results, failed = {}, []
@@ -93,7 +100,7 @@ def main() -> int:
         if not r["ok"]:
             failed.append(key)
     if results["gate"].get("blocked"):
-        results["check"] = run(["easyeda", "sch", "check", "--all", *sel])
+        results["check"] = run(cc.with_flag(["easyeda", "sch", "check", *sel], "--all"))
         if not results["check"]["ok"]:
             failed.append("check")
 
