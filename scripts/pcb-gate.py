@@ -44,7 +44,7 @@ def guard_not_skill_repo() -> None:
 def run(cmd: list[str]) -> dict:
     """跑一条子命令，返回 {cmd, rc, ok, json|text, error}。CLI 不可达记 blocked。"""
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=300)
         out = (p.stdout or "").strip()
         try:
             return {"cmd": " ".join(cmd), "rc": p.returncode, "ok": p.returncode == 0,

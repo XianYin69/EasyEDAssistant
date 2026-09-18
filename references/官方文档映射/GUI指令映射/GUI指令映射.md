@@ -16,7 +16,7 @@
 | 设计 - 检查 DRC | `design-check-drc` | `sch gate --strict --doc <page>`（layout-lint→check→bridge-check→SDK DRC） |
 | 设计 - 分配位号 | `design-annotate-designator` | `sch designators allocate` → `plan` → `verify` |
 | 布局 - 对齐 | `layout-align` | `sch lib-layout`（Lib 内部位置）/ `sch compose`（模块 Z 字排版） |
-| 导出 - BOM | `export-bill-of-materials-bom` | `bom-enrich.py`（补 LCSC C 号） |
+| 导出 - BOM | `export-bill-of-materials-bom` | `bom export` 取 BOM 后，`python <SKILL_DIR>/scripts/bom-enrich.py`（补 LCSC C 号，参数见其 `--help`） |
 | 导出 - 网表 | `export-netlist` | `sch_ManufactureData.getNetlistFile()`（不用已废弃的 `sch_Netlist.getNetlist()`） |
 
 ## PCB（前缀 `/cn/pcb/`）

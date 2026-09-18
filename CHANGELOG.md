@@ -2,6 +2,21 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.17（2026-09-18）
+
+本轮为「运行环境不可变」(约束 13) 的收尾 + 全维度审计整改，逐项带实证：
+
+- **修高危可用性 bug：脚本路径与 cwd 互斥**。全流程 53 处运行时命令写 `python scripts/<名>.py` 且要求 cwd=工作区，但脚本实体在 skill 仓库——cwd=工作区时 `No such file`，cwd=skill 仓库时守卫拒跑，**照抄文档的模型（低/高级皆然）会话第一条自检命令即失败**。统一改为 `python <SKILL_DIR>/scripts/<名>.py`（`<SKILL_DIR>` = 含 `SKILL.md` 的 skill 安装根绝对路径），在 SKILL.md §4 与 `嘉立创EDA指令索引` 使用纪律第 5 条定义为唯一正本；编辑期工具 `check-links.py` 仍按相对路径（在 skill 仓库跑）。实测：以工作区为 cwd、绝对路径调 `link-probe.py` 正常产出 `./tmp/init/link-probe.json`。
+- **修机器门禁崩溃（健壮性）**：`link-probe / sch-verify / pcb-gate / tool-probe / tool-probe-simulator / visual-qa` 六个脚本的 `subprocess.run(..., text=True)` 未指定编码，在中文 Windows 上按 cp936 解码 `easyeda` 的 UTF-8 中文输出（`✓ 版本一致性…`）抛 `UnicodeDecodeError`，致 **健康机器被误判 `blocked`、工作流在第 1 步即死锁**。六处一律补 `encoding="utf-8", errors="replace"`；`easyeda health` 实测 `versionGate.verdict: ok` → link-probe 由 exit 3 转 exit 0。
+- **删除残留禁用指令**：`AGENT-PROMPT.md` 与 `agents/*.yaml` 的 one-liner、`lib/connection-setup.md` §1.2 仍把 `easyeda update --check --exit-code` 写成「会话第一条命令/版本门禁」，与约束 13 直接冲突（模型照抄即 L3 违规）。全部改为本机 `health` 的 `versionGate` 自检；`运行环境不可变.md` 与 `门禁检查.md` 补 `link-probe` 实跑 `easyeda version`+`easyeda health`（脚本据此新增 version 调用并落 `cli_version`）。
+- **指令索引速查表标注禁用项**：`会话与文档.md` 给 `skill status/sync`、裸 `daemon start`、`--skip-version-check` 补「本 skill 禁用 / 必带 `--auto-update-skill=false`」标记（与既有 `update --check` 禁用标注对齐）；`端口探测与插件确认.md` 排查分支的裸 `daemon start` 补强制参数；`桥接联通性测试.md` 指向 `lib/environment-setup.md` 处标注「维护者历史存档、Agent 禁照做」。本机 `easyeda daemon start --help`/`skill --help` 实证约束 13 三条禁令为真（`--auto-update-skill` 默认 on、`skill status/sync` 比对 latest）。
+- **修门禁自锁（产物路径矛盾）**：`生成最终方案`「最终方案不入 `./tmp/`」与第 3 步账目 `--art ./tmp/design/<工程>-final-plan.md`、`读取上下文` 读 `./tmp/design/` 互相打架 → `check-progress` 永判产物缺失。统一为方案落 `./tmp/design/<工程>-final-plan.md`。`处理用户需求` 补「构建初步需求落 `<工程>-requirement.md`」，使其第 2 步账目 `art` 有实体。
+- **补 6 处无界回环熔断**（沿用 ≤3 惯例）：处理用户需求澄清往返、原理图/PCB「绘制↔对照检查」整步回退、电气检查「检查↔处理」重查、系统框图/关系图/连接图「绘制↔确认」与连接图上游冲突往返、交付「确认↔修改」均加上限并满轮转 `处理设计问题`/用户拍板。
+- **补缺失失败分支**：`专业技术规范检查`「既不修改又不豁免」原为死胡同 → 判未通过交回 `检查方案及敲定` 按未通过处理；`原理图制作/检查…` 补 `blocked`（环境异常先回桥接修环境，不当设计 fail）与整步回退 3 轮上限，与 PCB 侧对称；`系统框图`「未落实」节点补处置；`清理` 删除失败/占用补「记残留路径、不谎报已清理」。
+- **纠错与低模型可用性**：`文件命名规范` 截图命名式 `step-<索引>-…` 系过时（实际 `sch-`/`pcb-` 前缀被 visual-qa 滚动清理与账目 `art` 依赖）→ 改正并修其依据来源；`net-download` 政策/约束正文臆造的 `--yes`/`--force` 参数实际不存在 → 改「无任何越过开关」；`GUI指令映射` BOM 行的 `bom-enrich.py` 改完整调用式；`原理图/检查…` 门禁复核改用一键 `sch-verify.py`（与 PCB `pcb-gate.py` 对称）；`用户PCB配置文件` 两处裸文件名/目录碎片路径补正确相对链接。
+- **门禁脚本增强**：`check-progress.py --steps` 支持 `1-5`/`1..5`/`1..5,6` 区间混写（消除 `--steps 1..N-1` 被当单步名的隐患），步骤门禁正本同步示例。
+- 校验：`check-links` → **188 个 md，悬空 0、孤立 0**；12 脚本 `py_compile` 全过；非 lib references 与 net-download-policy 子文件全部 ≤50 行；从 SKILL.md BFS 不可达仅 6 份（均为根文档/Sample 存档/agent 定义/lib，非运行时断链）；功能实测——link-probe exit 0（本机 versionGate ok→选定 cli-daemon）、`check-progress --steps 1-5` 通过且 `--steps 1..6` 正确报「缺步骤 6」、`net-download` 拒 `.eext`(exit 1)；`easyeda health/version/daemon start --help/skill --help` 本机 v1.5.1 实测。版本对齐 **0.12.17**（SKILL.md / agents yaml）。
+
 ### v0.12.16（2026-09-18）
 
 - **账本钩子补齐六步（修「门禁只管两步」）**：此前仅「初始化」与「交付」提到账本，中间四步（处理用户需求 / 检查方案及敲定 / 原理图制作 / PCB制作）文档内无写入点，弱模型走完整流程时会在中段漏记。现每步末尾各有一条 `progress-log.py --step N --name … --cmd … --art … --result …` 钩子，并写明「未记账 = 本步未完成，不得进入下一步」。

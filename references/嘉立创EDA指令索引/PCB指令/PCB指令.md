@@ -1,6 +1,6 @@
-# EasyEDAssistant Reference：嘉立创EDA指令索引 — PCB指令
+﻿# EasyEDAssistant Reference：嘉立创EDA指令索引 — PCB指令
 
-> `easyeda pcb` 域总索引（来源版本 v1.4.8 自描述）。主流程：**import-changes → 四档放置 → 板框确认 → P6 门 → 布线 → 铺铜 → P10 终检**。
+> `easyeda pcb` 域总索引（来源版本 v1.5.1 自描述）。主流程：**import-changes → 四档放置 → 板框确认 → P6 门 → 布线 → 铺铜 → P10 终检**。
 > 编辑遵守 RULE_EDIT.md：文本 ≤ 50 行、自然语言；条目见四个同名子文件。
 
 ## 阶段门（workflow/stage 状态机）

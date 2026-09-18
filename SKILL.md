@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.16"
+  version: "0.12.17"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -14,9 +14,10 @@ metadata:
 0. **逐步执行铁律（最高优先级）**：标准流程六步必须**按序逐步**执行，**禁止跳步、禁止合并步骤、禁止跳过子步骤**；
    每步完成判据未满足、且未在 `./tmp/init/progress.md` 留下「步骤名 + 时间 + 证据（命令 / 产物路径 / 结果）」账目前，
    **不得进入下一步**；**绘制期每落位一个器件必须当次产出截图产物，无新截图即该件未完成、禁止落位下一个**。
-   细则见 [`references/约束部分/步骤门禁/步骤门禁.md`](references/约束部分/步骤门禁/步骤门禁.md)；账本校验 `python scripts/check-progress.py`。
+   细则见 [`references/约束部分/步骤门禁/步骤门禁.md`](references/约束部分/步骤门禁/步骤门禁.md)；账本校验 `python <SKILL_DIR>/scripts/check-progress.py`。
 1. **识别用户请求**：判断用户意图与目标。
-2. **判断是否为第一次设计**：
+2. **运行环境不可变（与铁律同级）**：设计执行期 skill 本体只读——禁 `easyeda update`/`skill sync`/`skill status`，启动 daemon 必带 `easyeda daemon start --auto-update-skill=false`；禁下载或安装任何可执行体与 EDA 插件（含 `.eext`）；**不检查最新版本**，会话自检只跑 `python <SKILL_DIR>/scripts/link-probe.py`（本机比对，不查 latest）。细则见 [`references/约束部分/运行环境不可变/运行环境不可变.md`](references/约束部分/运行环境不可变/运行环境不可变.md)。
+3. **判断是否为第一次设计**：
    - **是** → 执行「电路板设计标准设计流程」（见 §2）。
    - **否** → 询问用户需要执行哪一个步骤；先读取 `./tmp/` 下的上下文文件，再执行对应步骤（见 §3）。
 
@@ -31,11 +32,11 @@ metadata:
 
 ## 4. 文档地图
 
-> 全量路由见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)（六步 + 子步 + 运行时指令速查）；约束见 §5；重复命令序列已封装为一键脚本——`scripts/link-probe.py`（桥接探测+门禁）、`scripts/sch-verify.py`（原理图验证）、`scripts/pcb-gate.py`（PCB 门禁）、`scripts/progress-log.py`（账本写入）；校验用 [`scripts/check-links.py`](scripts/check-links.py)（悬空必须为 0）与 [`scripts/check-progress.py`](scripts/check-progress.py)（步骤门禁账本）。
+> 全量路由见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)（六步 + 子步 + 运行时指令速查）；约束见 §5；重复命令序列已封装为一键脚本——`scripts/link-probe.py`（桥接探测+门禁）、`scripts/sch-verify.py`（原理图验证）、`scripts/pcb-gate.py`（PCB 门禁）、`scripts/progress-log.py`（账本写入）；**运行时一律以 `python <SKILL_DIR>/scripts/<名>.py` 调用（`<SKILL_DIR>` = 含本 `SKILL.md` 的 skill 安装根目录绝对路径），cwd 保持在用户确认的工作区根，使产物落工作区 `./tmp/`**；校验用 [`scripts/check-links.py`](scripts/check-links.py)（悬空必须为 0，仅编辑期跑）与 `python <SKILL_DIR>/scripts/check-progress.py`（步骤门禁账本）。
 
 ## 5. 约束部分
 
-> 详见 [`references/约束部分/约束部分.md`](references/约束部分/约束部分.md)：文件命名规范、垃圾处理、记忆链、逻辑链的存储、文件存储格式、处罚机制、激励机制、上下文存储压缩机制、文件与文件夹创建范围、创建操作流程、安全与合规、步骤门禁。
+> 详见 [`references/约束部分/约束部分.md`](references/约束部分/约束部分.md)：文件命名规范、垃圾处理、记忆链、逻辑链的存储、文件存储格式、处罚机制、激励机制、上下文存储压缩机制、文件与文件夹创建范围、创建操作流程、安全与合规、步骤门禁、运行环境不可变。
 > 文件存储格式总则：技术文件与数据手册可用 markdown 或 pdf，其余文档一律 markdown。
 > 适用范围划分：`FILE_CREATION_POLICY.md` 只管设计执行期的工作区文件与权限；编辑 skill 本体一律遵守 `RULE_EDIT.md`。
 > 裁决优先级：当前用户指令与代码/CLI 自描述 > 约束部分 > 各步骤文档 > `references/lib/`。

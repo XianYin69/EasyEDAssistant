@@ -24,8 +24,8 @@
 ```bash
 python scripts/check-links.py          # 全树 markdown 链接：悬空必须为 0（退出码 1 即失败）
 python scripts/check-progress.py       # 设计执行期步骤门禁：账本齐全、证据产物存在
+python scripts/link-probe.py           # 本机环境自检（不联网查 latest），不通过即阻断
 python -m py_compile scripts/*.py     # 脚本语法
-easyeda update --check --exit-code     # 联调前版本门禁（非 0 升级后新开会话）
 ```
 
 行为验证以真实工程走查：按 `references/电路设计标准设计流程/` 跑通相关步骤，门禁命令（`sch gate --strict`、`pcb drc` 等）结果为证。
@@ -43,7 +43,7 @@ easyeda update --check --exit-code     # 联调前版本门禁（非 0 升级后
 
 ## 6. 红线
 
-- 不得放宽硬门（版本门禁、`sch gate`、`pcb drc`、格式白/黑名单）来让检查「通过」。
+- 不得放宽硬门（`sch gate`、`pcb drc`、格式白/黑名单、运行环境不可变）来让检查「通过」。
 - 不得为「更快」跳步、合并步骤、省略进度账目，或跳过绘制期逐件截图（见 `references/约束部分/步骤门禁/步骤门禁.md`）。
 - 运行产物（截图/JSON/tmp）一律不入库；skill 目录不得被设计执行期写入。
 - 历史 `CHANGELOG.md` 条目不改写；数值判据冲突以 daemon 规则代码（Go）与 JLC 官网为准并回改文档。
