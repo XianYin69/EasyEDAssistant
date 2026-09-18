@@ -31,7 +31,7 @@ EasyEDAssistant/
 │   ├── check-links.py                         # 全树 markdown 链接扫描（悬空必须为 0；RULE_EDIT 第 6 步）
 │   ├── check-progress.py                      # 步骤门禁校验：进度账本完整性 + 证据产物存在性
 │   ├── progress-log.py                        # 进度账本写入（幂等追加 ./tmp/init/progress.md）
-│   ├── link-probe.py                          # 桥接探测序列：MCP/daemon 探活 + 本机环境自检 + 接口漂移 compat 探测 → 选定链路 JSON
+│   ├── link-probe.py                          # 桥接探测序列：MCP/daemon 探活 + 版本记录（无门禁）+ 接口漂移 compat 探测 → 选定链路 JSON
 │   ├── cli_compat.py                          # CLI 能力探测库（--help 自描述防上游接口漂移；被各一键脚本 import）
 │   ├── sch-verify.py                          # 原理图验证序列：gate/connectivity/list/sheet-geometry → 聚合 JSON
 │   ├── pcb-gate.py                            # PCB 门禁序列：drc/check/lint/score/report/net-classes → 聚合 JSON
@@ -41,12 +41,16 @@ EasyEDAssistant/
 │   ├── parts-select.py                        # 选型查询（离线库已随上游清理移除，实时目录走 --online）
 │   ├── bom-enrich.py                          # BOM 补 LCSC C 号（需自备 --parts 标准件库）
 │   ├── net-download.py                        # 网络资源下载器（白名单 + 逃逸防护）
-│   └── net-download-policy/                   # 网络资源下载策略（总索引 + 格式白名单/格式黑名单/URL与路径防护/用法与会话纪律）
+│   ├── net-download-policy/                   # 网络资源下载策略（总索引 + 格式白名单/格式黑名单/URL与路径防护/用法与会话纪律）
+│   └── connector-src/                         # connector 源码快照封装（编辑期维护：eext-src.py + connector-src.md 政策）
 └── Sample/
     ├── easyeda-agent-skill-behavior.md        # easyeda-agent skill 全部行为记录（含移植版章节）
-    └── easyeda-agent/                         # 上游样本存档（仅 README + LICENSE；
-        ├── README.md                          #   正文已迁为 references/lib/ 维护者文档与 嘉立创EDA指令索引）
-        └── LICENSE
+    ├── easyeda-agent/                         # 上游样本存档（仅 README + LICENSE；
+    │   ├── README.md                          #   正文已迁为 references/lib/ 维护者文档与 嘉立创EDA指令索引）
+    │   └── LICENSE
+    └── easyeda-agent-connector/               # eext 插件上游源码快照（tag v1.5.1 全 TS 源+清单，
+        ├── .snapshot.json                     #   出处/commit/sha256 校验清单；更新检查禁用后的离线真值）
+        └── extension.json · src/ · config/ · scripts/ · README.md · CHANGELOG.md · LICENSE
 ```
 
 ## 概述
@@ -98,8 +102,8 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 1. **连接**：JLCEDA MCP（VS Code 插件）与 `easyeda` CLI/daemon 互为**替代链路**
    （不是级联备用）：先测 MCP `7655`，可达再测 `60832`，双通优先 CLI/daemon，
    一旦选定全程使用，重试最多 3 轮后转用户；两链路语义一致（同一套 `eda.*` API 映射与验证纪律）。
-   本机环境自检 `easyeda health` 的 `versionGate` 非 ok 属终止性失败（由用户自行升级后新开会话），不占重试额度；**不查最新发行版**。
-2. **会话门禁**：首条命令 `python <SKILL_DIR>/scripts/link-probe.py`（`<SKILL_DIR>`=skill 安装根；本机自检+接口漂移探测，不联网查 latest）；组件升级由用户自行完成后新开会话。
+   本机组件版本（`easyeda health` 的 `versionGate`）**只记录进报告、不作门禁**（更新检查全面禁用，用户指令 2026-09-18）；行为异常对照 connector 源码快照离线排查（`scripts/connector-src/`）；**不查最新发行版**。
+2. **会话门禁**：首条命令 `python <SKILL_DIR>/scripts/link-probe.py`（`<SKILL_DIR>`=skill 安装根；只探链路 + compat 接口漂移探测，零联网、零版本判定）；组件升级由用户自行完成后新开会话。
 3. **需求澄清**（§11）：按任务类型走默认行为；只问"答案会改变做法"的选项；
    把模糊需求落成可验证的目标不变量（pin→net 黄金表、skew 预算、DRC 目标）。
    执行中遇强制/条件中断点（正本 `references/lib/discipline-checkpoints.md` §11.5）按 CHECKPOINT 协议暂停等用户确认。
@@ -126,7 +130,7 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 |---|---|---|
 | `agents/EasyEDAssistant.yaml` | Kilocode agent 定义（权威，interface: schema） | 本项目（EasyEDAssistant）维护 |
 | `references/*.md`、`*.json` | 正本/维护者参考文件（判据原始来源） | 本项目（EasyEDAssistant）维护 |
-| `scripts/`（根） | 运行时辅助脚本：门禁/账本类 check-links、check-progress、progress-log、link-probe、sch-verify、pcb-gate；视觉/探针类 visual-qa、tool-probe、tool-probe-simulator；选型与下载类 parts-select、bom-enrich、net-download | 本项目（EasyEDAssistant）维护（上游同名脚本已迁入并按挂接判据裁剪；重复命令序列已封装为一键脚本） |
+| `scripts/`（根） | 运行时辅助脚本：门禁/账本类 check-links、check-progress、progress-log、link-probe、sch-verify、pcb-gate；视觉/探针类 visual-qa、tool-probe、tool-probe-simulator；选型与下载类 parts-select、bom-enrich、net-download；`connector-src/`＝connector 源码快照封装（编辑期维护）、`net-download-policy/`＝下载政策 | 本项目（EasyEDAssistant）维护（上游同名脚本已迁入并按挂接判据裁剪；重复命令序列已封装为一键脚本） |
 | `scripts/visual-qa.py` | 视觉质量与布局完整性自动评估（API 截图 + 数据驱动交叉评估 + 动态截图生命周期管理，§8.3） | 本项目（EasyEDAssistant）维护 |
 | `scripts/tool-probe.py` / `tool-probe-simulator.py` | 嘉立创 EDA 内建工具与已安装插件探针（生成 `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`） | 本项目（EasyEDAssistant）维护 |
 | `scripts/net-download.py` + `scripts/net-download-policy/`（总索引 + 4 子文件） | 网络资源下载器（格式白/黑名单 + 路径逃逸防护 + `index.json` 审计）与配套策略文档 | 本项目（EasyEDAssistant）维护 |
@@ -223,14 +227,15 @@ EasyEDAssistant skill 内置的设计判据（详见 [`references/电气检查/�
 1. 启动 JLCEDA MCP VS Code 插件（监听 `8765` / `7655`）；MCP 不通时安装
    `easyeda` CLI/daemon 作为替代链路（选定后全程使用，不重复探测）。
 2. 在 Kilocode `kilo.json` 中启用 `jlceda` MCP server（配置见上）。
-3. 会话首条命令为本机自检（`scripts/link-probe.py` / `easyeda health`），不查询最新发行版
-   （EasyEDAssistant 移植版同样适用）；升级后新开会话。
+ 3. 会话首条命令为 `python <SKILL_DIR>/scripts/link-probe.py`（只探链路与 compat 接口漂移；
+    更新检查/版本判定已全面禁用）；组件升级由用户自行完成后新开会话。
 4. 按 [`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md) 选择设计子域判据（维护者全文见 `references/lib/design-rules.md`）；参数真值以
    `easyeda <command> --help` 与 `easyeda actions` 为准。
 
 ## 许可
 
 本仓库文档与 EasyEDAssistant skill 定义采用 MIT 许可，见 [LICENSE](./LICENSE)。
-上游 `Sample/easyeda-agent/` 样本版权归原项目
+上游 `Sample/easyeda-agent/` 样本与 `Sample/easyeda-agent-connector/` 插件源码快照版权归原项目
 （[zhoushoujianwork/easyeda-agent](https://github.com/zhoushoujianwork/easyeda-agent)，
-MIT，作者 zhoushoujianwork），见 `Sample/easyeda-agent/LICENSE`。
+MIT，作者 zhoushoujianwork），见各自 `LICENSE`；connector 快照的 tag/commit/文件哈希见
+`Sample/easyeda-agent-connector/.snapshot.json`。

@@ -1,25 +1,24 @@
 #!/usr/bin/env python
-"""link-probe.py — 桥接连通性探测序列封装：一条命令完成探链路 + 本机环境自检 + 健康检查。
+"""link-probe.py — 桥接连通性探测序列封装：一条命令完成探链路 + 本机版本记录 + 兼容性探测。
 
 替代 references/桥接联通性测试/ 里「手敲 TCP 探测 → 环境自检 → health」的多步交互，
 选定规则与正本 references/lib/connection-setup.md §1.1 一致：
 先探 MCP 7655；可达仍继续探 60832；双通优先 CLI/daemon；一条通即全程使用。
 
-**只比对本机、不联网查最新发行版**：环境判据取 `easyeda health` 输出的 `versionGate.verdict`
-（CLI/daemon 同版、connector 共享 major.minor 即 ok）。本脚本**不调用** `easyeda update`、
-`easyeda skill status/sync`——那类命令会比对 GitHub latest 并可能改写已安装 skill 目录，
-违反 references/约束部分/运行环境不可变/。需要启动 daemon 时须用
-`easyeda daemon start --auto-update-skill=false`。
+**更新/版本检查已全面禁用（用户指令 2026-09-18）**：
+- 不联网比对最新发行版（禁 `easyeda update`/`skill status/sync`，见 约束/运行环境不可变）；
+- 本机 versionGate 也**降级为纯记录**，不再作为门禁（非 ok 只提示不阻断）；版本行为差异排查
+  走本地源码快照 `scripts/connector-src/eext-src.py`（离线）+ 下方 compat 探测。
+compat 兼容性探测（本机 `--help` 自描述，零网络）保留——它检测「接口漂移」，非「检查更新」。
+启动 daemon 仍必须 `easyeda daemon start --auto-update-skill=false`（那是写保护，不是检查）。
 
 用法：
   python <SKILL_DIR>/scripts/link-probe.py [--mcp-port 7655] [--bridge-port 8765]
                                [--daemon-ports 60832-60841] [--project <工程>]
-                               [--out ./tmp/init/link-probe.json] [--skip-version-gate]
+                               [--out ./tmp/init/link-probe.json]
 
-退出码：0 = 已选定链路且本机 versionGate 为 ok；
-3 = 本机版本不一致 / 未取到 versionGate（终止性，转用户处理）或两条链路都不通。
-另含 **compat 兼容性探测**（REQUIRED 基线经 cli_compat 向 `--help` 提问）：上游接口漂移在
-会话开始即告警（WARN，不改退出码——一键脚本已自适应），missing 清单落 JSON 供报告引用。
+退出码：0 = 已选定链路（版本状态只记录）；3 = 两条链路都不通（终止/进排查环）。
+compat.missing_* 非空 → WARN（脚本层已自适应降级，不改退出码），须在报告中如实标注。
 """
 from __future__ import annotations
 
@@ -116,7 +115,6 @@ def main() -> int:
     ap.add_argument("--bridge-port", type=int, default=8765)
     ap.add_argument("--daemon-ports", default="60832-60841")
     ap.add_argument("--project", help="健康检查带工程名（可选）")
-    ap.add_argument("--skip-version-gate", action="store_true")
     ap.add_argument("--out")
     args = ap.parse_args()
 
@@ -130,7 +128,9 @@ def main() -> int:
     # 绝不跑 `update --check`/`skill status`（那会联网比对最新发行版，见约束/运行环境不可变）。
     version = run(["easyeda", "version"])
     health = run(["easyeda", "health", *(["--project", args.project] if args.project else [])])
-    version_gate = {"source": "health.versionGate", "network": "none", "cli_version": (version.get("text") or "").strip() or None}
+    version_gate = {"source": "health.versionGate", "network": "none", "judged": False,
+                    "policy": "更新/版本门禁已全面禁用（用户指令 2026-09-18），此段仅记录",
+                    "cli_version": (version.get("text") or "").strip() or None}
     gate_verdict = None
     parsed = health.get("json")
     if isinstance(parsed, dict) and isinstance(parsed.get("versionGate"), dict):
@@ -194,12 +194,9 @@ def main() -> int:
     if link is None:
         print("[link-probe] 两条链路都不通 → 进入排查环（回桥接联通性测试总索引），不得落笔", file=sys.stderr)
         return 3
-    if not args.skip_version_gate:
-        if gate_verdict == "ok":
-            return 0
-        print("[link-probe] 本机版本不一致或未取到 versionGate（终止性）→ 报告用户自行升级并新开会话；"
-              "禁止用 easyeda update / skill status 比对最新发行版", file=sys.stderr)
-        return 3
+    if gate_verdict != "ok":
+        print("[link-probe] 提示：本机 versionGate 非 ok——按用户指令（2026-09-18）**版本对齐/更新检查已全面禁用**，"
+              "仅记录不阻断；接口差异由 compat 探测与源码快照（scripts/connector-src/）解释", file=sys.stderr)
     return 0
 
 
