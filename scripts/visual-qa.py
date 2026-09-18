@@ -19,8 +19,8 @@ visual-qa.py — EasyEDAssistant 视觉质量与布局完整性自动评估
   3 = 有 blocking（短路/重叠/出框/间距硬违规/截图 stale 且数据也不全）
 
 用法：
-  python scripts/visual-qa.py --project <name> [--doc <原理图页>] [--pcb-doc <PCB页>]
-      [--artifacts-dir ./tmp/snapshots]   # 工作区相对路径，禁止逃逸 cwd
+  python <SKILL_DIR>/scripts/visual-qa.py --project <name> [--doc <原理图页>] [--pcb-doc <PCB页>]
+      [--artifacts-dir ./tmp/snapshots]   # 工作区相对路径，禁止逃逸 cwd；<SKILL_DIR>=skill 安装根
       [--schematic | --pcb | --both]      # 默认 --both
       [--strict]                          # WARN 也判阻塞（退出码 3）
       [--no-snapshot]                     # 跳过截图采集，只用已有数据打分
@@ -28,14 +28,20 @@ visual-qa.py — EasyEDAssistant 视觉质量与布局完整性自动评估
       [--summary]                         # 仅人读摘要（不打印 JSON）
       [--out <path>]                      # JSON 报告另存（强制工作区内）
 
+CLI 真值对齐 easyeda-agent **v1.5.1**（本机 --help 实测）：
+  - `sch list`/`sch connectivity` 无 `--json` 标志（原生输出即 JSON，list 为 {ok,result} 信封）；
+  - `sch export-image` 默认 SVG，须显式 `--format png --out <path>` 才产 PNG（逐件硬门产物）；
+  - 器件 bbox 形如 {minX,minY,maxX,maxY}；`sheet-geometry` 含 hard keepouts（标题栏等禁区）；
+  - `pcb components.list` 已并入 `pcb list --include-bbox --include-pads`。
+
 截图与后台/前台行为：
-  - 原理图走 `sch export-image`（文档渲染，真后台执行，无需 stale 检测）；
+  - 原理图走 `sch export-image --format png --out`（文档渲染，真后台执行，无需 stale 检测）；
   - PCB 走 `pcb snapshot`（视口渲染）；检测到 stale（canvas-freeze）时经 `doc switch`
     自动切前台重试，最多 2 次；
   - 全程仅经 easyeda CLI/daemon API（view fit / doc switch）操作编辑器视口，
     **不发送任何 OS 级鼠标/键盘事件**，不劫持用户指针；
-  - 只认本次调用后新产生的 PNG（mtime 新鲜度门槛），不再静默复用旧图；
-  - 原理图器件 bbox 与 `sch sheet-geometry` 图纸边界核验：画出图纸外 = 阻断（exit 3）。
+  - 原理图只认本次 `--out` 精确路径的产物；PCB 只认调用后新产生的 PNG（mtime 门槛）；
+  - 原理图器件 bbox 与 `sch sheet-geometry` 核验：画出图纸边界、或压入 hard keepout（标题栏）= 阻断（exit 3）。
 """
 from __future__ import annotations
 
@@ -230,18 +236,18 @@ def capture_sch_image(project: str, doc: str, artifacts_dir: Path) -> dict:
     """
     采原理图官方导图（文档渲染，不依赖视口刷新；见 references/lib/verification-delivery.md §8.3）。
     sch export-image 不需要 previous-sha256（文档渲染），支持后台执行。
-    只认本次调用后新产生的 PNG；无新产物即报错，不再静默复用旧图。
+    **v1.5.x：export-image 默认导出 SVG，必须显式 `--format png --out <path>`**，
+    否则不产生 PNG、逐件截图硬门无产物。只认本次 --out 路径的文件；无产物即报错。
     """
     out: dict = {"path": None, "sha256": None, "error": None}
-    start = time.time() - 1.0
-    args = ["sch", "export-image", "--project", project, "--doc", doc]
+    target = artifacts_dir / f"_export-{time.strftime('%Y%m%d-%H%M%S')}-{time.time_ns() % 100000:05d}.png"
+    args = ["sch", "export-image", "--project", project, "--page", doc,
+            "--format", "png", "--out", str(target)]
     _cli(args, capture=False, timeout=60)
-    time.sleep(1.0)
-    img = _latest_new_png(artifacts_dir, start)
-    if img is None:
-        out["error"] = "no export-image artifact produced (见上方 [cli] 错误行)"
+    if not target.exists():
+        out["error"] = "export-image 未产出 PNG（--format png --out，见上方 [cli] 错误行）"
         return out
-    out["path"] = str(_stamp_and_prune(artifacts_dir, img, "sch"))
+    out["path"] = str(_stamp_and_prune(artifacts_dir, target, "sch"))
     out["sha256"] = _sha256_file(Path(out["path"]))
     return out
 
@@ -274,8 +280,8 @@ def collect_pcb_data(project: str) -> dict:
 
     comps = _cli_json(
         [
-            "pcb", "components.list", "--project", project,
-            "--include-bbox", "--include-pads", "--json",
+            "pcb", "list", "--project", project,
+            "--include-bbox", "--include-pads",
         ],
         timeout=60,
     )
@@ -286,20 +292,25 @@ def collect_pcb_data(project: str) -> dict:
 
 
 def collect_sch_data(project: str, doc: str) -> dict:
-    """收集原理图数据驱动侧（list / connectivity / sheet-geometry 用于对账与越界核验）。"""
+    """收集原理图数据驱动侧（list / connectivity / sheet-geometry 用于对账与越界核验）。
+
+    v1.5.x：`sch list` 与 `sch connectivity` **无 `--json` 标志**（传了即 unknown flag），
+    其原生输出本就是 JSON（list 为 {id,ok,result} 信封、connectivity 为裸 IR），直接解析原始输出；
+    `sch sheet-geometry --json` 仍受支持。
+    """
     data = {"list": None, "connectivity": None, "sheet_geometry": None}
     lst = _cli_json(
         [
-            "sch", "list", "--project", project, "--doc", doc,
+            "sch", "list", "--project", project, "--page", doc,
             "--include-device-identity", "--include-pins",
-            "--include-bbox", "--include-wires", "--json",
+            "--include-bbox", "--include-wires",
         ],
         timeout=60,
     )
     if isinstance(lst, (dict, list)):
         data["list"] = lst
     conn = _cli_json(
-        ["sch", "connectivity", "--project", project, "--doc", doc, "--json"],
+        ["sch", "connectivity", "--project", project, "--page", doc],
         timeout=60,
     )
     if isinstance(conn, (dict, list)):
@@ -461,22 +472,56 @@ def _rect_to_bounds(x, y, w, h):
     return None
 
 
+def _unwrap_env(d):
+    """v1.5.x 读命令输出为 {id,type,ok,result} 信封；有 result 一律剥一层，裸输出原样返回。"""
+    if isinstance(d, dict) and ("result" in d) and ("ok" in d or "type" in d):
+        return d["result"]
+    return d
+
+
 def _extract_sheet_bounds(geom):
     """从 sheet-geometry JSON 尽力提取可绘制边界 (x0,y0,x1,y1)（兼容多种键形，单位 raw）。"""
     if not isinstance(geom, dict):
         return None
+    geom = _unwrap_env(geom)
+    if not isinstance(geom, dict):
+        return None
     candidates = [geom]
-    for key in ("drawArea", "sheetBorder", "border", "bounds", "area", "geometry"):
+    for key in ("sheet", "drawArea", "sheetBorder", "border", "bounds", "area", "geometry"):
         if isinstance(geom.get(key), dict):
             candidates.append(geom[key])
+    for b in list(candidates):
+        if isinstance(b.get("bbox"), dict):
+            candidates.append(b["bbox"])  # v1.5.1：result.sheet.bbox.{minX,minY,maxX,maxY}
     for b in candidates:
         r = _rect_to_bounds(b.get("x"), b.get("y"), b.get("width"), b.get("height"))
         if r:
             return r
+        l, rr, bo, t = b.get("minX"), b.get("maxX"), b.get("minY"), b.get("maxY")
+        if all(_num(v) for v in (l, rr, bo, t)):
+            return (float(l), float(bo), float(rr), float(t))
         l, rr, t, bo = b.get("left"), b.get("right"), b.get("top"), b.get("bottom")
         if all(_num(v) for v in (l, rr, t, bo)):
             return (float(l), float(bo), float(rr), float(t))
     return None
+
+
+def _extract_hard_keepouts(geom):
+    """sheet-geometry 的 hard keepout 禁区（如标题栏）：[(名, (x0,y0,x1,y1)), ...]，单位 raw。"""
+    if not isinstance(geom, dict):
+        return []
+    r = _unwrap_env(geom)
+    out = []
+    for k in (r.get("keepouts") or []) if isinstance(r, dict) else []:
+        if not (isinstance(k, dict) and k.get("hard")):
+            continue
+        bb = k.get("bbox")
+        if isinstance(bb, dict):
+            l, rr, bo, t = bb.get("minX"), bb.get("maxX"), bb.get("minY"), bb.get("maxY")
+            if all(_num(v) for v in (l, rr, bo, t)):
+                out.append((str(k.get("name") or "keepout"),
+                            (float(l), float(bo), float(rr), float(t))))
+    return out
 
 
 def _item_bounds(item: dict):
@@ -492,10 +537,14 @@ def _item_bounds(item: dict):
         x0, y0, x1, y1 = raw.get("x0"), raw.get("y0"), raw.get("x1"), raw.get("y1")
         if all(_num(v) for v in (x0, y0, x1, y1)):
             return (float(x0), float(y0), float(x1), float(y1))
+        l, r_, b_, t_ = raw.get("minX"), raw.get("maxX"), raw.get("minY"), raw.get("maxY")
+        if all(_num(v) for v in (l, r_, b_, t_)):
+            return (float(l), float(b_), float(r_), float(t_))
     return None
 
 
 def _iter_components(lst_data):
+    lst_data = _unwrap_env(lst_data)
     if isinstance(lst_data, dict):
         for key in ("components", "devices", "items", "list"):
             if isinstance(lst_data.get(key), list):
@@ -515,6 +564,7 @@ def evaluate_sch(image: dict, data: dict, strict: bool) -> dict:
         "data_available": {k: bool(v) for k, v in data.items()},
         "bounds_check": "skipped",
         "out_of_bounds": [],
+        "keepout_hits": [],
         "verdict": "pass",
         "issues": [],
     }
@@ -544,19 +594,36 @@ def evaluate_sch(image: dict, data: dict, strict: bool) -> dict:
             result["verdict"] = "warn"
     else:
         result["bounds_check"] = "run"
+        keepouts = _extract_hard_keepouts(data.get("sheet_geometry"))
+        result["hard_keepouts"] = [{"name": n, "bbox": list(b)} for n, b in keepouts]
         for item in comps:
+            if str(item.get("componentType") or "").lower() in ("sheet", "board", "frame"):
+                continue  # 图框/板框基元按定义覆盖全幅，不参与越界/禁区判定
             bb = _item_bounds(item)
             if not bb:
                 continue
+            ref = None
             if bb[0] < bounds[0] or bb[1] < bounds[1] or bb[2] > bounds[2] or bb[3] > bounds[3]:
                 ref = item.get("ref") or item.get("designator") or item.get("name") or "?"
                 result["out_of_bounds"].append({"ref": ref, "bbox": list(bb)})
+            for kname, kb in keepouts:
+                if bb[0] < kb[2] and bb[2] > kb[0] and bb[1] < kb[3] and bb[3] > kb[1]:
+                    ref = ref or item.get("ref") or item.get("designator") or item.get("name") or "?"
+                    result["keepout_hits"].append(
+                        {"ref": ref, "keepout": kname, "bbox": list(bb)})
         if result["out_of_bounds"]:
             result["verdict"] = "fail"
             refs = ", ".join(str(o["ref"]) for o in result["out_of_bounds"][:20])
             result["issues"].append(
                 {"level": "blocking", "area": "out_of_bounds",
                  "msg": f"{len(result['out_of_bounds'])} 个器件画出图纸边界: {refs}"}
+            )
+        if result["keepout_hits"]:
+            result["verdict"] = "fail"
+            hits = ", ".join(f"{o['ref']}∈{o['keepout']}" for o in result["keepout_hits"][:20])
+            result["issues"].append(
+                {"level": "blocking", "area": "keepout",
+                 "msg": f"{len(result['keepout_hits'])} 个器件压入 hard keepout 禁区（如标题栏）: {hits}"}
             )
     for k, v in data.items():
         if not v and k != "sheet_geometry":

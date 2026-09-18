@@ -5,7 +5,7 @@
 技术手册及方案 / 校验与对账 等）。
 
 用法：
-  python scripts/sch-verify.py --project <工程> [--doc <原理图页>]
+  python <SKILL_DIR>/scripts/sch-verify.py --project <工程> [--doc <原理图页>]
                                [--out ./tmp/sch/verify-<UTC>.json]
 
 子命令（参数真值以 easyeda sch <命令> --help 为准）：

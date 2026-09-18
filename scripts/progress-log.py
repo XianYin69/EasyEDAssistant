@@ -4,7 +4,7 @@
 正本格式与规则见 references/约束部分/步骤门禁/步骤门禁.md；校验用 scripts/check-progress.py。
 
 用法：
-  python scripts/progress-log.py --step <步骤号> --name <步骤名> --cmd <证据命令>
+  python <SKILL_DIR>/scripts/progress-log.py --step <步骤号> --name <步骤名> --cmd <证据命令>
                                  --art <产物路径[,多个]> --result <pass|fail|blocked>
                                  [--ledger ./tmp/init/progress.md] [--t <UTC ISO>]
 
@@ -37,7 +37,7 @@ def guard_not_skill_repo() -> None:
 
 RESULTS = ("pass", "fail", "blocked")
 HEADER = ("# 步骤进度账本\n\n"
-          "> 由 scripts/progress-log.py 维护；校验：python scripts/check-progress.py\n"
+          "> 由 scripts/progress-log.py 维护；校验：python <SKILL_DIR>/scripts/check-progress.py\n"
           "> 格式：- [x] <步骤号> <名> | t: <UTC ISO> | cmd: <命令> | art: <产物> | result: <pass|fail|blocked>\n\n")
 
 

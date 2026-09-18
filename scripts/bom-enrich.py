@@ -9,7 +9,7 @@ is not directly orderable. We DO know the real C-numbers — they're in
 joins them in: for every BOM row whose Manufacturer Part matches a standard part,
 it rewrites "Supplier Part" to the C-number (and fills an empty Value).
 
-    python scripts/bom-enrich.py <bom.tsv/csv> [--out enriched.tsv] [--parts standard-parts.json]
+    python <SKILL_DIR>/scripts/bom-enrich.py <bom.tsv/csv> [--out enriched.tsv] [--parts standard-parts.json]
 
 Reads the EasyEDA BOM (tab-separated, UTF-16/UTF-8), writes UTF-8. Reports the
 match rate and any unmatched MPNs (candidates to add to standard-parts.json).
