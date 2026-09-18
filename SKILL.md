@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.21"
+  version: "0.12.22"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -16,7 +16,7 @@ metadata:
    **不得进入下一步**；**绘制期每落位一个器件必须当次产出截图产物，无新截图即该件未完成、禁止落位下一个**。
    细则见 [`references/约束部分/步骤门禁/步骤门禁.md`](references/约束部分/步骤门禁/步骤门禁.md)；账本校验 `python <SKILL_DIR>/scripts/check-progress.py`。
 1. **识别用户请求**：判断用户意图与目标。
-2. **运行环境不可变（与铁律同级）**：设计执行期 skill 本体只读——禁 `easyeda update`/`skill sync`/`skill status`，启动 daemon 必带 `easyeda daemon start --auto-update-skill=false`；禁下载或安装任何可执行体与 EDA 插件（含 `.eext`）；**所有检查更新/版本对齐步骤已禁用**（用户指令 2026-09-18：既不联网查 latest，本机 versionGate 也只记录不判定），会话自检只跑 `python <SKILL_DIR>/scripts/link-probe.py`（链路探活 + compat 接口漂移探测，零联网；漂移只 WARN 并如实报告，脚本按 cli_compat 自适应，接口行为差异对照 connector 源码快照 `python <SKILL_DIR>/scripts/connector-src/eext-src.py report` 离线排查）。细则见 [`references/约束部分/运行环境不可变/运行环境不可变.md`](references/约束部分/运行环境不可变/运行环境不可变.md)。
+2. **运行环境不可变（与铁律同级）**：设计执行期 skill 本体只读——禁 `easyeda update`/`skill sync`/`skill status`，启动 daemon 必带 `easyeda daemon start --auto-update-skill=false`；禁下载或安装任何可执行体与 EDA 插件（含 `.eext`）；**所有检查更新/版本对齐步骤已禁用**（用户指令 2026-09-18：既不联网查 latest，本机 versionGate 也只记录不判定；**connector 版本钉定**＝只基于快照版本开发，发现新版删除回退钉定包、禁一切自动更新含市场原地更新，link-probe `pin.mismatch` 告警时报告并指引用户经 `scripts/connector-src/eext-src.py eext` 维护窗口回退，Agent 不代卸/代装），会话自检只跑 `python <SKILL_DIR>/scripts/link-probe.py`（链路探活 + compat 接口漂移探测，零联网；漂移只 WARN 并如实报告，脚本按 cli_compat 自适应，接口行为差异对照 connector 源码快照 `python <SKILL_DIR>/scripts/connector-src/eext-src.py report` 离线排查）。细则见 [`references/约束部分/运行环境不可变/运行环境不可变.md`](references/约束部分/运行环境不可变/运行环境不可变.md)。
 3. **判断是否为第一次设计**：
    - **是** → 执行「电路板设计标准设计流程」（见 §2）。
    - **否** → 询问用户需要执行哪一个步骤；先读取 `./tmp/` 下的上下文文件，再执行对应步骤（见 §3）。

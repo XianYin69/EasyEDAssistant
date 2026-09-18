@@ -189,14 +189,14 @@ def cmd_eext(tag: str | None, out_dir: str) -> int:
     dest = Path(out_dir) / f"easyeda-agent-connector-{tag}.eext"
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(raw)
-    print(json.dumps({"eext": str(dest.resolve()), "tag": tag, "sha256": got,
-                      "size_bytes": len(raw),
+    print(json.dumps({"eext": str(dest.resolve()), "tag": tag, "pinned": tag == meta.get("tag"),
+                      "sha256": got, "size_bytes": len(raw),
                       "import_steps": [
-                          "1) EasyEDA Pro 扩展管理器中卸载旧版 easyeda-agent-connector（平台按 UUID 去重）",
+                          "1) EasyEDA Pro 扩展管理器卸载现装 connector（**含更高版本——本项目版本钉定，发现新版只回退不升级**；平台按 UUID 去重）",
                           f"2) 导入本文件：{dest.resolve()}",
-                          "3) 完全退出并重开 EasyEDA（仅重导不保证已打开页面执行新代码）",
-                          "4) 新会话跑 link-probe 确认 daemon 连通（版本只记录，无门禁）"],
-                      "alt_channel": "立创插件市场 https://jlc-ext.com/item/zhoushoujian/easyeda-agent-connector （支持原地自动更新）"},
+                          "3) 完全退出并重开 EasyEDA（仅重导不保证已打开页面执行新代码），并关闭一切自动更新通道（市场原地更新/daemon --auto-update-skill）",
+                          "4) 新会话跑 link-probe 确认链路且 version_gate.pin.mismatch 为 false"],
+                      "alt_channel": "立创插件市场（支持原地自动更新）与版本钉定冲突：不推荐；若经市场安装须立即关闭自动更新并确认版本＝钉定"},
                      ensure_ascii=False, indent=2))
     print("[eext-src] 注意：Agent 不得在设计执行期代装（.eext 属运行期禁下载项，正本见 约束/运行环境不可变）；"
           "本产物是工具输出物，不要放回 skill 仓库。", file=sys.stderr)

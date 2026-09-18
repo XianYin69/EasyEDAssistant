@@ -26,6 +26,10 @@
    LICENSE/CHANGELOG 随附保证出处与许可合规。
 5. **与漂移防线的关系**：`cli_compat`（运行时能力探测）与 `link-probe` 的 `compat` 基线负责
    「检测漂移」；本快照负责「解释漂移」——上游改了行为时，改的是 connector 的哪段源码。
+6. **版本钉定（只回退，不升级）**：本项目只使用且只基于快照 `connector_version` 版本开发（用户指令
+   2026-09-18）。`eext` 缺省即取钉定 tag；一切自动更新通道（市场原地更新、daemon skill 自同步）必须关闭；
+   link-probe 检测到 `version_gate.pin.mismatch` → 用户维护窗口**卸载新版重导钉定包**，Agent 报告+指引、
+   不代卸/代装（约束正本见 运行环境不可变 §四）。
 
 ## 依据来源
 

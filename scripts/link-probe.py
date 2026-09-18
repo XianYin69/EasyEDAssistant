@@ -157,6 +157,29 @@ def main() -> int:
     version_gate["verdict"] = gate_verdict
     version_gate["rc"] = health.get("rc")
 
+    # connector 版本钉定（用户指令 2026-09-18：只基于快照 tag 版本开发；发现新版→删除回归此版）。
+    # 比对≠门禁：不改变退出码，只记录+告警+给出用户手工回退指引（Agent 无权代卸/代装插件）。
+    pin = {"pinned": None, "observed": {}, "mismatch": False, "action": None}
+    try:
+        snap = json.loads((Path(__file__).resolve().parent.parent
+                           / "Sample" / "easyeda-agent-connector" / ".snapshot.json"
+                           ).read_text(encoding="utf-8"))
+        pv = str(snap.get("connector_version") or snap.get("tag") or "").lower().lstrip("v")
+        pin["pinned"] = pv or None
+    except Exception:
+        pass
+    det = version_gate.get("detail") or {}
+    pin["observed"] = {k: str(det[k]).lower().lstrip("v") for k in ("cli", "daemon")
+                       if det.get(k)}
+    if pin["pinned"] and pin["observed"]:
+        bad = sorted(f"{k}={v}" for k, v in pin["observed"].items() if v != pin["pinned"])
+        if bad:
+            pin["mismatch"] = True
+            pin["action"] = (f"组件版本 {bad} 与钉定 {pin['pinned']} 不符——用户在维护窗口卸载非钉定版本"
+                             "（含被插件市场/侧载自动升级的 connector），用 `eext-src.py eext` 取钉定包重导入并"
+                             "关闭一切自动更新；Agent 只如实报告，不得代卸/代装。")
+    version_gate["pin"] = pin
+
     if mcp and daemon_hit is not None:
         link = "cli-daemon"          # 双通优先 CLI/daemon（connection-setup §1.1）
     elif mcp:
@@ -189,6 +212,9 @@ def main() -> int:
               f"缺失 flag {comp['missing_flags'] or '无'}——脚本经 cli_compat 已自适应降级，"
               "但须在报告中如实标注，并请用户在维护窗口按 RULE_EDIT 修复 skill（运行期禁自改）",
               file=sys.stderr)
+    pin_info = version_gate.get("pin") or {}
+    if pin_info.get("mismatch"):
+        print("[link-probe] WARN " + (pin_info.get("action") or "connector 版本与钉定不符"), file=sys.stderr)
     print(f"[link-probe] 结果 JSON：{out}")
 
     if link is None:
