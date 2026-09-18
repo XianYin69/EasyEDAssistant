@@ -18,6 +18,8 @@
 
 退出码：0 = 已选定链路且本机 versionGate 为 ok；
 3 = 本机版本不一致 / 未取到 versionGate（终止性，转用户处理）或两条链路都不通。
+另含 **compat 兼容性探测**（REQUIRED 基线经 cli_compat 向 `--help` 提问）：上游接口漂移在
+会话开始即告警（WARN，不改退出码——一键脚本已自适应），missing 清单落 JSON 供报告引用。
 """
 from __future__ import annotations
 
@@ -30,6 +32,8 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
+
+import cli_compat as cc  # 同目录共享模块：接口漂移运行时探测（见其 docstring）
 
 
 def guard_not_skill_repo() -> None:
@@ -83,6 +87,26 @@ def within_cwd(raw: str) -> Path:
     except ValueError:
         raise SystemExit(f"[link-probe] 拒绝写出工作区之外：{p}")
     return p
+
+
+# 会话入口兼容性基线：一键脚本/流程所依赖的「命令+flag」能力。上游 CLI 破坏任一能力时，
+# 此处非空 missing 即在**会话开始**告警（而不是步骤 4 中途死锁）；脚本已经 cli_compat
+# 自适应降级，故漂移不阻断门禁判定，只要求如实报告并转维护窗口按 RULE_EDIT 修复。
+REQUIRED_CMDS = [["sch", "export-image"], ["sch", "gate"], ["sch", "list"],
+                 ["sch", "connectivity"], ["sch", "sheet-geometry"],
+                 ["pcb", "snapshot"], ["pcb", "drc"], ["pcb", "check"]]
+REQUIRED_FLAGS = [(["sch", "export-image"], "--format"), (["sch", "gate"], "--json"),
+                  (["sch", "sheet-geometry"], "--json"), (["pcb", "drc"], "--json"),
+                  (["pcb", "check"], "--json")]
+
+
+def probe_compat() -> dict:
+    missing_cmds = [" ".join(c) for c in REQUIRED_CMDS if not cc.cmd_supported(c)]
+    missing_flags = [f"{' '.join(c)} {f}" for c, f in REQUIRED_FLAGS
+                     if not cc.flag_supported(c, f)]
+    return {"easyeda_reachable": bool(cc.help_text(["sch"])),
+            "missing_commands": missing_cmds, "missing_flags": missing_flags,
+            "drift": bool(missing_cmds or missing_flags)}
 
 
 def main() -> int:
@@ -153,11 +177,18 @@ def main() -> int:
                    "probed_range": args.daemon_ports,
                    "start_cmd": "easyeda daemon start --auto-update-skill=false"},
         "version_gate": version_gate, "health_rc": health.get("rc"),
+        "compat": probe_compat(),
     }
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
     print(f"[link-probe] MCP:{'通' if mcp else '不通'}  daemon:{'通:' + str(daemon_hit) if daemon_hit else '不通'}"
           f"  选定:{link or '无'}  本机版本 verdict:{gate_verdict or '未取到'}")
+    comp = summary["compat"]
+    if comp["drift"]:
+        print(f"[link-probe] WARN 接口漂移：缺失命令 {comp['missing_commands'] or '无'}、"
+              f"缺失 flag {comp['missing_flags'] or '无'}——脚本经 cli_compat 已自适应降级，"
+              "但须在报告中如实标注，并请用户在维护窗口按 RULE_EDIT 修复 skill（运行期禁自改）",
+              file=sys.stderr)
     print(f"[link-probe] 结果 JSON：{out}")
 
     if link is None:

@@ -39,6 +39,7 @@
 ## 刷新方法
 
 - `easyeda --help` 全量顶层域、`easyeda sch --help`、`easyeda pcb --help` 与本子文件条目数对照；缺项即回补。
+- **漂移机器探测**：`python <SKILL_DIR>/scripts/link-probe.py` 输出的 `compat.missing_commands/missing_flags` 非空即上游接口破坏，据此回补本索引与 `scripts/cli_compat.py` 基线（结果记 `CHANGELOG.md`）。
 - CLI/daemon/Connector 由用户自行升级后（本机 `health` 的 `versionGate: ok` 的新会话内）做一次核对，结果记 `CHANGELOG.md`。**比对与升级不由 Agent 在会话内触发**（禁 `easyeda update`、`easyeda skill status/sync`，见 [`../约束部分/运行环境不可变/运行环境不可变.md`](../约束部分/运行环境不可变/运行环境不可变.md)）。
 
 ## 依据来源

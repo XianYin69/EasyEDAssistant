@@ -31,7 +31,8 @@ EasyEDAssistant/
 │   ├── check-links.py                         # 全树 markdown 链接扫描（悬空必须为 0；RULE_EDIT 第 6 步）
 │   ├── check-progress.py                      # 步骤门禁校验：进度账本完整性 + 证据产物存在性
 │   ├── progress-log.py                        # 进度账本写入（幂等追加 ./tmp/init/progress.md）
-│   ├── link-probe.py                          # 桥接探测序列：MCP/daemon 探活 + 本机环境自检（不查最新版）→ 选定链路 JSON
+│   ├── link-probe.py                          # 桥接探测序列：MCP/daemon 探活 + 本机环境自检 + 接口漂移 compat 探测 → 选定链路 JSON
+│   ├── cli_compat.py                          # CLI 能力探测库（--help 自描述防上游接口漂移；被各一键脚本 import）
 │   ├── sch-verify.py                          # 原理图验证序列：gate/connectivity/list/sheet-geometry → 聚合 JSON
 │   ├── pcb-gate.py                            # PCB 门禁序列：drc/check/lint/score/report/net-classes → 聚合 JSON
 │   ├── visual-qa.py                           # 视觉质量与布局完整性自动评估（截图+数据双检，滚动保留 3 张）
@@ -98,13 +99,13 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
    （不是级联备用）：先测 MCP `7655`，可达再测 `60832`，双通优先 CLI/daemon，
    一旦选定全程使用，重试最多 3 轮后转用户；两链路语义一致（同一套 `eda.*` API 映射与验证纪律）。
    本机环境自检 `easyeda health` 的 `versionGate` 非 ok 属终止性失败（由用户自行升级后新开会话），不占重试额度；**不查最新发行版**。
-2. **会话门禁**：首条命令 `python scripts/link-probe.py`（本机自检，不联网查 latest）；组件升级由用户自行完成后新开会话。
+2. **会话门禁**：首条命令 `python <SKILL_DIR>/scripts/link-probe.py`（`<SKILL_DIR>`=skill 安装根；本机自检+接口漂移探测，不联网查 latest）；组件升级由用户自行完成后新开会话。
 3. **需求澄清**（§11）：按任务类型走默认行为；只问"答案会改变做法"的选项；
    把模糊需求落成可验证的目标不变量（pin→net 黄金表、skew 预算、DRC 目标）。
    执行中遇强制/条件中断点（正本 `references/lib/discipline-checkpoints.md` §11.5）按 CHECKPOINT 协议暂停等用户确认。
 4. **基线读取**：`sch connectivity` / `sch list` / `pcb list --include-bbox`
    + `sheet-geometry`；写前读被改器件/引脚/网络/几何。
-5. **工具探针**：**Agent 自动执行** `python scripts/tool-probe.py --project <name>`，生成
+5. **工具探针**：**Agent 自动执行** `python <SKILL_DIR>/scripts/tool-probe.py --project <name>`，生成
    `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`（CLI 不可达时 exit 2，清单标注未经运行时验证）；
    在 P1/P6/P8/P10 等关键步骤前查阅清单，按需触发条件中断点（`references/lib/discipline-checkpoints.md` §11.5）询问用户是否启用专用插件。
 6. **设计执行**：按子域判据（[`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md)，维护者全文见 `references/lib/design-rules.md`）与用户已拍板的决策点执行；原理图走 S0–S6

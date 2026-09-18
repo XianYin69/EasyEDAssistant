@@ -2,6 +2,16 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.19（2026-09-18）
+
+**防上游接口漂移的系统性机制（用户判据：「上游新版本发布后，针对老版本的 skill 完全没法用了」）**。v0.12.18 只修了 v1.5.1 当次断点；本轮把「CLI 自描述为唯一真值」的既有裁决落到脚本层，使 skill 对未来的 1.5.x/1.6.x 破坏性变更自适应降级、并在会话开始即报警：
+
+- **新增 `scripts/cli_compat.py`（共享探测库）**：`flag_supported`/`cmd_supported`/`pick_cmd`/`with_flag` 把「某 flag/子命令是否存在」从硬编码改为运行时向 `--help` 提问（进程内缓存；命令路径提取容忍 easyeda 前缀与 flag 值混排；探测失败一律按不支持、fail-closed 由调用方兜底）。12+11 断言对活 v1.5.1 全过（含 `sch list --json` 假、`pcb components` 假、`pcb snapshot` 真等）。
+- **五个脚本去硬编码**：`visual-qa`（export-image `--format/--out` 探测+无 `--out` 时退 mtime 找图；sheet-geometry/`--json` 探测；PCB 组件收集 `pcb list`→`pcb components` 候选 + `--json/--include-*` 逐个探测；layout-score/check/drc `--json` 探测）、`sch-verify`（gate `--json`、connectivity/list `--all-pages`、`--include-*`、check `--all` 全探测）、`pcb-gate`（五个 `--json`/`--strict` 探测；`--with-gate` 时 `--gate` 不受支持 → 显式 `blocked` 记录，不静默不伪过）、`tool-probe`（`health --json`/`api search --json` 探测——**该脚本在 v1.5.1 上本已误报 cli_unavailable，顺带修复**，实测恢复 rc=0 产出 manifest）。
+- **link-probe 增 compat 兼容性基线探测**：REQUIRED 命令/flag 表（sch export-image/gate/list/…、pcb snapshot/drc/check/…）会话开始跑一遍，`compat.missing_*` 非空 → **WARN + 落 `link-probe.json`，不改退出码**（脚本已自适应，漂移=降级非阻断），把「步骤 4 中途死锁」变成「第 1 步就知道并转维护窗口」——补上「预想每步出错、机制早发现」在环境层缺的一环。
+- **文档接链**：`门禁检查` 增第 4 项「兼容性探针」判据（漂移只报告不阻断、报告须如实列 missing、维护期外禁改 skill 本体）；`桥接联通性测试`/`门禁检查` 脚本输出字段补 `compat`；`指令索引` 刷新方法增「漂移机器探测」条；`SKILL.md` §1.2 自检描述补 compat；README 脚本清单 + 两处漏改的运行时 `python scripts/` 补 `<SKILL_DIR>`；**CONTRIBUTING 验证块修正**——link-probe/check-progress 有仓库 cwd 守卫，原文档教的仓库内跑法必被拒（维护文档自身不可执行的低级错误）。
+- 校验：13 脚本 py_compile 全过；`check-links` 188 md 悬空 0/孤立 0；非 lib references ≤50 行；端到端实测——link-probe rc=0 且 `compat:{drift:false}`（当前 v1.5.1 全基线在位）、`visual-qa --schematic` 对进行中工程 pass(exit 0)、`tool-probe` 恢复产出、`sch-verify` 四项 pass、仅 gate rc=1（U1 未连线，真设计态非接口错）。版本对齐 **0.12.19**。
+
 ### v0.12.18（2026-09-18）
 
 **修复 `visual-qa.py` 与 easyeda CLI v1.5.1 的接口漂移（用户实测：步骤 4 截图硬门命中中断点，重试 2 次同因失败、账目 4.1 blocked，写操作冻结）**。经本机 v1.5.1 `--help` 实测 + 上游 release notes 核对（v1.5.0 起 `sch snapshot` 移除、`sch export-image` 为官方导图且**默认 SVG**；v1.5.1 延续）：

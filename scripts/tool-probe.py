@@ -21,6 +21,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import cli_compat as cc  # 同目录共享模块：接口漂移运行时探测（见其 docstring）
+
 
 def guard_not_skill_repo() -> None:
     """cwd 疑似 skill 仓库本体时拒绝运行（FILE_CREATION_POLICY §1/§2.3：产物只落工作区）。"""
@@ -81,9 +83,10 @@ def main() -> int:
 
     sys.stderr.write("[tool-probe] 正在探针嘉立创 EDA 内建工具与已安装插件...\n")
 
-    # 尝试通过 easyeda CLI 获取系统/健康状态与扩展信息
-    health_raw = _cli(["health", "--project", args.project, "--json"])
-    plugins_raw = _cli(["api", "search", "plugin", "--json"])
+    # 尝试通过 easyeda CLI 获取系统/健康状态与扩展信息（flag 经 cli_compat 探测，不写死版本）
+    health_raw = _cli(cc.with_flag(["health", "--project", args.project], "--json"))
+    plugins_raw = (_cli(cc.with_flag(["api", "search", "plugin"], "--json"))
+                   if cc.cmd_supported(["api", "search"]) else "")
     probe_ok = bool(health_raw)
 
     # 内建工具清单为静态参考（官方能力描述），非运行时探针结果；

@@ -22,10 +22,11 @@
 本项目是文档驱动的 skill，正确性靠**结构检查 + 运行时门禁**保证（无 pytest 测试套件，勿凭 CI 猜测）：
 
 ```bash
-python scripts/check-links.py          # 全树 markdown 链接：悬空必须为 0（退出码 1 即失败）
-python scripts/check-progress.py       # 设计执行期步骤门禁：账本齐全、证据产物存在
-python scripts/link-probe.py           # 本机环境自检（不联网查 latest），不通过即阻断
-python -m py_compile scripts/*.py     # 脚本语法
+python scripts/check-links.py          # 全树 markdown 链接：悬空必须为 0（退出码 1 即失败；编辑期在仓库内跑）
+python -m py_compile scripts/*.py      # 脚本语法
+# 运行时门禁工具带 skill 仓库 cwd 守卫，须任选一个工作区目录、以 <SKILL_DIR> 绝对路径调用：
+python <SKILL_DIR>/scripts/link-probe.py     # 本机环境自检 + 接口漂移 compat 探测（不联网查 latest）
+python <SKILL_DIR>/scripts/check-progress.py # 设计执行期步骤门禁：账本齐全、证据产物存在
 ```
 
 行为验证以真实工程走查：按 `references/电路设计标准设计流程/` 跑通相关步骤，门禁命令（`sch gate --strict`、`pcb drc` 等）结果为证。

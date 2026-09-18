@@ -28,11 +28,11 @@ visual-qa.py — EasyEDAssistant 视觉质量与布局完整性自动评估
       [--summary]                         # 仅人读摘要（不打印 JSON）
       [--out <path>]                      # JSON 报告另存（强制工作区内）
 
-CLI 真值对齐 easyeda-agent **v1.5.1**（本机 --help 实测）：
-  - `sch list`/`sch connectivity` 无 `--json` 标志（原生输出即 JSON，list 为 {ok,result} 信封）；
-  - `sch export-image` 默认 SVG，须显式 `--format png --out <path>` 才产 PNG（逐件硬门产物）；
+CLI 接口**自适应**（cli_compat 运行时探测 `--help`，不写死版本；当前基线 easyeda-agent v1.5.1 实测）：
+  - `sch list`/`sch connectivity` 无 `--json` 标志（传了即 unknown flag），原生输出本就是 JSON（list 为 {id,ok,result} 信封）；
+  - `sch export-image` 默认 SVG，`--format png`/`--out` 受支持时显式使用，否则按能力降级；
   - 器件 bbox 形如 {minX,minY,maxX,maxY}；`sheet-geometry` 含 hard keepouts（标题栏等禁区）；
-  - `pcb components.list` 已并入 `pcb list --include-bbox --include-pads`。
+  - `pcb components.list` 在 v1.5.x 已并入 `pcb list`（探测候选自动选择）。
 
 截图与后台/前台行为：
   - 原理图走 `sch export-image --format png --out`（文档渲染，真后台执行，无需 stale 检测）；
@@ -53,6 +53,8 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
+import cli_compat as cc  # 同目录共享模块：接口漂移运行时探测（见其 docstring）
 
 # ───────────────────────── CLI 封装 ─────────────────────────
 
@@ -236,17 +238,28 @@ def capture_sch_image(project: str, doc: str, artifacts_dir: Path) -> dict:
     """
     采原理图官方导图（文档渲染，不依赖视口刷新；见 references/lib/verification-delivery.md §8.3）。
     sch export-image 不需要 previous-sha256（文档渲染），支持后台执行。
-    **v1.5.x：export-image 默认导出 SVG，必须显式 `--format png --out <path>`**，
-    否则不产生 PNG、逐件截图硬门无产物。只认本次 --out 路径的文件；无产物即报错。
+    **接口漂移自适应（cli_compat 探测，不写死版本）**：`--format png` 受支持则显式 PNG
+    （v1.5.x 默认导出 SVG，不显式即无 PNG、逐件硬门死锁）；`--out` 受支持则精确路径验收，
+    否则退回 mtime 新鲜度找图。
     """
     out: dict = {"path": None, "sha256": None, "error": None}
-    target = artifacts_dir / f"_export-{time.strftime('%Y%m%d-%H%M%S')}-{time.time_ns() % 100000:05d}.png"
-    args = ["sch", "export-image", "--project", project, "--page", doc,
-            "--format", "png", "--out", str(target)]
-    _cli(args, capture=False, timeout=60)
-    if not target.exists():
-        out["error"] = "export-image 未产出 PNG（--format png --out，见上方 [cli] 错误行）"
+    base = ["sch", "export-image", "--project", project, "--page", doc]
+    base = cc.with_flag(base, "--format", "png")
+    if cc.flag_supported(["sch", "export-image"], "--out"):
+        target = artifacts_dir / f"_export-{time.strftime('%Y%m%d-%H%M%S')}-{time.time_ns() % 100000:05d}.png"
+        _cli([*base, "--out", str(target)], capture=False, timeout=60)
+        img = target if target.exists() else None
+    else:
+        start = time.time() - 1.0
+        _cli(base, capture=False, timeout=60)
+        time.sleep(1.0)
+        img = _latest_new_png(artifacts_dir, start)
+    if img is None:
+        out["error"] = "export-image 未产出 PNG（查上方 [cli] 错误行；旧版 CLI 无 --format 时确认其默认格式）"
         return out
+    out["path"] = str(_stamp_and_prune(artifacts_dir, img, "sch"))
+    out["sha256"] = _sha256_file(Path(out["path"]))
+    return out
     out["path"] = str(_stamp_and_prune(artifacts_dir, target, "sch"))
     out["sha256"] = _sha256_file(Path(out["path"]))
     return out
@@ -259,32 +272,30 @@ def collect_pcb_data(project: str) -> dict:
     """收集 PCB 数据驱动侧（layout-score / check / drc / list）。"""
     data = {"layout_score": None, "check": None, "drc": None, "components": None}
 
-    score = _cli_json(
-        ["pcb", "layout-score", "--project", project, "--json"], timeout=60
-    )
+    score_cmd = cc.with_flag(["pcb", "layout-score", "--project", project], "--json")
+    score = _cli_json(score_cmd, timeout=60)
     if isinstance(score, dict):
         data["layout_score"] = score
 
-    check = _cli_json(
-        ["pcb", "check", "--project", project, "--json"], timeout=60
-    )
+    check_cmd = cc.with_flag(["pcb", "check", "--project", project], "--json")
+    check = _cli_json(check_cmd, timeout=60)
     if isinstance(check, dict):
         data["check"] = check
 
     # drc 前台窗口执行；超时装前景跑一次不循环重试（references/lib/verification-delivery.md §8.3）
-    drc = _cli_json(
-        ["pcb", "drc", "--project", project, "--json"], timeout=90
-    )
+    drc_cmd = cc.with_flag(["pcb", "drc", "--project", project], "--json")
+    drc = _cli_json(drc_cmd, timeout=90)
     if isinstance(drc, dict):
         data["drc"] = drc
 
-    comps = _cli_json(
-        [
-            "pcb", "list", "--project", project,
-            "--include-bbox", "--include-pads",
-        ],
-        timeout=60,
-    )
+    comps = None
+    comp_cmd = cc.pick_cmd([["pcb", "list"], ["pcb", "components"]])
+    if comp_cmd:
+        args = cc.with_flag([*comp_cmd, "--project", project], "--json")
+        for f in ("--include-bbox", "--include-pads"):
+            if cc.flag_supported(comp_cmd, f):
+                args.append(f)
+        comps = _cli_json(args, timeout=60)
     if isinstance(comps, (dict, list)):
         data["components"] = comps
 
@@ -315,10 +326,9 @@ def collect_sch_data(project: str, doc: str) -> dict:
     )
     if isinstance(conn, (dict, list)):
         data["connectivity"] = conn
-    geom = _cli_json(
-        ["sch", "sheet-geometry", "--project", project, "--doc", doc, "--json"],
-        timeout=60,
-    )
+    geom_args = cc.with_flag(
+        ["sch", "sheet-geometry", "--project", project, "--doc", doc], "--json")
+    geom = _cli_json(geom_args, timeout=60)
     if isinstance(geom, dict):
         data["sheet_geometry"] = geom
     return data
