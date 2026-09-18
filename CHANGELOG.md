@@ -2,6 +2,18 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.18（2026-09-18）
+
+**修复 `visual-qa.py` 与 easyeda CLI v1.5.1 的接口漂移（用户实测：步骤 4 截图硬门命中中断点，重试 2 次同因失败、账目 4.1 blocked，写操作冻结）**。经本机 v1.5.1 `--help` 实测 + 上游 release notes 核对（v1.5.0 起 `sch snapshot` 移除、`sch export-image` 为官方导图且**默认 SVG**；v1.5.1 延续）：
+
+- **逐件截图硬门恢复（阻断根因）**：`capture_sch_image` 原样调用 `sch export-image`（默认导出 SVG）→ 脚本只认 PNG → 永远「无新截图 = exit 3」。现显式 `--format png --out <精确路径>`，产物直接盖 `sch-` 前缀进滚动轨；页面定位改用官方 `--page` 参数（`--doc` 只钉写操作）。
+- **数据回读三项修复**：`sch list`/`sch connectivity` 在 v1.5.1 **无 `--json` 标志**（传了即 unknown flag、rc=1），其原生输出本就是 JSON——去标志、直接解析；`sch sheet-geometry --json` 仍支持（保留）。输出现为 `{id,ok,result}` 信封，新增 `_unwrap_env` 统一剥壳；器件/边界 bbox 新键形 `{minX,minY,maxX,maxY}` 纳入 `_item_bounds`/`_extract_sheet_bounds`（原三键形解析器对新输出全部空转 → 越界核验静默变 no-op，属「假通过」隐患，一并堵上）。
+- **禁区核验增强（顺带补的真检测项）**：解析 `sheet-geometry.keepouts[]` 的 hard 禁区（标题栏），器件压入 = blocking（exit 3）；图框/板框基元（`componentType=sheet/board/frame`，bbox 按定义覆盖全幅）不参与判定，排除假阳性。实测样例：U1 工程跑通 `pass (exit 0)`（修复前 exit 3 死门）。
+- **PCB 数据侧陈旧命令修复**：`collect_pcb_data` 原调 `pcb components.list ... --json`（v1.5.1 已并入 `pcb list`，且 `pcb list` 无 `--json`）→ 组件收集恒失败；改 `pcb list --include-bbox --include-pads` + 信封剥壳。`pcb layout-score/check/drc --json` 经实测仍存在，不动。
+- **脚本 docstring 调用式对齐 `<SKILL_DIR>` 约定**（12 处，v0.12.17 批量替换只覆盖了 .md）；`check-links.py`（编辑期工具）保持相对路径。
+- 文档同步：`原理图指令` 索引 export-image 行标注「默认 SVG，PNG 须 --format png --out」；`部分绘制与截图` 截图硬门条写明 PNG 导图 + hard keepout（标题栏）核验。
+- 校验：`check-links` 188 md 悬空 0/孤立 0；12 脚本 py_compile 全过；非 lib references ≤50 行；**端到端实测**——对进行中设计会话（指点杆/P1，U1 已落位）跑 `visual-qa --schematic` 得 `pass (exit 0)` 且滚动轨产出 `sch-*.png`。设计执行期无需豁免即可续跑步骤 4。版本对齐 **0.12.18**。
+
 ### v0.12.17（2026-09-18）
 
 本轮为「运行环境不可变」(约束 13) 的收尾 + 全维度审计整改，逐项带实证：

@@ -6,7 +6,7 @@ tool-probe-simulator.py — Simulate calling built-in tools/plugins in EasyEDA P
 并生成可用于技能文档的示例报告。
 
  用法：
-   python scripts/tool-probe-simulator.py [--project <name>] [--output-dir ./tmp]
+   python <SKILL_DIR>/scripts/tool-probe-simulator.py [--project <name>] [--output-dir ./tmp]
 
  输出内容：
    - ./tmp/tool-call-examples.json    # 结构化示例数据

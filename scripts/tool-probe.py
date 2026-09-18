@@ -10,7 +10,7 @@ tool-probe.py — 探针脚本：获取嘉立创 EDA 专业版内建工具与已
   4. 供 Agent 在特定设计步骤时查阅并按需调用
 
 用法：
-  python scripts/tool-probe.py [--project <name>] [--output-dir ./tmp]
+  python <SKILL_DIR>/scripts/tool-probe.py [--project <name>] [--output-dir ./tmp]
 """
 from __future__ import annotations
 

@@ -12,7 +12,7 @@
 `easyeda daemon start --auto-update-skill=false`。
 
 用法：
-  python scripts/link-probe.py [--mcp-port 7655] [--bridge-port 8765]
+  python <SKILL_DIR>/scripts/link-probe.py [--mcp-port 7655] [--bridge-port 8765]
                                [--daemon-ports 60832-60841] [--project <工程>]
                                [--out ./tmp/init/link-probe.json] [--skip-version-gate]
 

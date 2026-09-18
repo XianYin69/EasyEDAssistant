@@ -2,7 +2,7 @@
 """check-progress.py — 步骤门禁校验：进度账本完整性 + 证据产物存在性。
 
 用法：
-  python scripts/check-progress.py [--ledger ./tmp/init/progress.md] [--root .]
+  python <SKILL_DIR>/scripts/check-progress.py [--ledger ./tmp/init/progress.md] [--root .]
                                    [--steps 1,2,3,4,5,6] [--json] [--quiet]
 
   --steps 支持逗号列表与区间混写：`1,2,3` / `1-5` / `1..5` / `1..5,6` 等价，缺省 1-6。

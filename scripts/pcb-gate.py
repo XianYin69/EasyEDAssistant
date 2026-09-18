@@ -5,7 +5,7 @@
 规范技术手册及方案 / 交付报告 等），消除「每次手敲 6 条命令再人肉汇总」。
 
 用法：
-  python scripts/pcb-gate.py --project <工程> [--pcb-doc <PCB页>]
+  python <SKILL_DIR>/scripts/pcb-gate.py --project <工程> [--pcb-doc <PCB页>]
                              [--out ./tmp/pcb/gate-<UTC>.json] [--with-gate]
 
 子命令（参数真值以 easyeda pcb <命令> --help 为准）：

@@ -9,9 +9,9 @@ net-download.py — 网络资源下载器（配合 scripts/net-download-policy/n
   4. 记录元数据（URL/时间戳/HTTP 状态/字节数/SHA256）到 `./tmp/downloads/index.json`
 
 用法：
-  python scripts/net-download.py --url <URL> [--name <filename>] [--out-dir ./tmp/downloads]
-  python scripts/net-download.py --url-file list.txt          # 每行一个 URL
-  python scripts/net-download.py --url <URL> --dry-run        # 只判定格式与目标路径
+  python <SKILL_DIR>/scripts/net-download.py --url <URL> [--name <filename>] [--out-dir ./tmp/downloads]
+  python <SKILL_DIR>/scripts/net-download.py --url-file list.txt          # 每行一个 URL
+  python <SKILL_DIR>/scripts/net-download.py --url <URL> --dry-run        # 只判定格式与目标路径
 
 安全：
   - 拒绝 `file://`、`ftp://`、本地绝对路径、`..` 段与转义
