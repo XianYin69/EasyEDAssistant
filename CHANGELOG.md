@@ -2,6 +2,14 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.21（2026-09-18）
+
+**README 新增「安装扩展插件」条目 + 封装脚本增 `eext` 取包子命令（用户指令）**：
+
+- `scripts/connector-src/eext-src.py` 新增 `eext [--tag] [--out]`：默认取**与源码快照同 tag** 的官方发行资产 `easyeda-agent-connector.eext`，按 release `checksums.txt` 独立校验 sha256（不符即丢弃勿导入），成功后 JSON 输出四步导入指引（扩展管理器卸载同 UUID 旧项 → 导入 → 完全重启 EDA → 新会话 link-probe 验链路）+ 立创市场替代渠道；实测 v1.5.1 资产下载校验通过（`b92a963e…bbfc`，3,013,845 B），测试产物已清理未入库。维护窗口/用户手工语义写入 docstring 与 `connector-src.md` 纪律第 1 条（Agent 代下载/安装 `.eext` 仍属 L3）。
+- **README 新增「## 安装扩展插件（easyeda-agent-connector，用户手工动作）」**（连接方式小节后）：触发时机（60832 不通/connector 异常）、通道 1＝封装脚本取包+导入步骤、通道 2＝立创插件市场（原地自动更新、major.minor 同线即可），两条既有渠道语义与 `lib/environment-setup.md` 安装渠道正本对齐；目录树 connector-src 行同步能力清单。
+- 校验：14 脚本 py_compile 全过；`check-links` 悬空 0/孤立 0；connector-src.md ≤50 行；`eext-src verify` 快照清单不回归（39 文件）。版本对齐 **0.12.21**。
+
 ### v0.12.20（2026-09-18）
 
 **connector 源码快照入库 + 封装脚本 + 所有检查更新/版本门禁全面禁用（用户指令）**：

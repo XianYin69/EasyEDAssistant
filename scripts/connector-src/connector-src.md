@@ -13,8 +13,11 @@
 
 ## 使用纪律
 
-1. **编辑期专用**：`verify`/`report`/`apis` 纯本地零网络；`fetch` 会访问 GitHub 下载 tag 源，
-   属维护窗口人工动作，**设计执行期禁止运行本脚本**（与运行产物隔离，快照与工作区互不写）。
+1. **编辑期专用**：`verify`/`report`/`apis` 纯本地零网络；`fetch` 与 `eext` 会访问 GitHub（前者取
+   tag 源码、后者取官方 `easyeda-agent-connector.eext` 发行资产并按 `checksums.txt` 校验 sha256），
+   属维护窗口人工动作，**设计执行期禁止运行本脚本**；`.eext` 的**导入**始终由用户在 EDA
+   扩展管理器手工完成（卸载同 UUID 旧项 → 导入 → 完全重启 EDA），Agent 代下载/安装属 L3 违规
+   （运行环境不可变）。产物不落 skill 仓库。
 2. **快照只读**：`Sample/easyeda-agent-connector/` 内容由上游决定，本 skill 不得手改其源文件；
    更新只能经 `fetch` → 人工 diff 确认 → 同步 → 重生成 `.snapshot.json` → `verify` 全绿 → 记 `CHANGELOG.md`。
 3. **真值优先级不变**：运行时参数真值仍以本机 `easyeda <cmd> --help` / `easyeda actions` 为准；
