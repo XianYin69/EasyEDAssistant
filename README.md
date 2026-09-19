@@ -116,8 +116,10 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 6. **设计执行**：按子域判据（[`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md)，维护者全文见 `references/lib/design-rules.md`）与用户已拍板的决策点执行；原理图走 S0–S6
     （IR → Lib 几何 → compose → apply + 动态截图），PCB 走 P0–P10
     （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）；
-    **布线为向量-节点 + 网络标签-端口 + 干涉演算法**（`route-critical` → `route-short` 障碍感知 →
-    人工段 `route-check.py` 演算过后 `pcb track` 逐段落笔；上游迷宫自动布线已弃用禁调用）；
+    **走线/布线双侧同法（网络标签-端口 + 向量-节点 + 干涉演算 + 硬编码档位）**：PCB＝`route-critical` →
+    `route-short` 障碍感知 → 人工段 `route-check.py` 演算过后 `pcb track` 逐段落笔；原理图＝`block-apply`/`compose`
+    保护队列 → `autoconnect --spec`（确定性规划器）→ 剩余段逐向量推演、落笔即 `bridge-check`/`check` 复查；
+    **迷宫自动布线与盲画多点线均已弃用禁调用**（`pcb autoroute`/`export-dsn`/`import-autoroute`、sch 侧同理）；
     **丝印支持用户三类**：板型号 / 版权 / 功能指引（`references/PCB绘制/丝印标注/`）；
     关键步骤后截图（`./tmp/snapshots/`），SHA256 校验 stale，
     旧图自动清理。
