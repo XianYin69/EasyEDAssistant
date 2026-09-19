@@ -17,7 +17,7 @@
 2. **叠层与铜厚**：默认四层（Top 信号+局部铺铜 / Inner1 GND PLANE / Inner2 PWR / Bottom）；PLANE 生成顺序为「先信号层铺铜 → `pcb stackup set --plane` → `pcb pour-rebuild`」，顺序不可反。
 3. **线宽与间距**：按 net-class 分级取 live 规则（signal / power-branch / power-trunk / high-current），公制圆整；欠宽电源轨由检查门禁拦。
 4. **布局**：四档顺序（T1 安装孔 → T2 板边接口 → T3 主芯片 → T4 卫星件）；开关回路贴紧、热源散开、天线 keepout 全层禁铜。
-5. **布线**：走线 45°/90° 规整，差分等长、换层两侧地孔；稠密板走官方 autoroute 或交用户原生自动布线。
+5. **布线**：走线 45°/90° 规整，差分等长、换层两侧地孔；方法＝网络标签-端口 + 向量-节点 + 落笔前干涉演算（正本 [`../干涉布线/干涉布线.md`](../干涉布线/干涉布线.md)）；**上游迷宫自动布线已弃用禁调用**，长网人工向量分解、障碍死结摊牌。
 6. **铺铜与过孔**：netless pour 是死铜须清理；嵌入焊盘的 via 在 reload 后重新 `pcb via-bond`（平台会重置为 netless）。
 7. **丝印与 DFM**：位号/极标在器件本体外且装配后可见；测试点集中、pad ≥40 mil；`pcb check` 覆盖 DFM 审计。
 
