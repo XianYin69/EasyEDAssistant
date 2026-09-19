@@ -218,7 +218,11 @@ def main() -> int:
     print(f"[link-probe] 结果 JSON：{out}")
 
     if link is None:
-        print("[link-probe] 两条链路都不通 → 进入排查环（回桥接联通性测试总索引），不得落笔", file=sys.stderr)
+        msg = ("[link-probe] 两条链路都不通 → 进入排查环（回桥接联通性测试总索引），不得落笔\n"
+               "  → 确认 EasyEDA 主程序已打开；检查插件市场是否安装了 JLCEDA MCP 和 EasyEDA Agent 插件；\n"
+               "  → 如 daemon 未启动，执行：easyeda daemon start --auto-update-skill=false\n"
+               "  → 然后回到本步骤第 1 步重新发起探测。")
+        print(msg, file=sys.stderr)
         return 3
     if gate_verdict != "ok":
         print("[link-probe] 提示：本机 versionGate 非 ok——按用户指令（2026-09-18）**版本对齐/更新检查已全面禁用**，"
