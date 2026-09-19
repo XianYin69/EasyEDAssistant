@@ -35,6 +35,7 @@ EasyEDAssistant/
 │   ├── cli_compat.py                          # CLI 能力探测库（--help 自描述防上游接口漂移；被各一键脚本 import）
 │   ├── sch-verify.py                          # 原理图验证序列：gate/connectivity/list/sheet-geometry → 聚合 JSON
 │   ├── pcb-gate.py                            # PCB 门禁序列：drc/check/lint/score/report/net-classes → 聚合 JSON
+│   ├── route-check.py                         # 人工向量段落笔前干涉演算门（异网 track/via/pad/keepout/板边，档位源自硬编码；exit 0 才准落 track）
 │   ├── visual-qa.py                           # 视觉质量与布局完整性自动评估（截图+数据双检，滚动保留 3 张）
 │   ├── tool-probe.py                          # 内建工具与插件探针（生成 ./tmp/eda-tools-manifest.json）
 │   ├── tool-probe-simulator.py                # 工具调用示例文档生成器
@@ -113,10 +114,13 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
    `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`（CLI 不可达时 exit 2，清单标注未经运行时验证）；
    在 P1/P6/P8/P10 等关键步骤前查阅清单，按需触发条件中断点（`references/lib/discipline-checkpoints.md` §11.5）询问用户是否启用专用插件。
 6. **设计执行**：按子域判据（[`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md)，维护者全文见 `references/lib/design-rules.md`）与用户已拍板的决策点执行；原理图走 S0–S6
-   （IR → Lib 几何 → compose → apply + 动态截图），PCB 走 P0–P10
-   （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）；
-   关键步骤后截图（`./tmp/snapshots/`），SHA256 校验 stale，
-   旧图自动清理。
+    （IR → Lib 几何 → compose → apply + 动态截图），PCB 走 P0–P10
+    （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）；
+    **布线为向量-节点 + 网络标签-端口 + 干涉演算法**（`route-critical` → `route-short` 障碍感知 →
+    人工段 `route-check.py` 演算过后 `pcb track` 逐段落笔；上游迷宫自动布线已弃用禁调用）；
+    **丝印支持用户三类**：板型号 / 版权 / 功能指引（`references/PCB绘制/丝印标注/`）；
+    关键步骤后截图（`./tmp/snapshots/`），SHA256 校验 stale，
+    旧图自动清理。
 7. **验证与保存**：分层验证（§8），`blocked`/`fail` 区分，显式 `save`
    确认 `saved:true`。
 8. **收尾与交付**（见 `references/交付与清理/`）：功能定稿 → 清 blocking → `pcb refine` →

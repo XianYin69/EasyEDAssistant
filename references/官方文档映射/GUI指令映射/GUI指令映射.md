@@ -28,7 +28,7 @@
 | 放置 - 禁止区域 | `place-prohibited-region` | `pcb region create --rule no-pours`（天线全层 keepout） |
 | 布线 - 单路布线 | `route-single-routing` | `pcb.route-short`（启发式）/ 坐标 `pcb.line.create` |
 | 布线 - 差分对 | `route-differential-pair-routing` | `pcb diff-pair` 约束 + `pcb report` 量 skew |
-| 布线 - 自动布线 | `route-auto-routing` | `pcb export-dsn` → Freerouting 兜底（无 `eda.*` 自动布线 API） |
+| 布线 - 自动布线 | `route-auto-routing` | 【本项目已弃用】迷宫自动布线禁调用（`pcb autoroute` 三件套，见 [`../../PCB绘制/干涉布线/干涉布线.md`](../../PCB绘制/干涉布线/干涉布线.md)）；GUI 侧用户手动不受限 |
 | 设计 - 导入变更 | `design-import-changes-from-schematic` | `pcb import-changes`（报 before/after 计数差） |
 | 设计 - 检查 DRC | `design-check-drc` | `pcb drc --json` + `pcb check`（DFM 审计） |
 | 设计 - 网络类管理器 | `design-net-class-manager` | `pcb net-classes`（线宽阶梯，角色分档） |
