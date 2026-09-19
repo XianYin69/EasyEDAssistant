@@ -22,7 +22,7 @@
 
 | # | 决策项 | 提问要点 | 影响 |
 |---|---|---|---|
-| D1 | **板框尺寸与形状** | 长 × 宽（mm）、圆角半径、异形边？有机械图还是先粗布后收紧？ | P0 immovable 参考；`pcb outline-round` / `outline-fit` |
+| D1 | **板框尺寸与形状** | 长 × 宽（mm）、圆角半径、异形边？有机械图还是先粗布后收紧？ | P0 immovable 参考；`pcb outline-round` / 用户明确要求时可用 `outline-fit` |
 | D2 | **安装孔规格** | 数量（默认四角）、M2.5/M3/M4、孔心距板边（≥3 mm）、铜柱/沉头 | `pcb mount-holes` keep-out 半径 |
 | D3 | **叠层结构** | 2 层 / 4 层 / 6 层；每层用途（TOP/GND/PWR/BOT 或信号分区）；总厚度 | §4.7 PLANE 生成顺序；`pcb power-planes` |
 | D4 | **铜厚** | 1 oz（默认）/ 2 oz / 内外层分别？ | 电流线宽分档（§4.7 表） |

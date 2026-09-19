@@ -128,8 +128,7 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
     旧图自动清理。
 7. **验证与保存**：分层验证（§8），`blocked`/`fail` 区分，显式 `save`
    确认 `saved:true`。
-8. **收尾与交付**（见 `references/交付与清理/`）：功能定稿 → 清 blocking → `pcb refine` →
-   `pcb beautify` → 丝印整理 → 全量验证 → 出技术手册/功能手册与交付报告（用户确认）
+8. **收尾与交付**（见 `references/交付与清理/`）：功能定稿 → 清 blocking → 用户明确要求时可用 `pcb refine` → `pcb beautify` → 丝印整理 → 全量验证 → 出技术手册/功能手册与交付报告（用户确认）
    → 清理 `./tmp/`（先交付后清理，blocked/fail 如实列出）。
 9. **文档任务**（随交付与清理生成）：按需生成 LICENSE / README（内容只来自工程回读）。
 

@@ -2,6 +2,14 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.29（2026-09-19）
+
+**自动布局命令默认禁用＋用户手摆＝P0 immovable（修「排好又被重排、不按用户要求排列/划线」）**：
+
+- `SKILL.md` §2 新增「放置方法钉定」：Agent 禁止调用 `pcb auto-place/align/distribute/refine/outline-fit/silk-align/silk-set` 重排或收紧板框，仅用户点名要求时可用（先复述禁令并锁定已授权布局）；用户已排好＝P0 immovable、无授权不移动手摆件（SKILL.md 45 行，仍 ≤50）。
+- 知识库正面推荐改为「仅用户明确要求时可用」六处：`layout-aesthetics.md`（align/distribute、refine 收尾链）、`design-flow.md`（P5 silk-align、放置 auto-place）、`design-rules.md`（成行对齐、outline-fit）、`pcb-design-spec.md`（D1 outline-fit）、`丝印标注.md`（整板收口 silk-align）、`README.md`（收尾 refine）。
+- **校验**：`check-links` 197 md 悬空 0/孤立 0；所触文件 ≤50 行。版本对齐 **0.12.29**。
+
 ### v0.12.28（2026-09-19）
 
 **项目整体质量审计 + 运维排障指南落地（九维度审查：完整性/可达性/安全性/适用性/实用性/可维护性/健壮性/可拓展性 + 高低模型高速制图可用性）**：
