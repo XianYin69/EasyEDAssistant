@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.29"
+  version: "0.12.30"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -26,7 +26,7 @@ metadata:
 > 详见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)。
 > 步骤：初始化部分 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理（按 §1 铁律逐步执行，每步留证后方可推进）。
 > **走线/布线方法钉定（原理图与 PCB 同一套）**：弃用一切迷宫/盲画式自动走线（PCB `pcb autoroute`/`export-dsn`/`import-autoroute` 禁调用；原理图禁不经演算的盲画多点线），改用「网络标签-端口 + 向量-节点 + 干涉演算（PCB 落笔前 `route-check.py`；原理图画前推演+画后 `bridge-check`/`check` 即查）+ 硬编码档位」——正本 [`references/PCB绘制/干涉布线/干涉布线.md`](references/PCB绘制/干涉布线/干涉布线.md)、[`references/绘制原理图/干涉路径/干涉路径.md`](references/绘制原理图/干涉路径/干涉路径.md)；丝印支持用户板型号/版权/功能指引三类（[`references/PCB绘制/丝印标注/丝印标注.md`](references/PCB绘制/丝印标注/丝印标注.md)）。
-> **放置方法钉定（与走线同源）**：用户已排好的器件位置＝P0 immovable，Agent 禁止调用 `pcb auto-place`/`align`/`distribute`/`refine`/`outline-fit`/`silk-align`/`silk-set` 重排或收紧板框；仅当用户点名要求时可用，执行前先复述禁令并锁定用户已授权布局防连带移动。四档顺序（T1 安装孔→T2 板边接口→T3 主芯片→T4 卫星件）逐件按用户意图落位，每步 `pcb list --include-pads` 回读对账，**无授权不移动用户手摆件**。
+> **放置方法钉定（与走线同源）**：放置是 **用户需求驱动**——未完成用户 PCB 配置文件（D1–D20+R1–R5）全部拍板、基线落盘 `./tmp/design/<工程>-pcb-spec.md` 前 **不得进入放置阶段**；进放置前用 `scripts/layout-calc.py` 算出板边距/件间距/分区矩形并三行留痕；`pcb align`/`distribute`/`auto-place`/`refine`/`outline-fit`/`silk-align`/`silk-set` 仅作 **需求已定后的规整工具**（阵列对齐/卫星收敛/收口），不得无依据重排用户手摆件（手摆＝P0 immovable，先锁定快照再执行）；四档顺序（T1 安装孔→T2 板边接口→T3 主芯片→T4 卫星）逐件按意图落位，每步 `pcb list --include-pads` 对账，**走线拐角默认 45°，直角除 R1 指定圆弧档外禁止**。
 
 ## 3. 询问步骤 + 读取 ./tmp/ + 执行对应步骤
 
@@ -34,7 +34,7 @@ metadata:
 
 ## 4. 文档地图
 
-> 全量路由见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)（六步 + 子步 + 运行时指令速查）；约束见 §5；重复命令序列已封装为一键脚本——`scripts/link-probe.py`（桥接探测+门禁）、`scripts/sch-verify.py`（原理图验证）、`scripts/pcb-gate.py`（PCB 门禁）、`scripts/route-check.py`（人工向量段落笔前干涉演算）、`scripts/calc-scientific.py` / `calc-electrical.py` / `calc-design.py`（科学/电气/设计三件计算器——数值必演算留痕，见约束·计算纪律）、`scripts/progress-log.py`（账本写入）；**运行时一律以 `python <SKILL_DIR>/scripts/<名>.py` 调用（`<SKILL_DIR>` = 含本 `SKILL.md` 的 skill 安装根目录绝对路径），cwd 保持在用户确认的工作区根，使产物落工作区 `./tmp/`**；校验用 [`scripts/check-links.py`](scripts/check-links.py)（悬空必须为 0，仅编辑期跑）与 `python <SKILL_DIR>/scripts/check-progress.py`（步骤门禁账本）。
+> 全量路由见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)（六步 + 子步 + 运行时指令速查）；约束见 §5；重复命令序列已封装为一键脚本——`scripts/link-probe.py`（桥接探测+门禁）、`scripts/sch-verify.py`（原理图验证）、`scripts/pcb-gate.py`（PCB 门禁）、`scripts/route-check.py`（人工向量段落笔前干涉演算）、`scripts/layout-calc.py`（布局/边距/分区计算）、`scripts/calc-scientific.py` / `calc-electrical.py` / `calc-design.py`（科学/电气/设计三件计算器——数值必演算留痕，见约束·计算纪律）、`scripts/progress-log.py`（账本写入）；**运行时一律以 `python <SKILL_DIR>/scripts/<名>.py` 调用（`<SKILL_DIR>` = 含本 `SKILL.md` 的 skill 安装根目录绝对路径），cwd 保持在用户确认的工作区根，使产物落工作区 `./tmp/`**；校验用 [`scripts/check-links.py`](scripts/check-links.py)（悬空必须为 0，仅编辑期跑）与 `python <SKILL_DIR>/scripts/check-progress.py`（步骤门禁账本）。
 
 ## 5. 约束部分
 
