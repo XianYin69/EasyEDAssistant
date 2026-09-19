@@ -18,7 +18,7 @@ EasyEDAssistant/
 ├── references/                                # 步骤文档：每步骤一个同名目录（总索引 + 子文件）
 │   ├── 初始化部分/ … 交付与清理/                # 六步：初始化 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理
 │   ├── 单步执行/                              # 非首次设计：读 ./tmp/ 上下文 → 选步骤 → 只执行该步骤 → 回写报告
-│   ├── 约束部分/                              # 十三项约束（命名/格式/垃圾/记忆链/逻辑链/压缩/处罚/激励/创建范围/流程/安全/步骤门禁/运行环境不可变）
+│   ├── 约束部分/                              # 十四项约束（命名/格式/垃圾/记忆链/逻辑链/压缩/处罚/激励/创建范围/流程/安全/步骤门禁/运行环境不可变/计算纪律）
 │   ├── 嘉立创EDA指令索引/                     # easyeda CLI v1.5.1 运行时指令入口（总索引 + 12 子文件）
 │   ├── 电气检查/硬编码规则/                   # 子域判据与公式（电气检查与 PCB 规范同源）
 │   └── lib/                                   # 维护者文档（13 份，原 SKILL.md §1–§13 正文，不参与运行时加载）
@@ -36,6 +36,9 @@ EasyEDAssistant/
 │   ├── sch-verify.py                          # 原理图验证序列：gate/connectivity/list/sheet-geometry → 聚合 JSON
 │   ├── pcb-gate.py                            # PCB 门禁序列：drc/check/lint/score/report/net-classes → 聚合 JSON
 │   ├── route-check.py                         # 人工向量段落笔前干涉演算门（异网 track/via/pad/keepout/板边，档位源自硬编码；exit 0 才准落 track）
+│   ├── calc-scientific.py                     # 科学计算器：表达式/SI 前缀/复数极坐标/单位换算（AST 白名单，零联网）
+│   ├── calc-electrical.py                     # 电气计算器：欧姆/分压E24/LED/RC/IPC-2152 载流档/过孔载流/Hammerstad 阻抗/λ4/dB
+│   ├── calc-design.py                         # 设计计算器：LDO 热预算/BUCK L 与 Cout/电池续航/晶振 CL/电阻容差 worst·RSS/铜面散热
 │   ├── visual-qa.py                           # 视觉质量与布局完整性自动评估（截图+数据双检，滚动保留 3 张）
 │   ├── tool-probe.py                          # 内建工具与插件探针（生成 ./tmp/eda-tools-manifest.json）
 │   ├── tool-probe-simulator.py                # 工具调用示例文档生成器
@@ -94,7 +97,7 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 | 非首次设计的续跑与单步执行 | `references/单步执行/`（读取上下文、选择步骤、执行与回写） |
 | 步骤级细则（桥接联通性测试、绘制原理图、绘制 PCB、检查步骤等） | 同上，各步骤目录内的同名子文件 |
 | 坐标与数据模型、官方文档与 GUI 映射 | `references/坐标与数据模型/`、`references/官方文档映射/` |
-| 约束（命名、格式、清理、证据链、处置、逐步执行门禁、运行环境不可变等十三项） | `references/约束部分/` |
+| 约束（命名、格式、清理、证据链、处置、逐步执行门禁、运行环境不可变、计算纪律等十四项） | `references/约束部分/` |
 | 原 SKILL.md §1–§13 正文与子域判据（维护者参考，不参与运行时加载） | `references/lib/`（12 份 md + 1 份 json） |
 | 变更历史 | `CHANGELOG.md` |
 
@@ -113,7 +116,7 @@ SKILL.md 主干只含流程入口、路由与约束总则（§1–§5）；详�
 5. **工具探针**：**Agent 自动执行** `python <SKILL_DIR>/scripts/tool-probe.py --project <name>`，生成
    `./tmp/eda-tools-manifest.json` 与 `eda-tools-guide.md`（CLI 不可达时 exit 2，清单标注未经运行时验证）；
    在 P1/P6/P8/P10 等关键步骤前查阅清单，按需触发条件中断点（`references/lib/discipline-checkpoints.md` §11.5）询问用户是否启用专用插件。
-6. **设计执行**：按子域判据（[`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md)，维护者全文见 `references/lib/design-rules.md`）与用户已拍板的决策点执行；原理图走 S0–S6
+6. **设计执行**：按子域判据（[`references/电气检查/硬编码规则/硬编码规则总览.md`](references/电气检查/硬编码规则/硬编码规则总览.md)，维护者全文见 `references/lib/design-rules.md`）与用户已拍板的决策点执行；**一切数值经三件计算器（`scripts/calc-scientific/electrical/design.py`）演算并整行留痕，禁心算进基线**（`references/约束部分/计算纪律/`）；原理图走 S0–S6
     （IR → Lib 几何 → compose → apply + 动态截图），PCB 走 P0–P10
     （放置 → 板框 → 禁布 → 丝印 → 布线门 → 布线 → 铺铜 → 标注 → 终检）；
     **走线/布线双侧同法（网络标签-端口 + 向量-节点 + 干涉演算 + 硬编码档位）**：PCB＝`route-critical` →
