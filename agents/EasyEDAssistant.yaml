@@ -6,6 +6,6 @@ interface:
   license: MIT
   metadata:
     author: EasyEDAssistant
-    version: "0.12.25"
+    version: "0.12.26"
     homepage: "https://github.com/XianYin69/EasyEDAssistant"
     skill: "EasyEDAssistant"
