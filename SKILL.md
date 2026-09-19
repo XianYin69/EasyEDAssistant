@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.30"
+  version: "0.12.31"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -26,7 +26,7 @@ metadata:
 > 详见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)。
 > 步骤：初始化部分 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理（按 §1 铁律逐步执行，每步留证后方可推进）。
 > **走线/布线方法钉定（原理图与 PCB 同一套）**：弃用一切迷宫/盲画式自动走线（PCB `pcb autoroute`/`export-dsn`/`import-autoroute` 禁调用；原理图禁不经演算的盲画多点线），改用「网络标签-端口 + 向量-节点 + 干涉演算（PCB 落笔前 `route-check.py`；原理图画前推演+画后 `bridge-check`/`check` 即查）+ 硬编码档位」——正本 [`references/PCB绘制/干涉布线/干涉布线.md`](references/PCB绘制/干涉布线/干涉布线.md)、[`references/绘制原理图/干涉路径/干涉路径.md`](references/绘制原理图/干涉路径/干涉路径.md)；丝印支持用户板型号/版权/功能指引三类（[`references/PCB绘制/丝印标注/丝印标注.md`](references/PCB绘制/丝印标注/丝印标注.md)）。
-> **放置方法钉定（与走线同源）**：放置是 **用户需求驱动**——未完成用户 PCB 配置文件（D1–D20+R1–R5）全部拍板、基线落盘 `./tmp/design/<工程>-pcb-spec.md` 前 **不得进入放置阶段**；进放置前用 `scripts/layout-calc.py` 算出板边距/件间距/分区矩形并三行留痕；`pcb align`/`distribute`/`auto-place`/`refine`/`outline-fit`/`silk-align`/`silk-set` 仅作 **需求已定后的规整工具**（阵列对齐/卫星收敛/收口），不得无依据重排用户手摆件（手摆＝P0 immovable，先锁定快照再执行）；四档顺序（T1 安装孔→T2 板边接口→T3 主芯片→T4 卫星）逐件按意图落位，每步 `pcb list --include-pads` 对账，**走线拐角默认 45°，直角除 R1 指定圆弧档外禁止**。
+> **放置方法钉定（与走线同源）**：放置是 **用户需求驱动**——未完成用户 PCB 配置文件（D1–D20+R1–R5）全部拍板、基线落盘 `./tmp/design/<工程>-pcb-spec.md` 前 **不得进入放置阶段**；进放置前**必须先问排布意图**（分区/固定件/信号流/热与 RF/阵列偏好，落盘 `./tmp/design/<工程>-layout-intent.md`），再用 `scripts/layout-calc.py` 按答复算出板边距/件间距/分区矩形并三行留痕；`pcb align`/`distribute`/`auto-place`/`refine`/`outline-fit`/`silk-align`/`silk-set` 仅作 **需求已定后的规整工具**（阵列对齐/卫星收敛/收口），不得无依据重排用户手摆件（手摆＝P0 immovable，先锁定快照再执行）；四档顺序（T1 安装孔→T2 板边接口→T3 主芯片→T4 卫星）逐件按意图落位，每步 `pcb list --include-pads` 对账，**走线拐角默认 45°，直角除 R1 指定圆弧档外禁止**。正本 [`references/约束部分/布局计算纪律/布局计算纪律.md`](references/约束部分/布局计算纪律/布局计算纪律.md)。
 
 ## 3. 询问步骤 + 读取 ./tmp/ + 执行对应步骤
 
