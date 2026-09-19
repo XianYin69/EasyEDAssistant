@@ -2,6 +2,15 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.27（2026-09-19）
+
+**机器工件 digest 抽象（用户指令：中间生成的、不需要人看和审核的产物数据要高度抽象，但 AI 大模型必须能读懂）**：
+
+- **约束正本扩展 `上下文存储压缩机制` 新增第 9–10 条**（28→30 行）：⑨无人审阅工件（门禁聚合/回读 dump/缓存）**禁整份原始输出堆文件**——落盘＝`digest`（状态+rc+计数+失败项样本 ≤20 条各截断 ≤200 字+total/truncated 分列）＋`src_cmd`/`raw_ref` 指针，全文仅 `--raw` 显式要求时另存 `raw-*`（gitignored）；截图/二进制只存路径+sha256。⑩**AI 可读性五判据**：snake_case 固定键+`schema` 版本；状态枚举不写散文；数值保类型并标注单位与坐标约定；计数与截断如实；指针可反查——判定字段（rc/ok/blocked）与证据摘要分层，前者永不压缩。违规后果补 L1「未做 digest 抽象整份堆盘」。
+- **脚本实现 `scripts/artifact_digest.py`（共享模块）**：`digest_json/digest_text/summarize/stash_raw`；嵌套 dict 一层展平保标量值（首版只留键名导致 violations 的 rule/net 实际值丢失——语义丢失即返工修正，单测 9/9：137 条 violations→20 样本+total+truncated，`verdict:"blocked"` 等标量在 keys 层原样保留）；`sch-verify.py`/`pcb-gate.py` 接入：默认落 digest 形（实测 verify JSON 1770B vs raw 2561B，判定字段完整、结构可读），新增 `--raw` 另存 `*.raw.json` 且顶层 `raw_ref` 指向；`route-check.py` 干涉列表 50→20 条上限+`interference_total` 如实。`visual-qa` 报告经核对本就是 digest 形（verdict/计数/路径，47 行）不动。
+- **挂接**：`约束部分` 第 8 条摘要补指针；`SKILL.md` §3 单步执行行补「读 tmp 先读 digest、raw 仅深挖时读」。
+- 校验：19 py 全编译；digest 单测 9/9；sch-verify 活体实跑 digest 结构正确（gate: rc=1 → digest{verdict:"blocked", blockers n:1, stages n:5}）；`check-links` 195 md 悬空 0/孤立 0；触及文件 ≤50 行。版本对齐 **0.12.27**。
+
 ### v0.12.26（2026-09-19）
 
 **分歧修复稿机制（用户指令：运行结果与 skill 步骤结果分歧时，允许在 tmp 创建对应 markdown、修复提示词、修复 python 脚本与错误说明，但不能更改 skill 文件）**：

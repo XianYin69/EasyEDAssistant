@@ -29,6 +29,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+import artifact_digest as ad  # 同目录：无人审阅工件 digest 抽象（约束·压缩机制 #9/#10）
 import cli_compat as cc  # 同目录共享模块：接口漂移运行时探测（见其 docstring）
 
 
@@ -76,6 +77,8 @@ def main() -> int:
     ap.add_argument("--project", required=True)
     ap.add_argument("--doc", help="原理图页 UUID/名（多页工程建议不传，走 --all-pages）")
     ap.add_argument("--out")
+    ap.add_argument("--raw", action="store_true",
+                    help="另存 raw-*.json 全文证据（默认只落 digest 形，约束·压缩机制 #9）")
     args = ap.parse_args()
 
     sel = ["--project", args.project]
@@ -93,22 +96,31 @@ def main() -> int:
         ("list",          list_args),
         ("sheet_geometry", ["easyeda", "sch", "sheet-geometry", *sel]),
     ]
-    results, failed = {}, []
+    results, raws, failed = {}, {}, []
     for key, cmd in seq:
         r = run(cmd)
-        results[key] = r
+        raws[key] = r
+        results[key] = ad.summarize(r)
         if not r["ok"]:
             failed.append(key)
     if results["gate"].get("blocked"):
-        results["check"] = run(cc.with_flag(["easyeda", "sch", "check", *sel], "--all"))
-        if not results["check"]["ok"]:
+        rc = run(cc.with_flag(["easyeda", "sch", "check", *sel], "--all"))
+        raws["check"] = rc
+        results["check"] = ad.summarize(rc)
+        if not rc["ok"]:
             failed.append("check")
 
     out = within_cwd(args.out or
                      f"./tmp/sch/verify-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json")
     out.parent.mkdir(parents=True, exist_ok=True)
+    raw_ref = ""
+    if args.raw:
+        raw_path = out.with_name(out.stem.replace("verify-", "verify-") + ".raw.json")
+        ad.stash_raw(raws, raw_path)
+        raw_ref = str(raw_path)
     summary = {"tool": "sch-verify", "project": args.project, "doc": args.doc or "",
                "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+               "digest_form": "1", "raw_ref": raw_ref,
                "all_passed": not failed, "failed_or_blocked": failed, "results": results}
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
 

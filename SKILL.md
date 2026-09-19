@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.26"
+  version: "0.12.27"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -29,7 +29,7 @@ metadata:
 
 ## 3. 询问步骤 + 读取 ./tmp/ + 执行对应步骤
 
-> 详见 [`references/单步执行/单步执行.md`](references/单步执行/单步执行.md)：读取 `./tmp/` 上下文 → 列出可执行步骤并询问用户 → 只执行被选步骤 → 回写上下文与三段式报告。
+> 详见 [`references/单步执行/单步执行.md`](references/单步执行/单步执行.md)：读取 `./tmp/` 上下文 → 列出可执行步骤并询问用户 → 只执行被选步骤 → 回写上下文与三段式报告。读中间工件一律先读 digest 摘要（判定字段+计数+指针，约束·压缩机制 #9/#10），raw 全文仅在深挖证据时读取。
 
 ## 4. 文档地图
 

@@ -279,7 +279,7 @@ def main() -> int:
            "segment": {"a": a, "b": b, "layer": args.layer, "width": w, "role": args.role,
                        "clearance": clr},
            "obstacles_read": len(obs), "notes": notes, "status": status,
-           "interferences": hits[:50],
+           "interferences": hits[:20], "interference_total": len(hits),
            "verdict_hint": ("可落笔：easyeda pcb track --x1.. --net " + args.net +
                             f" --layer {args.layer} --width {int(w)}（落笔后逐笔回读 primitive + 部分级截图硬门 + 终检 pcb-gate）"
                             if status == "clear" else

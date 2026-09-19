@@ -28,6 +28,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 
+import artifact_digest as ad  # 同目录：无人审阅工件 digest 抽象（约束·压缩机制 #9/#10）
 import cli_compat as cc  # 同目录共享模块：接口漂移运行时探测（见其 docstring）
 
 
@@ -79,6 +80,8 @@ def main() -> int:
     ap.add_argument("--out", help="聚合 JSON 输出路径（默认 ./tmp/pcb/gate-<UTC>.json）")
     ap.add_argument("--with-gate", action="store_true",
                     help="追加 layout-lint --gate（会推进阶段门，需先 set-assembly）")
+    ap.add_argument("--raw", action="store_true",
+                    help="另存 raw-*.json 全文证据（默认只落 digest 形，约束·压缩机制 #9）")
     args = ap.parse_args()
 
     sel = ["--project", args.project]
@@ -94,7 +97,7 @@ def main() -> int:
         ("net_classes",  cc.with_flag([*d, "net-classes", *sel], "--json")),
         ("report",       [*d, "report", *sel]),
     ]
-    results, failed = {}, []
+    results, raws, failed = {}, {}, []
     if args.with_gate:
         if cc.flag_supported(["pcb", "layout-lint"], "--gate"):
             seq.append(("lint_gate", cc.with_flag([*d, "layout-lint", "--gate", *sel], "--json")))
@@ -104,15 +107,22 @@ def main() -> int:
             failed.append("lint_gate")
     for key, cmd in seq:
         r = run(cmd)
-        results[key] = r
+        raws[key] = r
+        results[key] = ad.summarize(r)
         if not r["ok"]:
             failed.append(key)
 
     out = within_cwd(args.out or
                      f"./tmp/pcb/gate-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}.json")
     out.parent.mkdir(parents=True, exist_ok=True)
+    raw_ref = ""
+    if args.raw:
+        raw_path = out.with_name(out.stem + ".raw.json")
+        ad.stash_raw(raws, raw_path)
+        raw_ref = str(raw_path)
     summary = {"tool": "pcb-gate", "project": args.project, "pcb_doc": args.pcb_doc or "",
                "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+               "digest_form": "1", "raw_ref": raw_ref,
                "all_passed": not failed, "failed_or_blocked": failed, "results": results}
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
 
