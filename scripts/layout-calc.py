@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """layout-calc.py — 边距与位置计算器（PCB 布局 + 原理图布局本地演算；纪律见 references/约束部分/布局计算纪律/）。
 
-定位：布局「理解用户需求为主」的演算层——用户 PCB 配置文件（D1–D20+R1–R5）拍板后，
-先跑本脚本算出档位边距/分区/坐标建议并三行留痕，再落位；`pcb align`/`distribute`/`auto-place`
-只是演算之后的规整工具，不能替代本步，也不能无依据重排用户手摆件。
+定位：布局「理解用户需求为主」的演算层——先问排布意图（落盘 ./tmp/design/<工程>-layout-intent.md）、
+用户 PCB 配置文件（D1–D20+R1–R5）拍板后，再跑本脚本按答复算出档位边距/分区/坐标建议并三行留痕，
+最后落位；`pcb align`/`distribute`/`auto-place` 只是演算之后的规整工具，不能替代本步，也不能无依据重排用户手摆件。
 
 子命令（坐标 rect=x,y,w,h 均指左下角+宽高；PCB 单位 mil y-up，原理图单位 raw）：
   pcb gap   --a RECT --b RECT [--profile hand|reflow]
