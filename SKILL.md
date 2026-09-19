@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.23"
+  version: "0.12.24"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -25,7 +25,7 @@ metadata:
 
 > 详见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)。
 > 步骤：初始化部分 → 处理用户需求 → 检查方案及敲定 → 原理图制作 → PCB制作 → 交付与清理（按 §1 铁律逐步执行，每步留证后方可推进）。
-> **PCB 布线方法钉定**：弃用上游迷宫自动布线（`pcb autoroute`/`export-dsn`/`import-autoroute` 禁调用），改用「网络标签-端口 + 向量-节点 + 落笔前 `route-check.py` 干涉演算 + 硬编码档位」（正本 [`references/PCB绘制/干涉布线/干涉布线.md`](references/PCB绘制/干涉布线/干涉布线.md)）；丝印支持用户板型号/版权/功能指引三类（[`references/PCB绘制/丝印标注/丝印标注.md`](references/PCB绘制/丝印标注/丝印标注.md)）。
+> **走线/布线方法钉定（原理图与 PCB 同一套）**：弃用一切迷宫/盲画式自动走线（PCB `pcb autoroute`/`export-dsn`/`import-autoroute` 禁调用；原理图禁不经演算的盲画多点线），改用「网络标签-端口 + 向量-节点 + 干涉演算（PCB 落笔前 `route-check.py`；原理图画前推演+画后 `bridge-check`/`check` 即查）+ 硬编码档位」——正本 [`references/PCB绘制/干涉布线/干涉布线.md`](references/PCB绘制/干涉布线/干涉布线.md)、[`references/绘制原理图/干涉路径/干涉路径.md`](references/绘制原理图/干涉路径/干涉路径.md)；丝印支持用户板型号/版权/功能指引三类（[`references/PCB绘制/丝印标注/丝印标注.md`](references/PCB绘制/丝印标注/丝印标注.md)）。
 
 ## 3. 询问步骤 + 读取 ./tmp/ + 执行对应步骤
 
