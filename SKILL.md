@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.27"
+  version: "0.12.28"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -41,3 +41,4 @@ metadata:
 > 文件存储格式总则：技术文件与数据手册可用 markdown 或 pdf，其余文档一律 markdown。
 > 适用范围划分：`FILE_CREATION_POLICY.md` 只管设计执行期的工作区文件与权限；编辑 skill 本体一律遵守 `RULE_EDIT.md`。
 > 裁决优先级：当前用户指令与代码/CLI 自描述 > 约束部分 > 各步骤文档 > `references/lib/`。
+> 故障排查：遇未知错误先查 [`references/运维与排障/常见错误速查.md`](references/运维与排障/常见错误速查.md)；低模型用户同步参考 [`references/运维与排障/低模型优化指南.md`](references/运维与排障/低模型优化指南.md)。

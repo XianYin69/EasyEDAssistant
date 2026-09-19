@@ -126,7 +126,12 @@ def main() -> int:
 
     for key in results:
         r = results[key]
-        tag = "pass" if r["ok"] else ("blocked: " + r.get("blocked", "") if r.get("blocked") else f"rc={r['rc']}")
+        if r["ok"]:
+            tag = "pass"
+        elif r.get("blocked"):
+            tag = f"blocked: {r['blocked']}"
+        else:
+            tag = f"rc={r['rc']}（失败项，查 stderr 或 JSON 中的 cmd/text 字段定位原因）"
         print(f"[sch-verify] {key:14s} {tag}")
     print(f"[sch-verify] 聚合 JSON：{out}")
     if failed:
