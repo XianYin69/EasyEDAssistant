@@ -30,7 +30,9 @@ EasyEDAssistant/
 ├── scripts/
 │   ├── check-links.py                         # 全树 markdown 链接扫描（悬空必须为 0；RULE_EDIT 第 6 步）
 │   ├── check-progress.py                      # 步骤门禁校验：进度账本完整性 + 证据产物存在性
-│   ├── progress-log.py                        # 进度账本写入（幂等追加 ./tmp/init/progress.md）
+│   ├── progress-log.py                        # 进度账本写入（幂等追加 ./tmp/init/progress.md；写账后自动触发 auto-compress）
+│   ├── auto-compress.py                       # 步骤边界自动压缩 ./tmp/（超阈值 JSON→digest、快照只留最近 3 张；默认 dry-run）
+│   ├── chain-log.py                           # ./tmp/chains/ 记忆链/逻辑链 JSONL 建立与追加/校验（只增不改，禁手编）
 │   ├── link-probe.py                          # 桥接探测序列：MCP/daemon 探活 + 版本记录（无门禁）+ 接口漂移 compat 探测 → 选定链路 JSON
 │   ├── cli_compat.py                          # CLI 能力探测库（--help 自描述防上游接口漂移；被各一键脚本 import）
 │   ├── sch-verify.py                          # 原理图验证序列：gate/connectivity/list/sheet-geometry → 聚合 JSON
