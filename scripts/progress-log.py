@@ -18,6 +18,7 @@
 from __future__ import annotations
 
 import argparse
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -94,7 +95,21 @@ def main() -> int:
     for a in [x.strip() for x in args.art.split(",") if x.strip()]:
         if a.lower() not in ("n/a", "na") and not (Path.cwd() / a).exists():
             print(f"[progress-log] 提醒：产物尚不存在 {a}（check-progress 将判阻断）", file=sys.stderr)
+    auto_compress_hook()
     return 0
+
+
+def auto_compress_hook() -> None:
+    """步骤边界自动压缩 ./tmp/（约束·上下文存储压缩机制第 11 条）；失败只告警不阻断记账。"""
+    script = Path(__file__).resolve().parent / "auto-compress.py"
+    if not script.exists():
+        return
+    try:
+        subprocess.run([sys.executable, str(script), "--apply"],
+                       timeout=120, capture_output=True, check=False)
+    except Exception as e:  # noqa: BLE001 钩子降级：压缩失败不影响账本
+        print(f"[progress-log] 警告：自动压缩钩子未执行（{e}），可手动跑 auto-compress.py --apply",
+              file=sys.stderr)
 
 
 if __name__ == "__main__":
