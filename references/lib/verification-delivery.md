@@ -107,7 +107,7 @@ python <SKILL_DIR>/scripts/visual-qa.py --project <name> --pcb --no-snapshot
 | `./tmp/sch/` | 原理图字符画蓝图、官方导图 | md/json/png |
 | `./tmp/pcb/` | PCB 布局蓝图、视口快照 | md/json/png |
 | `./tmp/plan/` | 计划类工件（含 `<project>-sch-layout.md`） | md/json |
-| `./tmp/design/` | 方案、逻辑框图、可行性结论、PCB 设计基线（§13.3） | md/json |
+| `./tmp/design/` | 方案、逻辑框图、可行性结论、PCB 设计基线（§13.3）、PCB 字符画布局蓝图 `<project>-pcb-layout.md`（与 `-sch-layout.md` 分开） | md/json |
 | `./tmp/parts/` | 元器件选型与浏览器比价缓存（§5.6） | md/json |
 | `./tmp/calc/` | 理论计算数据缓存（§7.7 推导） | md/json |
 | `./tmp/datasheet/` | 数据手册摘要（型号/关键参数/页码出处） | md |
