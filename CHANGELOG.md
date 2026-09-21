@@ -2,6 +2,17 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.35（2026-09-21）
+
+**全项目体检（用户指令「检查整个项目」）与修复**：
+
+- 体检面：check-links 全树、md 行数红线（非 lib/非豁免）、py 编译 23/23、版本行一致、新工件文件存在性、过时命令引用扫描（裸 `scripts/` 路径、已弃用命令、已删数据文件）、CLI 自描述核对（`easyeda pcb --help` 证实 refine/beautify/outline-fit/silk-align 仍存在，README 措辞未失真）。
+- 修复 1：`README.md` scripts 树**漏登 `layout-calc.py`**（v0.12.30 起存在）——补行。
+- 修复 2：`scripts/net-download-policy/用法与会话纪律/` 三处示例仍写 `python scripts/net-download.py`（工作区 cwd 下必失败，SKILL §4 已定 `<SKILL_DIR>` 唯一正本）——改 `python <SKILL_DIR>/scripts/net-download.py` 并在账本条款补调用式。
+- 判读为噪音不改：`references/lib/` 维护者存档豁免行数与旧词汇；`干涉布线.md:4`、`文件与文件夹创建范围.md:11` 命中行本身即禁令句；CHANGELOG 历史条目不改写；`CONTRIBUTING.md:25` 为编辑期仓库内命令（口径允许）。
+- 发现遗留物：`.kilo/worktrees/neighborly-mandevilla`（detached `83fd12a` 孤儿 Agent Manager worktree，未纳入主仓）——待用户确认后 `git worktree remove`。
+- **校验**：修复后 check-links 200 md 悬空 0/孤立 0；审计扫描过时引用命中仅剩豁免/禁令句；触及 .md ≤50 行。版本对齐 **0.12.35**。
+
 ### v0.12.34（2026-09-21）
 
 **新建元件三图独立＋建库前摊细节拍板＋独立元件图（引脚说明+字符画）**（用户指令 2026-09-21，选项：`./tmp/newpart/` + 建库前先拍板）：
