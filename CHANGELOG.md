@@ -8,7 +8,7 @@
 
 - 新增 `scripts/chain-log.py`：在工作区 `./tmp/chains/` 建立与维护记忆链 `memory.jsonl` 与逻辑链 `logic.jsonl`（init/add/list/verify；三要素齐备校验 + logic 节点连续性校验；只增不改、禁手编）。初始化部分建链（`建立的文件.md` 第 3 项 + 完成判据），单步执行回写与中断恢复接入双链（`执行与回写.md`、`读取上下文.md`、`中断恢复.md`）；`记忆链.md` 第 3 条、`逻辑链的存储.md` 第 3 条钉定链文件正本。
 - 新增 `scripts/auto-compress.py`：步骤边界自动压缩 `./tmp/`——超阈值 JSON 复用 `artifact_digest` 转 digest 形（原文件删除，`--keep-raw` 另存）、`snapshots/`/`baseline/` 各只留最近 3 张；默认 dry-run，`progress-log.py` 写账后自动 `--apply` 触发（失败只告警不阻断记账）。约束新增第 11 条「步骤边界自动压缩」（`上下文存储压缩机制.md`）。
-- 新增约束第 16 项 [`references/约束部分/嘉立创元器件库为准/`](references/约束部分/嘉立创元器件库为准.md)（硬门禁）：选型/放置/换绑/BOM 一律以嘉立创 EDA 系统库（LCSC C 号，`lib search`/`lib by-lcsc` 解析）为唯一真值；非嘉立创库器件须用户拍板并记豁免链。`元件检查.md`、`器件库与块.md` 选型链同步指针。
+- 新增约束第 16 项 [`references/约束部分/嘉立创元器件库为准/`](references/约束部分/嘉立创元器件库为准/嘉立创元器件库为准.md)（硬门禁）：选型/放置/换绑/BOM 一律以嘉立创 EDA 系统库（LCSC C 号，`lib search`/`lib by-lcsc` 解析）为唯一真值；非嘉立创库器件须用户拍板并记豁免链。`元件检查.md`、`器件库与块.md` 选型链同步指针。
 - `tmp/chains/` 入目录契约与创建白名单；`SKILL.md` §2/§3/§4/§5 与 `README.md` 路由同步；FILE_CREATION_POLICY 不涉及（工作区目录契约已授权）。
 - **校验**：check-links 199 md 悬空 0/孤立 0；chain-log/auto-compress/progress-log 沙箱冒烟通过（init→add→verify→digest 80KB JSON→快照裁剪→钩子联动）；py_compile 全过；触及 .md 均 ≤50 行。版本对齐 **0.12.32**。
 
