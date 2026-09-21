@@ -38,6 +38,7 @@ EasyEDAssistant/
 │   ├── sch-verify.py                          # 原理图验证序列：gate/connectivity/list/sheet-geometry → 聚合 JSON
 │   ├── pcb-gate.py                            # PCB 门禁序列：drc/check/lint/score/report/net-classes → 聚合 JSON
 │   ├── route-check.py                         # 人工向量段落笔前干涉演算门（异网 track/via/pad/keepout/板边，档位源自硬编码；exit 0 才准落 track）
+│   ├── layout-calc.py                         # 布局/边距/分区计算器（pcb edge/gap/zone、sch gap/edge、angle check；先问意图后算再摆）
 │   ├── calc-scientific.py                     # 科学计算器：表达式/SI 前缀/复数极坐标/单位换算（AST 白名单，零联网）
 │   ├── calc-electrical.py                     # 电气计算器：欧姆/分压E24/LED/RC/IPC-2152 载流档/过孔载流/Hammerstad 阻抗/λ4/dB
 │   ├── calc-design.py                         # 设计计算器：LDO 热预算/BUCK L 与 Cout/电池续航/晶振 CL/电阻容差 worst·RSS/铜面散热
