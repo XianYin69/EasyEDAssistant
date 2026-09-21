@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.35"
+  version: "0.12.36"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -28,6 +28,7 @@ metadata:
 > **走线/布线方法钉定（原理图与 PCB 同一套）**：弃用一切迷宫/盲画式自动走线（PCB `pcb autoroute`/`export-dsn`/`import-autoroute` 禁调用；原理图禁不经演算的盲画多点线），改用「网络标签-端口 + 向量-节点 + 干涉演算（PCB 落笔前 `route-check.py`；原理图画前推演+画后 `bridge-check`/`check` 即查）+ 硬编码档位」——正本 [`references/PCB绘制/干涉布线/干涉布线.md`](references/PCB绘制/干涉布线/干涉布线.md)、[`references/绘制原理图/干涉路径/干涉路径.md`](references/绘制原理图/干涉路径/干涉路径.md)；丝印支持用户板型号/版权/功能指引三类（[`references/PCB绘制/丝印标注/丝印标注.md`](references/PCB绘制/丝印标注/丝印标注.md)）。
 > **放置方法钉定（与走线同源）**：放置是 **用户需求驱动**——未完成用户 PCB 配置文件（D1–D20+R1–R5）全部拍板、基线落盘 `./tmp/design/<工程>-pcb-spec.md` 前 **不得进入放置阶段**；进放置前**必须先问排布意图**（分区/固定件/信号流/热与 RF/阵列偏好，落盘 `./tmp/design/<工程>-layout-intent.md`），再用 `scripts/layout-calc.py` 按答复算出板边距/件间距/分区矩形并三行留痕；**布局文件两份分开**——PCB 绘制前另生成独立字符画布局图 `./tmp/design/<工程>-pcb-layout.md`（禁复制原理图 `<工程>-sch-layout.md`）并**再次向用户询问布局**，拿到「按图开工」拍板前禁止落位（正本 [`references/PCB绘制/PCB布局图/PCB布局图.md`](references/PCB绘制/PCB布局图/PCB布局图.md)）；`pcb align`/`distribute`/`auto-place`/`refine`/`outline-fit`/`silk-align`/`silk-set` 仅作 **需求已定后的规整工具**（阵列对齐/卫星收敛/收口），不得无依据重排用户手摆件（手摆＝P0 immovable，先锁定快照再执行）；四档顺序（T1 安装孔→T2 板边接口→T3 主芯片→T4 卫星）逐件按意图落位，每步 `pcb list --include-pads` 对账，**走线拐角默认 45°，直角除 R1 指定圆弧档外禁止**。正本 [`references/约束部分/布局计算纪律/布局计算纪律.md`](references/约束部分/布局计算纪律/布局计算纪律.md)。
 > **三图独立（新建元件）**：Agent 自绘新元件前先向用户摊讲技术细节（引脚依据/符号划分/封装尺寸，带手册页码），并生成**独立元件图** `./tmp/newpart/<型号>-newpart.md`（引脚说明表 + 字符画原理图符号），拍板后才 `lib device build`；元件图与原理图布局图（`-sch-layout.md`）、PCB 布局图（`-pcb-layout.md`）**三份文件互相独立、互不复制覆盖**。正本 [`references/元件检查/新建元件与替代方案/新建元件与替代方案.md`](references/元件检查/新建元件与替代方案/新建元件与替代方案.md)。
+> **画前坐标校正（通用）**：无论原理图/PCB/元件图，**正式绘图前先用数字+直线在画布上标坐标刻度**核原点/网格/轴向/比例尺（EDA 画布临时 `line`/`text` 标尺；字符画蓝图带刻度边框），核对通过据标尺落位，**正式图开始前移除全部坐标标尺并保存校正数据** `./tmp/design/<工程>-calib-<sch|pcb|newpart>.json` 留痕；正本 [`references/坐标与数据模型/坐标与数据模型.md`](references/坐标与数据模型/坐标与数据模型.md)「画前坐标校正」。
 
 ## 3. 询问步骤 + 读取 ./tmp/ + 执行对应步骤
 
