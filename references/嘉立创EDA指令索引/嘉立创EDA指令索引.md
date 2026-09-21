@@ -33,7 +33,7 @@
 | 新建工程 | **CLI 与全部 typed action 均无入口**（v1.5.1 实测 139 个，真值以 `easyeda actions` 为准） | 官方仅 `eda.dmt_Project.createProject`（@beta，经 `api search` 可发现）；推荐走 EasyEDA GUI 建工程，程序化只作 debug exec 确认门控下的例外 |
 | 新建原理图页 | `sch page-new`（action `schematic.page.create`） | 见 [`原理图指令/校验与对账/校验与对账.md`](原理图指令/校验与对账/校验与对账.md) |
 | 新建板子/PCB | `pcb new-board`（action `board.new_pcb`）；组合既有 sch+PCB 用 `board create/copy/rebind` | 见 [`PCB指令/放置与布局/放置与布局.md`](PCB指令/放置与布局/放置与布局.md)、[`会话与文档/会话与文档.md`](会话与文档/会话与文档.md) |
-| 新建元件 | 先 `blocks search` 复用块；缺库件走 `lib device build`（Symbol+Footprint+3D 一条龙） | 决策流程见 [`../元件检查/新建元件与替代方案/新建元件与替代方案.md`](../元件检查/新建元件与替代方案/新建元件与替代方案.md) |
+| 新建元件 | 先 `blocks search` 复用块；缺库件先出独立元件图 `./tmp/newpart/<型号>-newpart.md`（引脚说明+字符画，向用户摊细节拍板）再走 `lib device build`（Symbol+Footprint+3D 一条龙） | 决策流程见 [`../元件检查/新建元件与替代方案/新建元件与替代方案.md`](../元件检查/新建元件与替代方案/新建元件与替代方案.md) |
 | 新建/编辑封装·符号 | `lib footprint/symbol create`（空资产+回读验证）→ `build`（JSON spec 全量编写，**编辑主入口**）；改官方件先 `footprint copy` 到可写库 | 见 [`器件库与块/器件库与块.md`](器件库与块/器件库与块.md)；已放置件换绑走 `sch rebind-footprint/rebind-symbol` |
 
 ## 刷新方法
