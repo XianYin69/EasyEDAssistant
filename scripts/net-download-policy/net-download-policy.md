@@ -26,6 +26,7 @@
 2. 输出只允许落在工作区 `./tmp/downloads/` 内，逃逸即 `SystemExit`。
 3. 每次成功下载必须 append `index.json`（url/path/bytes/sha256/http_status/时间）作为证据链。
 4. 格式白/黑名单变更须同时改本套文档与 `net-download.py` 常量两处。
+5. **数据手册 `.pdf` 须过可用性判定**：下载前 `pdf-read.py check-url`、落盘后 `validate`；判为 `not_pdf`/损坏（无 `%%EOF`）的不得计入有效手册、不进 `./tmp/datasheet/` 摘要，规则正本见 `references/元件检查/PDF可用性检查/PDF可用性检查.md`。
 
 ## 4. 修订历史
 
