@@ -2,6 +2,15 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.37（2026-09-22）
+
+**新增网络环境检测（大陆优先 szlcsc / 华秋，境外用国际渠道）**（用户指令 2026-09-22）：
+
+- 新增 `scripts/net-probe.py`（≤50 行、stdlib、只读可达性探测）：以 `https://www.google.com/generate_204` 可达性判 `region`——**可达→global（境外，用厂商官网/DigiKey/Mouser/LCSC 国际站）；不可达且 `item.szlcsc.com`/`hqchip.com` 可达→cn（中国大陆）**；两向都不通→unknown（不阻断、由用户指定）。结果落 `./tmp/init/net-env.json`，一次会话缓存复用。
+- 平台择优：region=cn 时查询元件、元件价格、下载数据手册**优先 `https://item.szlcsc.com/`（深圳嘉立创商城）**，次选华秋 `https://www.hqchip.com/`、JLCPCB 等大陆平台；接线 `浏览器检索.md`（先定区域）、新增正本子文档 `浏览器检索/网络环境检测/网络环境检测.md`、`元件检查/查询技术手册.md`、`成本及预算检查.md` 第 2 步、`SKILL.md §4` 脚本清单、目录契约 `./tmp/init/`。
+- 边界：`net-probe.py` 拒绝在 skill 仓库 cwd 运行；region 仅**平台择优启发式非硬门禁**，不放宽下载格式白名单/运行环境不可变；器件身份仍「嘉立创元器件库为准」（szlcsc 为商城查价/手册，`lib` 为器件真值），二者不互替。
+- **校验**：check-links 201 md 悬空 0/孤立 0；net-probe.py py_compile 通过、沙箱实测 region=cn 正常产出；正反双链辩论通过（pro/con）。版本对齐 **0.12.37**。
+
 ### v0.12.36（2026-09-21）
 
 **画前坐标校正（通用：原理图 / PCB / 元件图）**（用户指令 2026-09-21，选项：EDA 画布 + 字符画蓝图两者都要）：
