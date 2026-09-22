@@ -2,6 +2,25 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.38（2026-09-22）
+
+**PDF 可用性检查 + 辩论熔断强制方案**（用户指令 2026-09-22）：
+
+- 新增 `scripts/pdf-read.py`（stdlib、只读、拒在 skill 仓库 cwd 跑）：`check-url`（下载前探真实 PDF，非 `%PDF-`/`application/pdf` 判不可用）、`validate`（魔数/`%%EOF` 尾/加密/页数）、`extract`（尽力提取文本，扫描件/无文本层如实回报 `text_extractable=false`、退出码 3，**绝不返乱码或假成功**，改用多模态 `read`）。新正本 `references/元件检查/PDF可用性检查/`；接线 `查询技术手册.md`（下载前后检查、不可用=未查到不得选型）、`元件检查.md`、`net-download-policy.md` 不变式 5（`.pdf` 须过判定）。
+- **修复 PDF 读取脚本** `Skill_Generator/scripts/knowledge_convert.py`：原 `.pdf` 缺 pdfplumber 或提取为空时**穿透按 UTF-8 读二进制**产乱码/空条目假成功——改为魔数不符/缺库/扫描件一律 `SystemExit` 明确报错不产垃圾条目（≤50 行）。
+- 新增约束 `references/约束部分/辩论熔断强制方案/`（第 17 项）：同一分歧「正反判断未通过/用户否决」累计 **10 次** 即熔断——建正反双链辩论→合成完整可过门方案→**无论用户意见如何强制采用**（覆盖后续对同一分歧的否决），全链留痕、交付报告显著标注；计数记 `./tmp/design/<工程>-issue.md` + `chain-log add memory`。触发含用户描述与实现不一致、冗余设计。
+- 接入 `处理设计问题.md`（新增累计计数步 6、达 10 熔断步 7、连接与例外说明），并在 `约束部分.md` 总则 1 把本机制列为「用户拍板优先」的**唯一例外**；`SKILL.md §4/§5` 路由同步，版本 0.12.38。
+- **校验**：check-links 203 md 悬空 0/孤立 0；`pdf-read.py`/`knowledge_convert.py` py_compile 通过、pdf-read 沙箱测（真 PDF usable/扫描件 rc3/非 PDF rc1/URL 不可达 rc1）正确；触及 .md ≤50 行；正反双链辩论通过（pro 4/0 断裂 > con 3）。版本对齐 **0.12.38**。
+
+### v0.12.37（2026-09-22）
+
+**新增网络环境检测（大陆优先 szlcsc / 华秋，境外用国际渠道）**（用户指令 2026-09-22）：
+
+- 新增 `scripts/net-probe.py`（≤50 行、stdlib、只读可达性探测）：以 `https://www.google.com/generate_204` 可达性判 `region`——**可达→global（境外，用厂商官网/DigiKey/Mouser/LCSC 国际站）；不可达且 `item.szlcsc.com`/`hqchip.com` 可达→cn（中国大陆）**；两向都不通→unknown（不阻断、由用户指定）。结果落 `./tmp/init/net-env.json`，一次会话缓存复用。
+- 平台择优：region=cn 时查询元件、元件价格、下载数据手册**优先 `https://item.szlcsc.com/`（深圳嘉立创商城）**，次选华秋 `https://www.hqchip.com/`、JLCPCB 等大陆平台；接线 `浏览器检索.md`（先定区域）、新增正本子文档 `浏览器检索/网络环境检测/网络环境检测.md`、`元件检查/查询技术手册.md`、`成本及预算检查.md` 第 2 步、`SKILL.md §4` 脚本清单、目录契约 `./tmp/init/`。
+- 边界：`net-probe.py` 拒绝在 skill 仓库 cwd 运行；region 仅**平台择优启发式非硬门禁**，不放宽下载格式白名单/运行环境不可变；器件身份仍「嘉立创元器件库为准」（szlcsc 为商城查价/手册，`lib` 为器件真值），二者不互替。
+- **校验**：check-links 201 md 悬空 0/孤立 0；net-probe.py py_compile 通过、沙箱实测 region=cn 正常产出；正反双链辩论通过（pro/con）。版本对齐 **0.12.37**。
+
 ### v0.12.36（2026-09-21）
 
 **画前坐标校正（通用：原理图 / PCB / 元件图）**（用户指令 2026-09-21，选项：EDA 画布 + 字符画蓝图两者都要）：

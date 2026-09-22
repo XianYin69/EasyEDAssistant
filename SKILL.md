@@ -4,7 +4,7 @@ description: "基于 JLCEDA MCP/CLI 双链路操作嘉立创 EDA 的电路设计
 license: MIT
 metadata:
   author: EasyEDAssistant
-  version: "0.12.36"
+  version: "0.12.38"
 ---
 
 # EasyEDAssistant 设计 Skill（主干）
@@ -36,11 +36,11 @@ metadata:
 
 ## 4. 文档地图
 
-> 全量路由见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)（六步 + 子步 + 运行时指令速查）；约束见 §5；重复命令序列已封装为一键脚本——`scripts/link-probe.py`（桥接探测+门禁）、`scripts/sch-verify.py`（原理图验证）、`scripts/pcb-gate.py`（PCB 门禁）、`scripts/route-check.py`（人工向量段落笔前干涉演算）、`scripts/layout-calc.py`（布局/边距/分区计算）、`scripts/chain-log.py`（`./tmp/chains/` 记忆链/逻辑链 JSONL 的建立与追加/校验，只增不改禁手编）、`scripts/auto-compress.py`（步骤边界自动压缩：超阈值 JSON 转 digest、快照只留最近 3 张；由 progress-log.py 写账后自动触发）、`scripts/calc-scientific.py` / `calc-electrical.py` / `calc-design.py`（科学/电气/设计三件计算器——数值必演算留痕，见约束·计算纪律）、`scripts/progress-log.py`（账本写入）；**运行时一律以 `python <SKILL_DIR>/scripts/<名>.py` 调用（`<SKILL_DIR>` = 含本 `SKILL.md` 的 skill 安装根目录绝对路径），cwd 保持在用户确认的工作区根，使产物落工作区 `./tmp/`**；校验用 [`scripts/check-links.py`](scripts/check-links.py)（悬空必须为 0，仅编辑期跑）与 `python <SKILL_DIR>/scripts/check-progress.py`（步骤门禁账本）。
+> 全量路由见 [`references/电路设计标准设计流程/电路设计标准设计流程.md`](references/电路设计标准设计流程/电路设计标准设计流程.md)（六步 + 子步 + 运行时指令速查）；约束见 §5；重复命令序列已封装为一键脚本——`scripts/link-probe.py`（桥接探测+门禁）、`scripts/net-probe.py`（联网/查价/下载手册前检测网络环境：谷歌可达性判 `region`，大陆优先 `item.szlcsc.com`/`hqchip.com`、境外用国际渠道，落 `./tmp/init/net-env.json`，正本 [`references/浏览器检索/网络环境检测/网络环境检测.md`](references/浏览器检索/网络环境检测/网络环境检测.md)）、`scripts/pdf-read.py`（数据手册 PDF 可用性检查与稳健读取：`check-url`/`validate`/`extract`，非 PDF/损坏/扫描件如实回报不返乱码，正本 [`references/元件检查/PDF可用性检查/PDF可用性检查.md`](references/元件检查/PDF可用性检查/PDF可用性检查.md)）、`scripts/sch-verify.py`（原理图验证）、`scripts/pcb-gate.py`（PCB 门禁）、`scripts/route-check.py`（人工向量段落笔前干涉演算）、`scripts/layout-calc.py`（布局/边距/分区计算）、`scripts/chain-log.py`（`./tmp/chains/` 记忆链/逻辑链 JSONL 的建立与追加/校验，只增不改禁手编）、`scripts/auto-compress.py`（步骤边界自动压缩：超阈值 JSON 转 digest、快照只留最近 3 张；由 progress-log.py 写账后自动触发）、`scripts/calc-scientific.py` / `calc-electrical.py` / `calc-design.py`（科学/电气/设计三件计算器——数值必演算留痕，见约束·计算纪律）、`scripts/progress-log.py`（账本写入）；**运行时一律以 `python <SKILL_DIR>/scripts/<名>.py` 调用（`<SKILL_DIR>` = 含本 `SKILL.md` 的 skill 安装根目录绝对路径），cwd 保持在用户确认的工作区根，使产物落工作区 `./tmp/`**；校验用 [`scripts/check-links.py`](scripts/check-links.py)（悬空必须为 0，仅编辑期跑）与 `python <SKILL_DIR>/scripts/check-progress.py`（步骤门禁账本）。
 
 ## 5. 约束部分
 
-> 详见 [`references/约束部分/约束部分.md`](references/约束部分/约束部分.md)：文件命名规范、垃圾处理、记忆链、逻辑链的存储、文件存储格式、处罚机制、激励机制、上下文存储压缩机制（含步骤边界自动压缩）、文件与文件夹创建范围、创建操作流程、安全与合规、步骤门禁、运行环境不可变、计算纪律、布局计算纪律、嘉立创元器件库为准（器件身份硬门禁：一律以嘉立创系统库/LCSC C 号解析为准，非嘉立创库器件须用户拍板记豁免）。
+> 详见 [`references/约束部分/约束部分.md`](references/约束部分/约束部分.md)：文件命名规范、垃圾处理、记忆链、逻辑链的存储、文件存储格式、处罚机制、激励机制、上下文存储压缩机制（含步骤边界自动压缩）、文件与文件夹创建范围、创建操作流程、安全与合规、步骤门禁、运行环境不可变、计算纪律、布局计算纪律、嘉立创元器件库为准（器件身份硬门禁：一律以嘉立创系统库/LCSC C 号解析为准，非嘉立创库器件须用户拍板记豁免）、辩论熔断强制方案（同一分歧正反判断/否决达 10 次→正反双链辩论合成完整可过门方案并强制采用，为「用户拍板优先」的唯一例外）。
 > 文件存储格式总则：技术文件与数据手册可用 markdown 或 pdf，其余文档一律 markdown。
 > 适用范围划分：`FILE_CREATION_POLICY.md` 只管设计执行期的工作区文件与权限；编辑 skill 本体一律遵守 `RULE_EDIT.md`。
 > 裁决优先级：当前用户指令与代码/CLI 自描述 > 约束部分 > 各步骤文档 > `references/lib/`。
