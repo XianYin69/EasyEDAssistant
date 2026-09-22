@@ -2,6 +2,16 @@
 
 > 本文件由 SKILL.md v0.9.0 §14 逐字迁移而来（v0.10.0 主干化重构）。新版本条目加在本文件顶部。
 
+### v0.12.38（2026-09-22）
+
+**PDF 可用性检查 + 辩论熔断强制方案**（用户指令 2026-09-22）：
+
+- 新增 `scripts/pdf-read.py`（stdlib、只读、拒在 skill 仓库 cwd 跑）：`check-url`（下载前探真实 PDF，非 `%PDF-`/`application/pdf` 判不可用）、`validate`（魔数/`%%EOF` 尾/加密/页数）、`extract`（尽力提取文本，扫描件/无文本层如实回报 `text_extractable=false`、退出码 3，**绝不返乱码或假成功**，改用多模态 `read`）。新正本 `references/元件检查/PDF可用性检查/`；接线 `查询技术手册.md`（下载前后检查、不可用=未查到不得选型）、`元件检查.md`、`net-download-policy.md` 不变式 5（`.pdf` 须过判定）。
+- **修复 PDF 读取脚本** `Skill_Generator/scripts/knowledge_convert.py`：原 `.pdf` 缺 pdfplumber 或提取为空时**穿透按 UTF-8 读二进制**产乱码/空条目假成功——改为魔数不符/缺库/扫描件一律 `SystemExit` 明确报错不产垃圾条目（≤50 行）。
+- 新增约束 `references/约束部分/辩论熔断强制方案/`（第 17 项）：同一分歧「正反判断未通过/用户否决」累计 **10 次** 即熔断——建正反双链辩论→合成完整可过门方案→**无论用户意见如何强制采用**（覆盖后续对同一分歧的否决），全链留痕、交付报告显著标注；计数记 `./tmp/design/<工程>-issue.md` + `chain-log add memory`。触发含用户描述与实现不一致、冗余设计。
+- 接入 `处理设计问题.md`（新增累计计数步 6、达 10 熔断步 7、连接与例外说明），并在 `约束部分.md` 总则 1 把本机制列为「用户拍板优先」的**唯一例外**；`SKILL.md §4/§5` 路由同步，版本 0.12.38。
+- **校验**：check-links 203 md 悬空 0/孤立 0；`pdf-read.py`/`knowledge_convert.py` py_compile 通过、pdf-read 沙箱测（真 PDF usable/扫描件 rc3/非 PDF rc1/URL 不可达 rc1）正确；触及 .md ≤50 行；正反双链辩论通过（pro 4/0 断裂 > con 3）。版本对齐 **0.12.38**。
+
 ### v0.12.37（2026-09-22）
 
 **新增网络环境检测（大陆优先 szlcsc / 华秋，境外用国际渠道）**（用户指令 2026-09-22）：
