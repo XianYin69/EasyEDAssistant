@@ -13,7 +13,7 @@
 - **不适用**：编辑 skill 本体（`SKILL.md`、`references/`、`scripts/`、`Sample/`、`CHANGELOG.md`、`RULE_EDIT.md`）。该场景遵守 `RULE_EDIT.md`（≤50 行、自然语言、总索引 + 子文件、改 CHANGELOG 并提交 git）。
 
 ### 1.3 skill 目录 vs 工作区（关键概念）
-- **skill 目录**（如 `~/.kilocode/skills/EasyEDAssistant/`）是技能定义与版本库，**只读 + 受版本控制**，运行产物不得写入。
+- **skill 目录**（如 `C:/Users/User/AppData/Local/SMS/skills/EasyEDAssistant/`）是技能定义与版本库，**只读 + 受版本控制**，运行产物不得写入。
 - **只读不止文件工具**：设计执行期同样禁止经由命令通道改写 skill——不得跑 `easyeda update`（含 `--skill-only`）、`easyeda skill sync/status`；启动 daemon 必须 `easyeda daemon start --auto-update-skill=false`（该参数默认 on，会静默覆写已安装 skill 目录）。正本见 `references/约束部分/运行环境不可变/`。
 - **工作区目录**（执行时的 `cwd`，即当前 EDA 工程所在目录）是运行时活动根，运行产物只允许写在这里。
 - 判据：`Path(__file__).parent` 等「脚本自身位置」派生路径指向 skill 目录，禁止用作运行产物根；运行产物必须以 `Path.cwd()` 或相对路径（`./tmp/`）解析到工作区。

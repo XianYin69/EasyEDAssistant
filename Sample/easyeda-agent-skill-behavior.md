@@ -914,7 +914,7 @@ Kilocode `kilo.json` 中的接入示例（与原有链路并存，不互斥）�
 > 本节记录 2026-09-12 对移植版 skill 定义文件的修订（dev 分支）。
 > 该文件曾位于 `.kilocode/skills/jlceda-mcp-easyeda/SKILL.md`，现移至仓库
 > 根目录；仓库根目录本身即 Kilocode skill 目录
-> （`~/.kilocode/skills/EasyEDAssistant/`，与 frontmatter `name` 一致）。
+> （`C:/Users/User/AppData/Local/SMS/skills/EasyEDAssistant/`，与 frontmatter `name` 一致）。
 
 **版本**：0.2.0 → 0.3.0（frontmatter `metadata.version`）。
 
@@ -965,7 +965,7 @@ Kilocode `kilo.json` 中的接入示例（与原有链路并存，不互斥）�
 - 技能名由 `jlceda-mcp-easyeda` 更名为 **`EasyEDAssistant`**
   （frontmatter `name` 与文档标题同步更新；MCP server 键 `jlceda` 不变）。
 - 文件由 `.kilocode/skills/jlceda-mcp-easyeda/SKILL.md` 移至仓库根目录
-  `SKILL.md`（仓库根目录 `~/.kilocode/skills/EasyEDAssistant/` 即 Kilocode
+  `SKILL.md`（仓库根目录 `C:/Users/User/AppData/Local/SMS/skills/EasyEDAssistant/` 即 Kilocode
   skill 发现路径，与 `name` 一致）。
 - 同步更新 `README.md`：新增「EasyEDAssistant（SKILL.md）详细文档」章节
   （组件、工作流、引用的 SKILL 文件及其作者），并修正全部旧路径引用。

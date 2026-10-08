@@ -23,7 +23,7 @@
 2. 索引未收录的新命令：走 `easyeda actions` 或 `easyeda api search <query>` 发现后**回补本索引对应子文件**（追加行，不改写既有条目）。
 3. 单位红线：PCB 坐标 mil、原理图 0.01inch（y 向上），详见 [`../坐标与数据模型/坐标与数据模型.md`](../坐标与数据模型/坐标与数据模型.md)。
 4. 操作纪律（幂等性、STALE_READ、批量优先）正本在 [`../lib/api-operations.md`](../lib/api-operations.md)，本索引不重复。
-5. Python 脚本调用一律写 `python <SKILL_DIR>/scripts/<名>.py`，其中 **`<SKILL_DIR>` = 本 skill 的安装根目录绝对路径（即含 `SKILL.md` 的目录，如 `~/.kilocode/skills/EasyEDAssistant`）**，从该根取脚本、不要写工作区相对 `scripts/`（脚本不在工作区）。入口统一用 `python`（Windows/Linux 通用；仅当环境只有 `python3` 时才替换），并必带 `--project` 等必填参数——以脚本 `--help` 为准。**运行前 cwd 必须是用户确认的工作区根目录**（产物落 `./tmp/`）：所有写产物的脚本会检测 cwd，落在 skill 仓库时直接拒绝运行（exit 1，`--help` 除外）。
+5. Python 脚本调用一律写 `python <SKILL_DIR>/scripts/<名>.py`，其中 **`<SKILL_DIR>` = 本 skill 的安装根目录绝对路径（即含 `SKILL.md` 的目录，如 `C:/Users/User/AppData/Local/SMS/skills/EasyEDAssistant`）**，从该根取脚本、不要写工作区相对 `scripts/`（脚本不在工作区）。入口统一用 `python`（Windows/Linux 通用；仅当环境只有 `python3` 时才替换），并必带 `--project` 等必填参数——以脚本 `--help` 为准。**运行前 cwd 必须是用户确认的工作区根目录**（产物落 `./tmp/`）：所有写产物的脚本会检测 cwd，落在 skill 仓库时直接拒绝运行（exit 1，`--help` 除外）。
 6. **重复命令序列优先走封装脚本**：PCB 门禁一键 `scripts/pcb-gate.py`、原理图验证一键 `scripts/sch-verify.py`、桥接探测一键 `scripts/link-probe.py`、账本写入一键 `scripts/progress-log.py`；脚本产物（`./tmp/` 下 JSON）即留证来源，单条命令细节仍查本索引。
 
 ## 新建对象速查（跨域入口）
